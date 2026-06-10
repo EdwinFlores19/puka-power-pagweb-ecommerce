@@ -1,0 +1,30 @@
+{
+  "name": "puka-power-astro",
+  "type": "module",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Puka Power — Energía Ancestral Peruana. E-commerce Astro 5 + SolidJS + Tailwind v4",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "lint": "biome lint ./src",
+    "format": "biome format --write ./src",
+    "check": "biome check --apply ./src"
+  },
+  "dependencies": {
+    "@astrojs/partytown": "^2.1.7",
+    "@astrojs/solid-js": "^5.0.0",
+    "@astrojs/vercel": "^8.0.0",
+    "@nanostores/solid": "^1.1.1",
+    "@tailwindcss/vite": "^4.3.0",
+    "astro": "^5.0.0",
+    "nanostores": "^1.3.0",
+    "resend": "^6.12.4",
+    "solid-js": "^1.9.0",
+    "tailwindcss": "^4.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0"
+  }
+}

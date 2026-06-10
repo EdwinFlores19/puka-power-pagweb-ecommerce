@@ -1,0 +1,48 @@
+---
+const badges = [
+  {
+    label: 'Pago Seguro',
+    icon: 'shield',
+  },
+  {
+    label: 'Boleta / Factura',
+    icon: 'document',
+  },
+  {
+    label: 'Garantía de Devolución',
+    icon: 'return',
+  },
+  {
+    label: 'Envío a todo el Perú',
+    icon: 'truck',
+  },
+];
+---
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+  {badges.map((badge) => (
+    <div class="flex items-center justify-center space-x-2 bg-brand-light/5 py-3 px-3 rounded-xl border border-brand-light/10">
+      {badge.icon === 'shield' && (
+        <svg class="w-5 h-5 text-brand-accentGold shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      )}
+      {badge.icon === 'document' && (
+        <svg class="w-5 h-5 text-brand-accentGold shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M20 8l-6-6H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8zm-2 12H6V4h7v5h5v11z"/>
+        </svg>
+      )}
+      {badge.icon === 'return' && (
+        <svg class="w-5 h-5 text-brand-accentGold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      )}
+      {badge.icon === 'truck' && (
+        <svg class="w-5 h-5 text-brand-accentGold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1m9 1h3a1 1 0 001-1v-4a1 1 0 00-.293-.707l-5-5A1 1 0 0012.586 5H11"/>
+        </svg>
+      )}
+      <span class="text-xs font-semibold uppercase tracking-wider text-brand-light/80">{badge.label}</span>
+    </div>
+  ))}
+</div>

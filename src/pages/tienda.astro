@@ -1,0 +1,73 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/Footer.astro';
+import ProductCatalog from '../islands/ProductCatalog.tsx';
+import CartSidebar from '../islands/CartSidebar.tsx';
+
+export const prerender = false;
+---
+
+<BaseLayout
+  title="Tienda Oficial | Puka Power - Elige tu Energía"
+  description="Compra packs de Puka Power. Energía natural peruana a base de cáscara de café, camu camu y maca andina. Envío gratis en Lima."
+  ogType="website"
+>
+  <!-- Header simplificado para la tienda -->
+  <header class="sticky top-0 z-50 bg-brand-secondary/95 backdrop-blur-md border-b border-brand-primary/10 py-4 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      <div class="flex items-center space-x-6">
+        <a href="/" class="hidden sm:flex items-center text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-colors group">
+          <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Volver al inicio
+        </a>
+        <a href="/tienda" class="flex items-center space-x-2">
+          <span class="font-serif text-2xl sm:text-3xl font-extrabold tracking-wider text-brand-primary">PUKA POWER</span>
+          <span class="text-xs bg-brand-accent/15 text-brand-accent font-bold px-2 py-0.5 rounded-full hidden md:inline-block">TIENDA</span>
+        </a>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <a href="/" class="sm:hidden text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-colors">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Volver
+        </a>
+        <a href="#summary" class="relative p-2.5 bg-brand-primary/5 rounded-full hover:bg-brand-primary/10 transition-colors duration-200">
+          <svg class="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero simple de la tienda -->
+  <section class="py-10 bg-brand-secondary border-b border-brand-primary/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
+      <span class="text-brand-accent font-extrabold text-xs uppercase tracking-widest">⚡ Desbloquea tu potencial</span>
+      <h1 class="font-serif text-4xl sm:text-5xl font-extrabold text-brand-primary">Elige tu Energía</h1>
+      <p class="text-sm sm:text-base text-brand-dark/70 font-medium max-w-xl mx-auto">
+        Ahorra más, rinde más. Selecciona tu pack ideal elaborado con súper alimentos del Perú.
+      </p>
+      <div class="w-12 h-1 bg-brand-accent mx-auto mt-2"></div>
+    </div>
+  </section>
+
+  <!-- Layout principal de la tienda -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <section class="lg:col-span-7">
+        <ProductCatalog client:load />
+      </section>
+
+      <section class="lg:col-span-5 lg:sticky lg:top-24" id="summary">
+        <CartSidebar client:load />
+      </section>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>

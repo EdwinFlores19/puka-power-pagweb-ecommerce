@@ -1,0 +1,54 @@
+---
+const testimonials = [
+  {
+    initials: 'M',
+    name: 'Mauricio V.',
+    role: 'Desarrollador de Software',
+    text: 'Soy programador y solía tomar de dos a tres tazas de café al día, lo que me causaba reflujo. Cambié a Puka Power y ahora mantengo un enfoque absoluto sin dolor estomacal. ¡Excelente sabor!',
+  },
+  {
+    initials: 'C',
+    name: 'Camila R.',
+    role: 'Entrenadora & Atleta',
+    text: 'Para mis entrenamientos diarios de Crossfit buscaba una alternativa limpia. Puka me da la fuerza del Camu Camu y no sufro la deshidratación común de otros pre-entrenos químicos.',
+  },
+  {
+    initials: 'D',
+    name: 'Daniel F.',
+    role: 'Estudiante de Medicina',
+    text: 'Como estudiante de medicina mis horarios son de locura. Puka Power me ayuda a mantenerme alerta y con energía para las guardias nocturnas. Me encanta que apoyen a agricultores locales.',
+  },
+];
+---
+
+<section id="testimonios" class="py-20 bg-brand-light scroll-mt-24 border-t border-brand-primary/5">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
+      <span class="text-brand-accent font-extrabold text-xs uppercase tracking-widest">Opinión de la Comunidad</span>
+      <h2 class="font-serif text-3xl sm:text-4xl font-extrabold text-brand-primary">
+        Lo que dicen quienes ya se unieron al cambio
+      </h2>
+      <div class="w-16 h-1 bg-brand-accent mx-auto"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {testimonials.map((t) => (
+        <div class="bg-brand-secondary p-8 rounded-2xl border border-brand-primary/5 relative flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex space-x-1 text-brand-accentGold">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            </div>
+            <p class="text-sm sm:text-base text-brand-dark/90 italic">"{t.text}"</p>
+          </div>
+          <div class="flex items-center space-x-4 pt-6 border-t border-brand-primary/10 mt-6">
+            <div class="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center font-bold text-brand-primary shrink-0">{t.initials}</div>
+            <div>
+              <p class="text-sm font-bold text-brand-primary">{t.name}</p>
+              <p class="text-[10px] text-brand-dark/60 uppercase">{t.role}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
