@@ -1,14 +1,15 @@
 import { atom, computed } from 'nanostores';
-import type { CartItem, CouponState } from '../lib/types';
-import { CATALOG } from '../lib/constants';
+import type { CartItem, CouponState } from '@/lib/types';
+import { CATALOG, VALID_COUPON } from '@/lib/constants';
 
-const CART_STORAGE_KEY = 'puka-power-cart';
-const COUPON_STORAGE_KEY = 'puka-power-coupon';
+const isClient = typeof window !== 'undefined';
+const CART_KEY = 'puka_cart';
+const COUPON_KEY = 'puka_coupon';
 
-function loadCartFromStorage(): CartItem[] {
-  if (typeof sessionStorage === 'undefined') return [];
+function loadCart(): CartItem[] {
+  if (!isClient) return [];
   try {
-    const stored = sessionStorage.getItem(CART_STORAGE_KEY);
+    const stored = localStorage.getItem(CART_KEY);
     if (stored) {
       const parsed = JSON.parse(stored) as CartItem[];
       if (Array.isArray(parsed)) return parsed;
@@ -19,12 +20,12 @@ function loadCartFromStorage(): CartItem[] {
   return [];
 }
 
-function loadCouponFromStorage(): CouponState {
-  if (typeof sessionStorage === 'undefined') {
+function loadCoupon(): CouponState {
+  if (!isClient) {
     return { applied: false, code: '', discountPercent: 0, error: '' };
   }
   try {
-    const stored = sessionStorage.getItem(COUPON_STORAGE_KEY);
+    const stored = localStorage.getItem(COUPON_KEY);
     if (stored) {
       return JSON.parse(stored) as CouponState;
     }
@@ -34,25 +35,18 @@ function loadCouponFromStorage(): CouponState {
   return { applied: false, code: '', discountPercent: 0, error: '' };
 }
 
-export const $cartReady = atom(false);
+export const $cart = atom<CartItem[]>(loadCart());
 
-export const $cart = atom<CartItem[]>(loadCartFromStorage());
+export const $coupon = atom<CouponState>(loadCoupon());
 
-export const $coupon = atom<CouponState>(loadCouponFromStorage());
-
-$cartReady.set(true);
-
-$cart.listen((cart) => {
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-  }
-});
-
-$coupon.listen((coupon) => {
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(coupon));
-  }
-});
+if (isClient) {
+  $cart.listen((value) => {
+    localStorage.setItem(CART_KEY, JSON.stringify(value));
+  });
+  $coupon.listen((value) => {
+    localStorage.setItem(COUPON_KEY, JSON.stringify(value));
+  });
+}
 
 export const $subtotal = computed($cart, (cart) =>
   cart.reduce((sum, item) => sum + item.price * item.qty, 0),
@@ -74,14 +68,26 @@ export function addItemToCart(productId: number) {
   const cart = $cart.get();
   const existing = cart.find((item) => item.id === productId);
   if (existing) {
-    $cart.set(cart.map((item) =>
-      item.id === productId ? { ...item, qty: item.qty + 1 } : item,
-    ));
+    $cart.set(
+      cart.map((item) =>
+        item.id === productId ? { ...item, qty: item.qty + 1 } : item,
+      ),
+    );
     return;
   }
   const product = CATALOG[productId];
   if (!product) return;
-  $cart.set([...cart, { id: product.id, name: product.name, price: product.price, qty: 1, description: product.description, unitLabel: product.unitLabel }]);
+  $cart.set([
+    ...cart,
+    {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      qty: 1,
+      description: product.description,
+      unitLabel: product.unitLabel,
+    },
+  ]);
 }
 
 export function decrementItemInCart(productId: number) {
@@ -92,9 +98,11 @@ export function decrementItemInCart(productId: number) {
     $cart.set(cart.filter((item) => item.id !== productId));
     return;
   }
-  $cart.set(cart.map((item) =>
-    item.id === productId ? { ...item, qty: item.qty - 1 } : item,
-  ));
+  $cart.set(
+    cart.map((item) =>
+      item.id === productId ? { ...item, qty: item.qty - 1 } : item,
+    ),
+  );
 }
 
 export function removeFromCart(productId: number) {
@@ -103,23 +111,33 @@ export function removeFromCart(productId: number) {
 
 export function clearCart() {
   $cart.set([]);
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem(CART_STORAGE_KEY);
+  if (isClient) {
+    localStorage.removeItem(CART_KEY);
   }
 }
 
 export function applyCoupon(code: string) {
   const normalized = code.trim().toUpperCase();
-  if (normalized === 'BOLT15') {
-    $coupon.set({ applied: true, code: normalized, discountPercent: 0.15, error: '' });
+  if (normalized === VALID_COUPON.code) {
+    $coupon.set({
+      applied: true,
+      code: normalized,
+      discountPercent: VALID_COUPON.discountPercent,
+      error: '',
+    });
   } else {
-    $coupon.set({ applied: false, code: normalized, discountPercent: 0, error: 'Código inválido. Intenta con "BOLT15"' });
+    $coupon.set({
+      applied: false,
+      code: normalized,
+      discountPercent: 0,
+      error: `Código inválido. Intenta con "${VALID_COUPON.code}"`,
+    });
   }
 }
 
 export function clearCoupon() {
   $coupon.set({ applied: false, code: '', discountPercent: 0, error: '' });
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem(COUPON_STORAGE_KEY);
+  if (isClient) {
+    localStorage.removeItem(COUPON_KEY);
   }
 }

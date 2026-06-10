@@ -1,6 +1,19 @@
-import { createSignal, onMount } from 'solid-js';
+import { createSignal, onMount, Show } from 'solid-js';
 import { useStore } from '@nanostores/solid';
-import { $cart, $subtotal, $totalQty, $total, $discount, $coupon, addItemToCart, decrementItemInCart, removeFromCart, clearCart, applyCoupon, clearCoupon } from '../store/cartStore';
+import {
+  $cart,
+  $subtotal,
+  $totalQty,
+  $total,
+  $discount,
+  $coupon,
+  addItemToCart,
+  decrementItemInCart,
+  removeFromCart,
+  clearCart,
+  applyCoupon,
+  clearCoupon,
+} from '@/store/cartStore';
 import OrderSuccessModal from './OrderSuccessModal';
 
 function Skeleton() {
@@ -38,10 +51,10 @@ function Skeleton() {
 }
 
 export default function CartSidebar() {
-  const [hydrated, setHydrated] = createSignal(false);
+  const [isMounted, setIsMounted] = createSignal(false);
 
   onMount(() => {
-    setHydrated(true);
+    setIsMounted(true);
   });
 
   const cart = useStore($cart);
@@ -55,7 +68,7 @@ export default function CartSidebar() {
   const [isProcessing, setIsProcessing] = createSignal(false);
   const [checkoutError, setCheckoutError] = createSignal('');
 
-  if (!hydrated()) {
+  if (!isMounted()) {
     return <Skeleton />;
   }
 
@@ -83,18 +96,25 @@ export default function CartSidebar() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        setCheckoutError(result.error || 'Error al procesar el pago. Intenta de nuevo.');
+        setCheckoutError(
+          result.error || 'Error al procesar el pago. Intenta de nuevo.',
+        );
         return;
       }
 
-      sessionStorage.setItem('puka-last-order', JSON.stringify({
-        orderId: result.orderId,
-        total: result.total,
-      }));
+      localStorage.setItem(
+        'puka-last-order',
+        JSON.stringify({
+          orderId: result.orderId,
+          total: result.total,
+        }),
+      );
 
       setShowModal(true);
     } catch {
-      setCheckoutError('Error de conexión. Verifica tu internet e intenta de nuevo.');
+      setCheckoutError(
+        'Error de conexión. Verifica tu internet e intenta de nuevo.',
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -104,12 +124,14 @@ export default function CartSidebar() {
     setShowModal(false);
     clearCart();
     clearCoupon();
-    sessionStorage.removeItem('puka-last-order');
+    localStorage.removeItem('puka-last-order');
   };
 
   return (
     <>
-      <div class="bg-brand-light rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-primary/10 space-y-6">
+      <div class="bg-brand-light rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-primary/10 space-y-6 opacity-0 transition-opacity duration-500"
+        classList={{ 'opacity-100': isMounted() }}
+      >
         <div class="flex justify-between items-center border-b border-brand-primary/5 pb-4">
           <h3 class="font-serif text-2xl font-black text-brand-primary flex items-center">
             <svg class="w-6 h-6 mr-3 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +139,7 @@ export default function CartSidebar() {
             </svg>
             Resumen de tu Pedido
           </h3>
-          {cart().length > 0 && (
+          <Show when={cart().length > 0}>
             <button
               onClick={clearCart}
               class="text-xs font-bold text-brand-accent hover:underline focus:outline-none flex items-center space-x-1"
@@ -128,20 +150,28 @@ export default function CartSidebar() {
               </svg>
               <span>Vaciar</span>
             </button>
-          )}
+          </Show>
         </div>
 
         <div class="space-y-4 max-h-[250px] overflow-y-auto scrollbar-hidden pr-1">
-          {cart().length === 0 ? (
-            <div class="py-8 text-center space-y-2">
-              <svg class="w-12 h-12 mx-auto text-brand-dark/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Show when={cart().length > 0} fallback={
+            <div class="py-8 text-center space-y-4">
+              <svg class="w-16 h-16 mx-auto text-brand-dark/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
               </svg>
-              <p class="text-sm font-medium text-brand-dark/50">Tu carrito de compras está vacío</p>
-              <p class="text-xs text-brand-dark/40">¡Añade un pack para desbloquear la energía!</p>
+              <div>
+                <p class="text-sm font-bold text-brand-dark/60">Tu carrito está vacío</p>
+                <p class="text-xs text-brand-dark/40 mt-1">¡Elige tu pack de energía ideal y prepárate para el poder del rayo!</p>
+              </div>
+              <a
+                href="#productos"
+                class="inline-block px-6 py-3 bg-brand-accent hover:bg-brand-accentGold text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 shadow-md"
+              >
+                Explorar productos
+              </a>
             </div>
-          ) : (
-            cart().map((item) => (
+          }>
+            {cart().map((item) => (
               <div class="flex items-center justify-between gap-4 p-3.5 bg-brand-secondary rounded-2xl border border-brand-primary/5 transition-all duration-300">
                 <div class="space-y-1 flex-grow min-w-0">
                   <h4 class="font-bold text-sm text-brand-primary leading-tight truncate">{item.name}</h4>
@@ -180,98 +210,100 @@ export default function CartSidebar() {
                   </button>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+          </Show>
         </div>
 
-        <div class="border-t border-brand-primary/10 pt-4 space-y-4">
-          <div class="space-y-1.5">
-            <label for="coupon-input" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/60">¿Tienes un cupón de descuento?</label>
-            <div class="flex space-x-2">
-              <input
-                type="text"
-                id="coupon-input"
-                placeholder="Ej. BOLT15"
-                value={couponInput()}
-                onInput={(e) => setCouponInput(e.currentTarget.value)}
-                class="flex-grow px-4 py-2.5 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none text-sm transition-all uppercase"
-                aria-label="Código de cupón"
-              />
-              <button
-                onClick={handleApplyCoupon}
-                class="px-5 py-2.5 bg-brand-primary hover:bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200"
-                aria-label="Aplicar cupón"
-              >
-                Aplicar
-              </button>
-            </div>
-            {coupon().error && (
-              <p class="text-xs font-bold mt-1.5 text-brand-accent flex items-center space-x-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
-                <span>{coupon().error}</span>
-              </p>
-            )}
-            {coupon().applied && (
-              <p class="text-xs font-bold mt-1.5 text-brand-success flex items-center space-x-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                <span>¡Cupón <strong>{coupon().code}</strong> aplicado! 15% de descuento.</span>
-              </p>
-            )}
-          </div>
-
-          <div class="space-y-2.5 pt-2">
-            <div class="flex justify-between text-sm text-brand-dark/80">
-              <span>Subtotal ({totalQty()} {totalQty() === 1 ? 'producto' : 'productos'})</span>
-              <span class="font-bold">S/ {subtotal().toFixed(2)}</span>
-            </div>
-
-            {coupon().applied && (
-              <div class="flex justify-between text-sm text-brand-success">
-                <span>Descuento (15%)</span>
-                <span class="font-bold">- S/ {discount().toFixed(2)}</span>
+        <Show when={cart().length > 0}>
+          <div class="border-t border-brand-primary/10 pt-4 space-y-4">
+            <div class="space-y-1.5">
+              <label for="coupon-input" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/60">
+                ¿Tienes un cupón de descuento?
+              </label>
+              <div class="flex space-x-2">
+                <input
+                  type="text"
+                  id="coupon-input"
+                  placeholder="Ej. BOLT15"
+                  value={couponInput()}
+                  onInput={(e) => setCouponInput(e.currentTarget.value)}
+                  class="flex-grow px-4 py-2.5 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none text-sm transition-all uppercase"
+                  aria-label="Código de cupón"
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  class="px-5 py-2.5 bg-brand-primary hover:bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200"
+                  aria-label="Aplicar cupón"
+                >
+                  Aplicar
+                </button>
               </div>
-            )}
-
-            <div class="flex justify-between text-sm text-brand-dark/80">
-              <span>Costo de Envío</span>
-              <span class="font-bold text-brand-success">¡GRATIS!</span>
+              <Show when={coupon().error}>
+                <p class="text-xs font-bold mt-1.5 text-brand-accent flex items-center space-x-1">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                  <span>{coupon().error}</span>
+                </p>
+              </Show>
+              <Show when={coupon().applied}>
+                <p class="text-xs font-bold mt-1.5 text-brand-success flex items-center space-x-1">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                  <span>¡Cupón <strong>{coupon().code}</strong> aplicado! 15% de descuento.</span>
+                </p>
+              </Show>
             </div>
 
-            <div class="flex justify-between items-center pt-3 border-t border-brand-primary/15">
-              <span class="font-serif text-lg font-bold text-brand-primary">Total a Pagar</span>
-              <span class="font-sans text-3xl font-extrabold text-brand-accent">S/ {total().toFixed(2)}</span>
+            <div class="space-y-2.5 pt-2">
+              <div class="flex justify-between text-sm text-brand-dark/80">
+                <span>Subtotal ({totalQty()} {totalQty() === 1 ? 'producto' : 'productos'})</span>
+                <span class="font-bold">S/ {subtotal().toFixed(2)}</span>
+              </div>
+
+              <Show when={coupon().applied}>
+                <div class="flex justify-between text-sm text-brand-success">
+                  <span>Descuento (15%)</span>
+                  <span class="font-bold">- S/ {discount().toFixed(2)}</span>
+                </div>
+              </Show>
+
+              <div class="flex justify-between text-sm text-brand-dark/80">
+                <span>Costo de Envío</span>
+                <span class="font-bold text-brand-success">¡GRATIS!</span>
+              </div>
+
+              <div class="flex justify-between items-center pt-3 border-t border-brand-primary/15">
+                <span class="font-serif text-lg font-bold text-brand-primary">Total a Pagar</span>
+                <span class="font-sans text-3xl font-extrabold text-brand-accent">S/ {total().toFixed(2)}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="pt-2">
-          <button
-            onClick={handleCheckout}
-            disabled={cart().length === 0 || isProcessing()}
-            class="w-full py-4 bg-brand-accent hover:bg-brand-accentGold disabled:bg-brand-dark/30 disabled:cursor-not-allowed text-brand-light font-extrabold text-sm uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-xl shadow-brand-accent/20 flex items-center justify-center space-x-2"
-            aria-label="Proceder al pago seguro"
-          >
-            {isProcessing() ? (
-              <>
+          <div class="pt-2">
+            <button
+              onClick={handleCheckout}
+              disabled={cart().length === 0 || isProcessing()}
+              class="w-full py-4 bg-brand-accent hover:bg-brand-accentGold disabled:bg-brand-dark/30 disabled:cursor-not-allowed text-brand-light font-extrabold text-sm uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-xl shadow-brand-accent/20 flex items-center justify-center space-x-2"
+              aria-label="Proceder al pago seguro"
+            >
+              <Show when={isProcessing()} fallback={
+                <>
+                  <span>Proceder al Pago Seguro</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </>
+              }>
                 <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
                 <span>Procesando...</span>
-              </>
-            ) : (
-              <>
-                <span>Proceder al Pago Seguro</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
-              </>
-            )}
-          </button>
-          {checkoutError() && (
-            <p class="mt-2 text-xs font-bold text-brand-accent text-center">{checkoutError()}</p>
-          )}
-        </div>
+              </Show>
+            </button>
+            <Show when={checkoutError()}>
+              <p class="mt-2 text-xs font-bold text-brand-accent text-center">{checkoutError()}</p>
+            </Show>
+          </div>
+        </Show>
 
         <div class="pt-4 border-t border-brand-primary/5 flex flex-col sm:flex-row items-center justify-around gap-4 text-center">
           <div class="flex items-center space-x-2 text-brand-dark/60 text-xs">
@@ -289,7 +321,9 @@ export default function CartSidebar() {
         </div>
       </div>
 
-      {showModal() && <OrderSuccessModal onClose={handleCloseModal} />}
+      <Show when={showModal()}>
+        <OrderSuccessModal onClose={handleCloseModal} />
+      </Show>
 
       <style>{`
         .scrollbar-hidden::-webkit-scrollbar { display: none; }

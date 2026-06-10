@@ -10,7 +10,10 @@ interface Props {
 }
 
 function loadOrderData(): OrderData {
-  const stored = sessionStorage.getItem('puka-last-order');
+  const stored =
+    typeof localStorage !== 'undefined'
+      ? localStorage.getItem('puka-last-order')
+      : null;
   if (stored) {
     try {
       return JSON.parse(stored) as OrderData;
