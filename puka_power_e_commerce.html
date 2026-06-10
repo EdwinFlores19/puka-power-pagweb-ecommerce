@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda Oficial | Puka Power - Elige tu Energía</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#7B1113',     // Rojo Vino Oscuro
+              secondary: '#FFF9F2',   // Crema/Beige de fondo
+              accent: '#D9534F',      // Naranja Ladrillo
+              success: '#2E7D32',     // Verde Oscuro
+              accentGold: '#B8860B',  // Dorado Oscuro
+              dark: '#2C1A14',        // Marrón Café Oscuro
+              light: '#FDFBF7'        // Blanco Hueso
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['"Montserrat"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom CSS for Premium UI touches -->
+  <style>
+    @keyframes subtle-pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px 0 rgba(217, 83, 79, 0.4);
+      }
+      50% {
+        transform: scale(1.02);
+        box-shadow: 0 4px 25px 0 rgba(217, 83, 79, 0.6);
+      }
+    }
+    .animate-btn-pulse {
+      animation: subtle-pulse 2.5s infinite ease-in-out;
+    }
+    .scrollbar-hidden::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hidden {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-brand-secondary text-brand-dark font-sans overflow-x-hidden antialiased flex flex-col min-h-screen">
+
+  <!-- ================= 1. HEADER (Frictionless checkout navigation) ================= -->
+  <header class="sticky top-0 z-50 bg-brand-secondary/95 backdrop-blur-md border-b border-brand-primary/10 py-4 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      
+      <!-- Logo and Back Navigation -->
+      <div class="flex items-center space-x-6">
+        <a href="index.html" class="hidden sm:flex items-center text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-colors">
+          <i class="fa-solid fa-arrow-left mr-2"></i> Volver al inicio
+        </a>
+        <a href="#" class="flex items-center space-x-2">
+          <span class="font-serif text-2xl sm:text-3xl font-extrabold tracking-wider text-brand-primary">PUKA POWER</span>
+          <span class="text-xs bg-brand-accent/15 text-brand-accent font-bold px-2 py-0.5 rounded-full hidden md:inline-block">TIENDA</span>
+        </a>
+      </div>
+
+      <!-- Navigation & Cart Icon Trigger -->
+      <div class="flex items-center space-x-4">
+        <a href="index.html" class="sm:hidden text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-colors">
+          <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+        
+        <!-- Cart Badge Icon -->
+        <a href="#summary-card" class="relative p-2.5 bg-brand-primary/5 rounded-full hover:bg-brand-primary/10 transition-colors duration-200">
+          <i class="fa-solid fa-shopping-cart text-brand-primary text-lg"></i>
+          <!-- Dynamic Badge count -->
+          <span id="cart-badge" class="absolute -top-1 -right-1 bg-brand-accent text-brand-light text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-brand-secondary transform scale-90 transition-transform duration-300">0</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= 2. TITLE SECTION (Hero Simple) ================= -->
+  <section class="py-10 bg-brand-secondary border-b border-brand-primary/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
+      <span class="text-brand-accent font-extrabold text-xs uppercase tracking-widest">⚡ Desbloquea tu potencial</span>
+      <h1 class="font-serif text-4xl sm:text-5xl font-extrabold text-brand-primary">Elige tu Energía</h1>
+      <p class="text-sm sm:text-base text-brand-dark/70 font-medium max-w-xl mx-auto">
+        Ahorra más, rinde más. Selecciona tu pack ideal elaborado con súper alimentos del Perú.
+      </p>
+      <div class="w-12 h-1 bg-brand-accent mx-auto mt-2"></div>
+    </div>
+  </section>
+
+  <!-- ================= 3. MAIN E-COMMERCE LAYOUT ================= -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      
+      <!-- COLUMN LEFT: PRODUCT CATALOGUE (65%) -->
+      <section class="lg:col-span-7 space-y-6">
+        <h2 class="text-xs uppercase tracking-widest font-extrabold text-brand-dark/60 mb-2">Selecciona un Pack de Energía</h2>
+
+        <!-- Product Card 1 -->
+        <div class="bg-brand-light p-6 rounded-3xl border border-brand-primary/5 shadow-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 hover:shadow-xl transition-all duration-300">
+          <div class="flex flex-col sm:flex-row items-center gap-6 w-full">
+            <!-- Icon/Visual Frame -->
+            <div class="w-32 h-32 bg-gradient-to-b from-brand-primary/10 to-brand-primary/25 rounded-2xl flex items-center justify-center shrink-0 border border-brand-primary/10 relative overflow-hidden select-none">
+              <!-- Illustrated tiny can visualization -->
+              <div class="w-14 h-24 bg-gradient-to-r from-red-800 to-red-950 rounded-2xl shadow-lg relative flex flex-col justify-between py-2 px-1 text-center">
+                <i class="fa-solid fa-bolt text-brand-accentGold text-xs animate-pulse"></i>
+                <span class="text-[7px] text-brand-light font-black tracking-tighter">PUKA 3x</span>
+                <span class="text-[6px] text-brand-light/60">355ML</span>
+              </div>
+            </div>
+
+            <!-- Product details -->
+            <div class="space-y-2 text-center sm:text-left">
+              <h3 class="font-serif text-xl font-bold text-brand-primary">Reto Puka - 3 Días</h3>
+              <p class="text-xs sm:text-sm text-brand-dark/70 font-light">
+                Ideal para probar el poder natural. Experimenta la claridad mental y el enfoque sin bajones.
+              </p>
+              <div class="flex items-center justify-center sm:justify-start space-x-3 pt-1">
+                <span class="font-sans text-xl font-extrabold text-brand-accent">S/ 24.00</span>
+                <span class="text-xs text-brand-dark/50">(S/ 8.00 por lata)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action block -->
+          <div class="flex sm:flex-col justify-center sm:justify-between items-center shrink-0 gap-4 w-full sm:w-auto">
+            <button onclick="addToCart(1)" class="w-full sm:w-auto px-6 py-3 bg-brand-primary text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-brand-accent transition-all duration-300 shadow-md">
+              Añadir <i class="fa-solid fa-plus ml-1.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Product Card 2 (BEST SELLER / DESTACADO) -->
+        <div class="bg-brand-light p-6 rounded-3xl border-2 border-brand-accent shadow-xl flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 relative transform lg:scale-105 my-8">
+          <!-- Floating Best Seller Badge -->
+          <span class="absolute -top-3.5 left-6 bg-brand-accent text-brand-light text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
+            🔥 10% DE DESCUENTO - Más Vendido
+          </span>
+
+          <div class="flex flex-col sm:flex-row items-center gap-6 w-full pt-2 sm:pt-0">
+            <!-- Icon/Visual Frame -->
+            <div class="w-32 h-32 bg-gradient-to-b from-brand-accent/10 to-brand-accent/20 rounded-2xl flex items-center justify-center shrink-0 border border-brand-accent/10 relative overflow-hidden select-none">
+              <!-- Illustrated tiny can visualization -->
+              <div class="w-16 h-26 bg-gradient-to-r from-red-700 via-brand-primary to-red-900 rounded-2xl shadow-xl relative flex flex-col justify-between py-2.5 px-1.5 text-center">
+                <i class="fa-solid fa-bolt text-brand-accentGold text-sm animate-bounce"></i>
+                <span class="text-[8px] text-brand-light font-black tracking-widest">PUKA 6x</span>
+                <span class="text-[6px] text-brand-light/60">BEST VALUE</span>
+              </div>
+            </div>
+
+            <!-- Product details -->
+            <div class="space-y-2 text-center sm:text-left">
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-brand-primary">Six Pack Poder</h3>
+              <p class="text-xs sm:text-sm text-brand-dark/70 font-light">
+                Para tu semana. Energía sostenida. Mantén tu stock listo para rendir en tus entrenamientos o intensas sesiones de desarrollo.
+              </p>
+              <div class="flex items-center justify-center sm:justify-start space-x-3 pt-1">
+                <span class="font-sans text-2xl font-extrabold text-brand-accent">S/ 43.20</span>
+                <span class="text-sm text-brand-dark/40 line-through">S/ 48.00</span>
+                <span class="text-xs text-brand-success font-semibold">(Ahorras S/ 4.80)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action block -->
+          <div class="flex sm:flex-col justify-center sm:justify-between items-center shrink-0 gap-4 w-full sm:w-auto">
+            <button onclick="addToCart(2)" class="w-full sm:w-auto px-6 py-4 bg-brand-accent text-brand-light font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-brand-accentGold transition-all duration-300 shadow-md animate-btn-pulse">
+              Añadir <i class="fa-solid fa-plus ml-1.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Product Card 3 -->
+        <div class="bg-brand-light p-6 rounded-3xl border border-brand-primary/5 shadow-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 hover:shadow-xl transition-all duration-300">
+          <div class="flex flex-col sm:flex-row items-center gap-6 w-full">
+            <!-- Icon/Visual Frame -->
+            <div class="w-32 h-32 bg-gradient-to-b from-brand-accentGold/10 to-brand-accentGold/20 rounded-2xl flex items-center justify-center shrink-0 border border-brand-accentGold/10 relative overflow-hidden select-none">
+              <span class="absolute -top-1 -left-1 bg-brand-success text-brand-light text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-br-lg">
+                20% DSCTO + ENVÍO GRATIS
+              </span>
+              <!-- Illustrated tiny can visualization -->
+              <div class="w-14 h-24 bg-gradient-to-r from-yellow-700 via-brand-accentGold to-yellow-900 rounded-2xl shadow-lg relative flex flex-col justify-between py-2 px-1 text-center">
+                <i class="fa-solid fa-crown text-brand-light text-xs animate-spin-slow"></i>
+                <span class="text-[7px] text-brand-light font-black tracking-tighter">SUBSCRIBE</span>
+                <span class="text-[6px] text-brand-light/60">24 LATAS</span>
+              </div>
+            </div>
+
+            <!-- Product details -->
+            <div class="space-y-2 text-center sm:text-left">
+              <h3 class="font-serif text-xl font-bold text-brand-primary">Suscripción Mensual</h3>
+              <p class="text-xs sm:text-sm text-brand-dark/70 font-light">
+                Nunca te quedes sin energía. Entregado de manera recurrente en tu puerta cada mes con el máximo descuento garantizado.
+              </p>
+              <div class="flex items-center justify-center sm:justify-start space-x-3 pt-1">
+                <span class="font-sans text-xl font-extrabold text-brand-accent">S/ 153.60</span>
+                <span class="text-sm text-brand-dark/40 line-through">S/ 192.00</span>
+                <span class="text-xs text-brand-success font-semibold">(Ahorras S/ 38.40)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action block -->
+          <div class="flex sm:flex-col justify-center sm:justify-between items-center shrink-0 gap-4 w-full sm:w-auto">
+            <button onclick="addToCart(3)" class="w-full sm:w-auto px-6 py-3 bg-brand-primary text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-brand-accentGold transition-all duration-300 shadow-md">
+              Suscribirse <i class="fa-solid fa-arrow-rotate-right ml-1.5"></i>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- COLUMN RIGHT: STICKY CHECKOUT SIDEBAR (35%) -->
+      <section class="lg:col-span-5 lg:sticky lg:top-24">
+        
+        <!-- Summary Container Card -->
+        <div id="summary-card" class="bg-brand-light rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-primary/10 space-y-6">
+          <div class="flex justify-between items-center border-b border-brand-primary/5 pb-4">
+            <h3 class="font-serif text-2xl font-black text-brand-primary flex items-center">
+              <i class="fa-solid fa-receipt mr-3 text-brand-accent"></i> Resumen de tu Pedido
+            </h3>
+            <button onclick="clearCart()" class="text-xs font-bold text-brand-accent hover:underline focus:outline-none">
+              <i class="fa-solid fa-trash-can"></i> Vaciar
+            </button>
+          </div>
+
+          <!-- Dynamic Cart Items list container -->
+          <div id="cart-items-wrapper" class="space-y-4 max-h-[250px] overflow-y-auto scrollbar-hidden pr-1">
+            <!-- Dynamic Injection will occur here -->
+          </div>
+
+          <!-- Divider -->
+          <div class="border-t border-brand-primary/10 pt-4 space-y-4">
+            
+            <!-- Coupon Input Block -->
+            <div class="space-y-1.5">
+              <label for="coupon-input" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/60">¿Tienes un cupón de descuento?</label>
+              <div class="flex space-x-2">
+                <input type="text" id="coupon-input" placeholder="Ej. BOLT15" class="flex-grow px-4 py-2.5 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none text-sm transition-all uppercase">
+                <button onclick="applyPromoCode()" class="px-5 py-2.5 bg-brand-primary hover:bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200">
+                  Aplicar
+                </button>
+              </div>
+              <div id="coupon-feedback" class="hidden text-xs font-bold mt-1.5"></div>
+            </div>
+
+            <!-- Billing Pricing Lines -->
+            <div class="space-y-2.5 pt-2">
+              <div class="flex justify-between text-sm text-brand-dark/80">
+                <span>Subtotal</span>
+                <span id="bill-subtotal" class="font-bold">S/ 0.00</span>
+              </div>
+              
+              <div id="discount-row" class="hidden flex justify-between text-sm text-brand-success">
+                <span>Descuento adicional (<span id="discount-pct">0</span>%)</span>
+                <span id="bill-discount" class="font-bold">- S/ 0.00</span>
+              </div>
+
+              <div class="flex justify-between text-sm text-brand-dark/80">
+                <span>Costo de Envío</span>
+                <span id="bill-shipping" class="font-bold text-brand-success">¡GRATIS!</span>
+              </div>
+
+              <!-- Total pay dynamic display -->
+              <div class="flex justify-between items-center pt-3 border-t border-brand-primary/15">
+                <span class="font-serif text-lg font-bold text-brand-primary">Total a Pagar</span>
+                <span id="bill-total" class="font-sans text-3xl font-extrabold text-brand-accent">S/ 0.00</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Checkout CTA (Place Order) -->
+          <div class="pt-2">
+            <button onclick="triggerOrderCheckout()" class="w-full py-4 bg-brand-accent hover:bg-brand-accentGold text-brand-light font-extrabold text-sm uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-xl shadow-brand-accent/20 flex items-center justify-center space-x-2">
+              <span>Proceder al Pago Seguro</span>
+              <i class="fa-solid fa-lock text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Safe Trust Assurances Badge Block -->
+          <div class="pt-4 border-t border-brand-primary/5 flex flex-col sm:flex-row items-center justify-around gap-4 text-center">
+            <div class="flex items-center space-x-2 text-brand-dark/60 text-xs">
+              <i class="fa-solid fa-shield-halved text-brand-accent text-sm"></i>
+              <span>Garantía de Devolución</span>
+            </div>
+            <div class="flex items-center space-x-2 text-brand-dark/60 text-xs">
+              <i class="fa-solid fa-truck-fast text-brand-accent text-sm"></i>
+              <span>Envío a todo el Perú</span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Checkout Fictional Modal Overlay (For smooth flow without alerts) -->
+  <div id="checkout-modal" class="hidden fixed inset-0 z-50 bg-brand-dark/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-brand-secondary rounded-3xl p-6 sm:p-10 max-w-md w-full border border-brand-primary/10 shadow-2xl relative space-y-6">
+      <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-brand-dark/50 hover:text-brand-dark text-lg focus:outline-none">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="text-center space-y-3">
+        <div class="w-16 h-16 bg-brand-success/15 rounded-full flex items-center justify-center text-brand-success text-3xl mx-auto">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h4 class="font-serif text-2xl font-bold text-brand-primary">¡Transacción Iniciada de Forma Segura!</h4>
+        <p class="text-sm text-brand-dark/70">
+          Tu carrito de compras ha sido procesado correctamente con nuestra plataforma contra entrega integrada.
+        </p>
+      </div>
+
+      <div class="bg-brand-light p-4 rounded-2xl border border-brand-primary/10 text-xs space-y-2">
+        <div class="flex justify-between">
+          <span class="text-brand-dark/60">N° de Operación</span>
+          <span class="font-bold text-brand-dark" id="modal-op-number">#PK-2026-9482</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-brand-dark/60">Monto Final</span>
+          <span class="font-bold text-brand-accent text-sm" id="modal-final-total">S/ 0.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-brand-dark/60">Método de Envío</span>
+          <span class="font-bold text-brand-dark">Envío Express (Gratis)</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <p class="text-[10px] text-brand-dark/50 text-center uppercase tracking-wider font-semibold">Te contactaremos de inmediato por WhatsApp</p>
+        <button onclick="closeCheckoutModal()" class="w-full py-3.5 bg-brand-primary hover:bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-colors duration-200">
+          Entendido, gracias ⚡
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 4. FOOTER ================= -->
+  <footer class="bg-brand-dark text-brand-light py-10 border-t border-brand-primary/20 shrink-0">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-brand-light/50">
+      <div class="space-y-1 text-center sm:text-left">
+        <p class="font-serif text-sm font-bold text-brand-light tracking-widest">PUKA POWER</p>
+        <p>© 2026 Puka Power. Todos los derechos reservados.</p>
+      </div>
+      
+      <!-- Supported Payment Gateways Layout representation -->
+      <div class="flex space-x-3 text-2xl">
+        <i class="fa-brands fa-cc-visa text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+        <i class="fa-brands fa-cc-mastercard text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+        <i class="fa-brands fa-cc-amex text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+        <i class="fa-solid fa-qrcode text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= 5. JAVASCRIPT LOGIC ================= -->
+  <script>
+    // Product Database representation
+    const catalogData = {
+      1: {
+        id: 1,
+        name: "Reto Puka - 3 Días",
+        price: 24.00,
+        desc: "3 latas de energía constante."
+      },
+      2: {
+        id: 2,
+        name: "Six Pack Poder",
+        price: 43.20,
+        desc: "6 latas para un máximo enfoque."
+      },
+      3: {
+        id: 3,
+        name: "Suscripción Mensual",
+        price: 153.60,
+        desc: "24 latas mensuales + Envío Gratis."
+      }
+    };
+
+    // Shopping Cart State
+    let cart = [];
+    let promoDiscount = 0.0; // 0.15 represents 15% discount
+    let activePromoCode = "";
+
+    // Load initial empty states
+    updateCartUI();
+
+    /**
+     * Add selected product to checkout cart
+     */
+    function addToCart(productId) {
+      const product = catalogData[productId];
+      if (!product) return;
+
+      // Check if item already exists inside shopping cart
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.qty += 1;
+      } else {
+        cart.push({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          qty: 1,
+          desc: product.desc
+        });
+      }
+
+      updateCartUI();
+      triggerMicroAnimation();
+    }
+
+    /**
+     * Remove or decrement items inside checkout cart
+     */
+    function decrementCartItem(productId) {
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.qty -= 1;
+        if (existingItem.qty <= 0) {
+          cart = cart.filter(item => item.id !== productId);
+        }
+      }
+      updateCartUI();
+    }
+
+    /**
+     * Increment cart quantity manually inside checkout list
+     */
+    function incrementCartItem(productId) {
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.qty += 1;
+      }
+      updateCartUI();
+    }
+
+    /**
+     * Remove entire item from cart regardless of quantity
+     */
+    function removeCartItem(productId) {
+      cart = cart.filter(item => item.id !== productId);
+      updateCartUI();
+    }
+
+    /**
+     * Clear all current items in cart
+     */
+    function clearCart() {
+      cart = [];
+      updateCartUI();
+    }
+
+    /**
+     * Apply Promo Code Validation Rule ("BOLT15")
+     */
+    function applyPromoCode() {
+      const couponInput = document.getElementById('coupon-input');
+      const feedback = document.getElementById('coupon-feedback');
+      const discountPctDisplay = document.getElementById('discount-pct');
+      const couponCode = couponInput.value.trim().toUpperCase();
+
+      if (couponCode === "BOLT15") {
+        promoDiscount = 0.15; // 15%
+        activePromoCode = "BOLT15";
+        
+        feedback.classList.remove('hidden', 'text-brand-accent');
+        feedback.classList.add('block', 'text-brand-success');
+        feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> ¡Cupón <strong>BOLT15</strong> aplicado! Obtuviste un 15% de descuento adicional.`;
+        
+        discountPctDisplay.textContent = "15";
+      } else {
+        promoDiscount = 0.0;
+        activePromoCode = "";
+        
+        feedback.classList.remove('hidden', 'text-brand-success');
+        feedback.classList.add('block', 'text-brand-accent');
+        feedback.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Código inválido. Intenta con "BOLT15"`;
+        
+        discountPctDisplay.textContent = "0";
+      }
+
+      updateCartUI();
+    }
+
+    /**
+     * Render the updated values in real-time
+     */
+    function updateCartUI() {
+      const cartWrapper = document.getElementById('cart-items-wrapper');
+      const cartBadge = document.getElementById('cart-badge');
+      const billSubtotal = document.getElementById('bill-subtotal');
+      const billDiscount = document.getElementById('bill-discount');
+      const discountRow = document.getElementById('discount-row');
+      const billTotal = document.getElementById('bill-total');
+
+      // Clear dynamic view first
+      cartWrapper.innerHTML = '';
+
+      // If cart is empty
+      if (cart.length === 0) {
+        cartWrapper.innerHTML = `
+          <div class="py-8 text-center space-y-2">
+            <i class="fa-solid fa-cart-flatbed text-brand-dark/20 text-4xl block"></i>
+            <p class="text-sm font-medium text-brand-dark/50">Tu carrito de compras está vacío</p>
+            <p class="text-xs text-brand-dark/40">¡Añade un pack para desbloquear la energía!</p>
+          </div>
+        `;
+        cartBadge.textContent = "0";
+        billSubtotal.textContent = "S/ 0.00";
+        discountRow.classList.add('hidden');
+        billTotal.textContent = "S/ 0.00";
+        return;
+      }
+
+      // Calculate total item count
+      let totalQty = 0;
+      let calculatedSubtotal = 0.0;
+
+      cart.forEach(item => {
+        totalQty += item.qty;
+        calculatedSubtotal += (item.price * item.qty);
+
+        // Inject active elements representation inside cart view list
+        const itemNode = document.createElement('div');
+        itemNode.className = "flex items-center justify-between gap-4 p-3.5 bg-brand-secondary rounded-2xl border border-brand-primary/5 transition-all duration-300";
+        itemNode.innerHTML = `
+          <div class="space-y-1 flex-grow">
+            <h4 class="font-bold text-sm text-brand-primary leading-tight">${item.name}</h4>
+            <p class="text-[10px] text-brand-dark/60 font-light truncate max-w-[180px]">${item.desc}</p>
+            <div class="flex items-center space-x-1 font-sans font-extrabold text-brand-accent text-xs">
+              <span>S/ ${(item.price * item.qty).toFixed(2)}</span>
+            </div>
+          </div>
+
+          <!-- Quantity adjustments and deletion -->
+          <div class="flex items-center space-x-2.5">
+            <div class="flex items-center bg-brand-light rounded-lg border border-brand-primary/15 overflow-hidden">
+              <button onclick="decrementCartItem(${item.id})" class="px-2 py-1 text-xs font-bold text-brand-dark/60 hover:bg-brand-primary/5 hover:text-brand-primary transition-colors focus:outline-none">-</button>
+              <span class="px-2 py-1 text-xs font-bold text-brand-dark select-none">${item.qty}</span>
+              <button onclick="incrementCartItem(${item.id})" class="px-2 py-1 text-xs font-bold text-brand-dark/60 hover:bg-brand-primary/5 hover:text-brand-primary transition-colors focus:outline-none">+</button>
+            </div>
+            <button onclick="removeCartItem(${item.id})" class="text-brand-dark/40 hover:text-brand-accent transition-colors duration-200 focus:outline-none">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+        `;
+        cartWrapper.appendChild(itemNode);
+      });
+
+      // Compute pricing metrics
+      cartBadge.textContent = totalQty;
+      billSubtotal.textContent = `S/ ${calculatedSubtotal.toFixed(2)}`;
+
+      if (promoDiscount > 0) {
+        const discountVal = calculatedSubtotal * promoDiscount;
+        billDiscount.textContent = `- S/ ${discountVal.toFixed(2)}`;
+        discountRow.classList.remove('hidden');
+        discountRow.classList.add('flex');
+        
+        const finalTotalVal = calculatedSubtotal - discountVal;
+        billTotal.textContent = `S/ ${finalTotalVal.toFixed(2)}`;
+      } else {
+        discountRow.classList.add('hidden');
+        discountRow.classList.remove('flex');
+        billTotal.textContent = `S/ ${calculatedSubtotal.toFixed(2)}`;
+      }
+    }
+
+    /**
+     * Add a delightful micro interaction badge animation to let the customer know the item was added
+     */
+    function triggerMicroAnimation() {
+      const badge = document.getElementById('cart-badge');
+      badge.classList.remove('scale-90');
+      badge.classList.add('scale-125', 'bg-brand-accentGold');
+      setTimeout(() => {
+        badge.classList.remove('scale-125', 'bg-brand-accentGold');
+        badge.classList.add('scale-90');
+      }, 300);
+    }
+
+    /**
+     * Opens the checkout completion confirmation modal
+     */
+    function triggerOrderCheckout() {
+      if (cart.length === 0) {
+        const feedback = document.getElementById('coupon-feedback');
+        feedback.classList.remove('hidden', 'text-brand-success');
+        feedback.classList.add('block', 'text-brand-accent');
+        feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Por favor, añade al menos un producto a tu carrito.`;
+        return;
+      }
+
+      const modal = document.getElementById('checkout-modal');
+      const modalTotalDisplay = document.getElementById('modal-final-total');
+      const opDisplay = document.getElementById('modal-op-number');
+      const currentTotal = document.getElementById('bill-total').textContent;
+
+      // Generate a dynamic mock transaction tracking code
+      const randomOrderNumber = Math.floor(1000 + Math.random() * 9000);
+      opDisplay.textContent = `#PK-2026-${randomOrderNumber}`;
+      modalTotalDisplay.textContent = currentTotal;
+
+      modal.classList.remove('hidden');
+    }
+
+    /**
+     * Closes checkout modal and resets shopping state smoothly
+     */
+    function closeCheckoutModal() {
+      const modal = document.getElementById('checkout-modal');
+      modal.classList.add('hidden');
+      clearCart();
+    }
+  </script>
+</body>
+</html>

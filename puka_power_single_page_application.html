@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puka Power | Energía Ancestral Peruana</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#7B1113',     // Rojo Vino Oscuro
+              secondary: '#FFF9F2',   // Crema/Beige de fondo
+              accent: '#D9534F',      // Naranja Ladrillo
+              success: '#2E7D32',     // Verde Oscuro
+              accentGold: '#B8860B',  // Dorado Oscuro
+              dark: '#2C1A14',        // Marrón Café Oscuro
+              light: '#FDFBF7'        // Blanco Hueso
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['"Montserrat"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @keyframes custom-pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.7);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 15px rgba(217, 83, 79, 0);
+      }
+    }
+    .animate-pulse-btn {
+      animation: custom-pulse 2s infinite ease-in-out;
+    }
+    @keyframes subtle-pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px 0 rgba(217, 83, 79, 0.4);
+      }
+      50% {
+        transform: scale(1.02);
+        box-shadow: 0 4px 25px 0 rgba(217, 83, 79, 0.6);
+      }
+    }
+    .animate-btn-pulse {
+      animation: subtle-pulse 2.5s infinite ease-in-out;
+    }
+    .scrollbar-hidden::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hidden {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .bg-wine-gradient {
+      background: linear-gradient(135deg, #7B1113 0%, #4A0507 100%);
+    }
+  </style>
+</head>
+<body class="bg-brand-secondary text-brand-dark font-sans overflow-x-hidden antialiased flex flex-col min-h-screen">
+
+  <!-- ========================================================================= -->
+  <!-- VISTA 1: LANDING PAGE DE CONVERSIÓN (#inicio) -->
+  <!-- ========================================================================= -->
+  <div id="view-landing" class="block">
+    
+    <!-- Navigation Header -->
+    <header id="landing-header" class="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-brand-secondary/95 backdrop-blur-md border-b border-brand-primary/10 py-4">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        
+        <!-- Logo -->
+        <a href="#inicio" class="flex items-center space-x-2 focus:outline-none">
+          <span class="font-serif text-2xl sm:text-3xl font-extrabold tracking-wider text-brand-primary">PUKA POWER</span>
+          <span class="w-2.5 h-2.5 bg-brand-accent rounded-full animate-ping"></span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex space-x-8 items-center font-medium text-sm tracking-wide text-brand-dark">
+          <a href="#beneficios" class="hover:text-brand-primary transition-colors duration-200">Beneficios</a>
+          <a href="#ingredientes" class="hover:text-brand-primary transition-colors duration-200">Ingredientes</a>
+          <a href="#testimonios" class="hover:text-brand-primary transition-colors duration-200">Testimonios</a>
+          <a href="#tienda" class="hover:text-brand-primary transition-colors duration-200 font-bold text-brand-accent">Ir a Tienda ⚡</a>
+        </nav>
+
+        <!-- Desktop CTA Button -->
+        <div class="hidden md:flex items-center">
+          <a href="#tienda" class="px-6 py-2.5 bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-full hover:bg-brand-accentGold transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-brand-accent/20">
+            Comprar Ahora
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button id="menu-btn" class="md:hidden flex flex-col justify-between w-6 h-4 text-brand-primary focus:outline-none" aria-label="Abrir Menú">
+          <span class="w-full h-0.5 bg-brand-primary transition-all duration-300 origin-left" id="line1"></span>
+          <span class="w-full h-0.5 bg-brand-primary transition-all duration-300" id="line2"></span>
+          <span class="w-full h-0.5 bg-brand-primary transition-all duration-300 origin-left" id="line3"></span>
+        </button>
+
+      </div>
+
+      <!-- Mobile Navigation Drawer -->
+      <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-brand-secondary/98 border-b border-brand-primary/10 shadow-xl transition-all duration-300">
+        <nav class="flex flex-col space-y-4 px-6 py-8 font-medium text-lg text-brand-dark">
+          <a href="#beneficios" class="mobile-link hover:text-brand-primary transition-colors">Beneficios</a>
+          <a href="#ingredientes" class="mobile-link hover:text-brand-primary transition-colors">Ingredientes</a>
+          <a href="#testimonios" class="mobile-link hover:text-brand-primary transition-colors">Testimonios</a>
+          <a href="#tienda" class="mobile-link hover:text-brand-accent transition-colors font-bold text-brand-accent">Ver Tienda 🛒</a>
+          <a href="#tienda" class="mobile-link w-full text-center py-3 bg-brand-accent text-brand-light font-bold text-sm uppercase tracking-widest rounded-lg shadow-lg hover:bg-brand-accentGold">
+            Comprar Ahora
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative pt-28 pb-16 lg:pt-36 lg:pb-24 min-h-screen flex items-center overflow-hidden">
+      <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-primary/5 blur-3xl"></div>
+      <div class="absolute top-1/2 right-0 w-96 h-96 rounded-full bg-brand-accent/5 blur-3xl"></div>
+      
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          
+          <!-- Hero Text (Left) -->
+          <div class="lg:col-span-7 text-center lg:text-left space-y-6">
+            <div class="inline-flex items-center space-x-2 bg-brand-primary/10 text-brand-primary px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
+              <span>⚡ Energía Ancestral de Origen Peruano</span>
+            </div>
+            
+            <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-primary leading-none">
+              Para ser el mejor, elige <span class="text-brand-accent">Puka Power</span>.
+            </h1>
+            
+            <p class="text-lg sm:text-xl text-brand-dark/80 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              El poder del rayo, ahora natural. Energía sostenida a base de <span class="font-bold text-brand-primary">cáscara de café, camu camu y maca andina</span>. Sin químicos, sin bajones.
+            </p>
+
+            <div class="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <a href="#tienda" class="animate-pulse-btn w-full sm:w-auto px-8 py-4 bg-brand-accent text-brand-light font-extrabold text-sm uppercase tracking-widest rounded-full hover:bg-brand-accentGold transition-all duration-300 text-center shadow-2xl shadow-brand-accent/40">
+                Acepta el Reto de 3 Días
+              </a>
+              <a href="#beneficios" class="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-brand-primary/20 text-brand-primary font-bold text-sm uppercase tracking-widest rounded-full hover:bg-brand-primary hover:text-brand-light hover:border-brand-primary transition-all duration-300 text-center">
+                Saber Más
+              </a>
+            </div>
+
+            <!-- Trust highlights -->
+            <div class="pt-8 border-t border-brand-primary/10 grid grid-cols-3 gap-4 text-center lg:text-left">
+              <div>
+                <p class="font-serif text-3xl font-extrabold text-brand-primary">100%</p>
+                <p class="text-xs font-semibold text-brand-dark/60 uppercase">Ingredientes Reales</p>
+              </div>
+              <div>
+                <p class="font-serif text-3xl font-extrabold text-brand-primary">0%</p>
+                <p class="text-xs font-semibold text-brand-dark/60 uppercase">Azúcar Añadida</p>
+              </div>
+              <div>
+                <p class="font-serif text-3xl font-extrabold text-brand-primary">24h</p>
+                <p class="text-xs font-semibold text-brand-dark/60 uppercase">Foco y Claridad</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Image Mockup (Right) -->
+          <div class="lg:col-span-5 flex justify-center relative">
+            <div class="absolute inset-0 bg-gradient-to-tr from-brand-accent/20 to-brand-accentGold/20 rounded-full blur-3xl transform scale-75 -z-10 animate-pulse"></div>
+            
+            <div class="relative w-full max-w-[340px] sm:max-w-[400px]">
+              <div class="absolute -top-4 -right-4 bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest px-4 py-2.5 rounded-lg shadow-xl z-20 transform rotate-12">
+                Envío Gratis hoy 🇵🇪
+              </div>
+
+              <div class="relative bg-gradient-to-b from-brand-primary/10 to-brand-primary/25 p-8 rounded-3xl border border-brand-light/30 backdrop-blur-sm overflow-hidden flex flex-col items-center">
+                <div class="w-48 h-80 relative flex items-center justify-center transform hover:scale-105 transition-transform duration-500 cursor-pointer">
+                  <div class="absolute inset-0 bg-gradient-to-r from-red-800 via-brand-primary to-red-950 rounded-[40px] shadow-2xl border-t border-brand-light/40 overflow-hidden">
+                    <div class="absolute top-0 bottom-0 left-0 w-8 bg-gradient-to-r from-white/20 to-transparent"></div>
+                    <div class="absolute top-0 bottom-0 right-0 w-6 bg-gradient-to-l from-black/40 to-transparent"></div>
+                    
+                    <div class="absolute inset-0 flex flex-col justify-between py-8 px-4 text-center select-none">
+                      <span class="text-[10px] tracking-widest font-bold text-brand-light/60 uppercase">Hecho en Perú</span>
+                      <div class="flex flex-col items-center">
+                        <svg class="w-12 h-12 text-brand-accentGold fill-current drop-shadow-[0_4px_10px_rgba(184,134,11,0.5)] animate-bounce" viewBox="0 0 24 24">
+                          <path d="M19 11h-6V3l-9 10h6v8l9-10z" />
+                        </svg>
+                        <h3 class="font-serif text-xl sm:text-2xl font-black text-brand-light tracking-wide mt-2">PUKA</h3>
+                        <p class="text-[9px] tracking-[0.4em] font-extrabold text-brand-accent uppercase -mt-1">POWER</p>
+                      </div>
+                      <div class="space-y-1">
+                        <p class="text-[8px] text-brand-light/80 uppercase font-bold tracking-widest">Maca · Camu Camu · Café</p>
+                        <div class="w-12 h-0.5 bg-brand-accentGold mx-auto"></div>
+                        <p class="text-[7px] text-brand-light/50 tracking-wide uppercase">Contenido Neto 355 ml</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="w-40 h-5 bg-black/30 rounded-full blur-md mt-6"></div>
+              </div>
+              
+              <div class="absolute -bottom-6 -left-6 bg-brand-light p-4 rounded-2xl shadow-xl flex items-center space-x-3 border border-brand-primary/10">
+                <span class="flex h-3 w-3 relative">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <p class="text-xs font-bold text-brand-dark">982 personas lo han probado hoy</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Social Proof Section -->
+    <section class="py-20 bg-brand-primary text-brand-light relative overflow-hidden">
+      <div class="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#FFF9F2_1px,transparent_1px)] [background-size:16px_16px]"></div>
+      
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div class="lg:col-span-5 relative">
+            <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-brand-accentGold/50 aspect-video lg:aspect-square">
+              <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" 
+                   alt="Atleta entrenando con intensidad para validar la energía natural" 
+                   class="w-full h-full object-cover filter brightness-75 hover:scale-105 transition-all duration-700">
+              <div class="absolute bottom-4 left-4 right-4 bg-brand-dark/80 backdrop-blur-md p-4 rounded-xl border border-brand-light/10">
+                <p class="font-serif text-lg font-bold italic text-brand-light">"La energía limpia no se negocia. Sentí el enfoque desde el primer día."</p>
+                <p class="text-xs text-brand-accent uppercase tracking-wider font-extrabold mt-2">— Alejandro Guerrero, Campeón de Trail Running</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-6">
+            <span class="text-brand-accentGold font-extrabold text-sm uppercase tracking-widest">Respaldo Deportivo Real</span>
+            <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
+              VALIDADO POR LA LEYENDA.<br>ENERGÍA QUE SÍ RINDE.
+            </h2>
+            <div class="w-20 h-1 bg-brand-accent"></div>
+            <p class="text-base sm:text-lg text-brand-light/90 leading-relaxed font-light">
+              La energía real no necesita de químicos sintéticos, ni de taurinas artificiales creadas en laboratorios. Puka Power aprovecha el poder natural de los superalimentos peruanos para trabajar <span class="font-semibold text-brand-accentGold">con tu cuerpo, no en su contra</span>.
+            </p>
+            <p class="text-base sm:text-lg text-brand-light/90 leading-relaxed font-light">
+              Diseñado para deportistas de alto rendimiento, estudiantes comprometidos y profesionales imparables que buscan mantener un enfoque agudo y resistencia pura sin el bajón o 'crash' de las bebidas tradicionales.
+            </p>
+            
+            <div class="pt-4">
+              <a href="#tienda" class="inline-flex items-center space-x-3 text-brand-accentGold hover:text-brand-light font-bold text-sm uppercase tracking-widest transition-colors duration-200">
+                <span>Únete al desafío de rendimiento</span>
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Ingredients and Benefits Section -->
+    <section id="beneficios" class="py-20 bg-brand-secondary scroll-mt-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+          <span class="text-brand-accent font-extrabold text-xs uppercase tracking-widest">¿Por qué elegir natural?</span>
+          <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brand-primary">
+            El problema no es la energía, es cómo la obtienes.
+          </h2>
+          <p class="text-base sm:text-lg text-brand-dark/70 font-medium">
+            Dile adiós a las taquicardias y los bajones bruscos de azúcar. Nuestra fórmula inteligente está optimizada para el cerebro y el cuerpo.
+          </p>
+          <div class="w-16 h-1 bg-brand-accent mx-auto mt-4"></div>
+        </div>
+
+        <!-- Grid Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          <!-- Card 1 -->
+          <div class="bg-brand-light p-8 rounded-3xl border border-brand-primary/5 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col justify-between">
+            <div class="space-y-6">
+              <div class="w-14 h-14 bg-brand-accent/10 rounded-2xl flex items-center justify-center text-brand-accent">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                </svg>
+              </div>
+              <div class="space-y-3">
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-brand-primary">100% Ingredientes Reales</h3>
+                <p class="text-sm sm:text-base text-brand-dark/85 leading-relaxed font-light">
+                  Sin conservadores agresivos, sin colorantes artificiales ni azúcar refinada añadida. Endulzado naturalmente con néctares de fruta que mantienen un índice glucémico controlado.
+                </p>
+              </div>
+            </div>
+            <div class="pt-6 border-t border-brand-primary/5 mt-6">
+              <span class="text-xs font-semibold text-brand-accent uppercase tracking-wider">Libre de transgénicos</span>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="bg-brand-light p-8 rounded-3xl border border-brand-primary/5 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col justify-between">
+            <div class="space-y-6">
+              <div class="w-14 h-14 bg-brand-accent/10 rounded-2xl flex items-center justify-center text-brand-accent">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div class="space-y-3">
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-brand-primary">Energía Sin Bajones</h3>
+                <p class="text-sm sm:text-base text-brand-dark/85 leading-relaxed font-light">
+                  Olvídate del repentino colapso. La liberación lenta de cafeína proveniente de la cáscara de café proporciona un rendimiento lineal de hasta 6 horas consecutivas para tu estudio o trabajo.
+                </p>
+              </div>
+            </div>
+            <div class="pt-6 border-t border-brand-primary/5 mt-6">
+              <span class="text-xs font-semibold text-brand-accent uppercase tracking-wider">Sin efecto rebote</span>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="bg-brand-light p-8 rounded-3xl border border-brand-primary/5 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col justify-between">
+            <div class="space-y-6">
+              <div class="w-14 h-14 bg-brand-accent/10 rounded-2xl flex items-center justify-center text-brand-accent">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                </svg>
+              </div>
+              <div class="space-y-3">
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-brand-primary">Amazonía y Andes</h3>
+                <p class="text-sm sm:text-base text-brand-dark/85 leading-relaxed font-light">
+                  Nutrición ancestral de verdad. Extraído de forma directa y sostenible gracias a comunidades locales peruanas que cultivan el Camu Camu de la Amazonía y la Maca andina de los Andes.
+                </p>
+              </div>
+            </div>
+            <div class="pt-6 border-t border-brand-primary/5 mt-6">
+              <span class="text-xs font-semibold text-brand-accent uppercase tracking-wider">Comercio Justo Local</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Interactive Detail Selector -->
+        <div id="ingredientes" class="mt-20 scroll-mt-24 bg-brand-primary/5 rounded-3xl p-6 sm:p-10 border border-brand-primary/10">
+          <h3 class="font-serif text-2xl sm:text-3xl font-extrabold text-brand-primary text-center mb-8">Nuestros 3 Ingredientes Sagrados</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Ingredient 1 -->
+            <div class="bg-brand-light p-6 rounded-2xl border border-brand-primary/10 hover:border-brand-accent transition-colors cursor-pointer group" onclick="selectIngredient(1)">
+              <div class="flex items-center space-x-3 mb-3">
+                <span class="w-8 h-8 rounded-full bg-brand-primary text-brand-light flex items-center justify-center font-bold text-sm">1</span>
+                <h4 class="font-serif text-lg font-bold text-brand-primary group-hover:text-brand-accent transition-colors">Cáscara de Café</h4>
+              </div>
+              <p class="text-sm text-brand-dark/80">
+                Antioxidante supremo que provee cafeína limpia y promueve la regeneración celular. Menor acidez para cuidar tu estómago.
+              </p>
+            </div>
+            
+            <!-- Ingredient 2 -->
+            <div class="bg-brand-light p-6 rounded-2xl border border-brand-primary/10 hover:border-brand-accent transition-colors cursor-pointer group" onclick="selectIngredient(2)">
+              <div class="flex items-center space-x-3 mb-3">
+                <span class="w-8 h-8 rounded-full bg-brand-primary text-brand-light flex items-center justify-center font-bold text-sm">2</span>
+                <h4 class="font-serif text-lg font-bold text-brand-primary group-hover:text-brand-accent transition-colors">Camu Camu Peruano</h4>
+              </div>
+              <p class="text-sm text-brand-dark/80">
+                La mayor fuente de Vitamina C natural en el planeta. Fortalece tus defensas al mismo tiempo que te reactivas mentalmente.
+              </p>
+            </div>
+
+            <!-- Ingredient 3 -->
+            <div class="bg-brand-light p-6 rounded-2xl border border-brand-primary/10 hover:border-brand-accent transition-colors cursor-pointer group" onclick="selectIngredient(3)">
+              <div class="flex items-center space-x-3 mb-3">
+                <span class="w-8 h-8 rounded-full bg-brand-primary text-brand-light flex items-center justify-center font-bold text-sm">3</span>
+                <h4 class="font-serif text-lg font-bold text-brand-primary group-hover:text-brand-accent transition-colors">Maca Negra Andina</h4>
+              </div>
+              <p class="text-sm text-brand-dark/80">
+                Súper adaptógeno milenario de los Andes. Regula el estrés y mejora sustancialmente la claridad cognitiva y el vigor muscular.
+              </p>
+            </div>
+          </div>
+
+          <div id="ingredient-detail-box" class="mt-8 bg-brand-primary text-brand-light p-6 rounded-2xl hidden transition-all duration-300">
+            <h5 id="detail-title" class="font-serif text-lg sm:text-xl font-bold text-brand-accentGold mb-2"></h5>
+            <p id="detail-text" class="text-sm sm:text-base leading-relaxed"></p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonios" class="py-20 bg-brand-light scroll-mt-24 border-t border-brand-primary/5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
+          <span class="text-brand-accent font-extrabold text-xs uppercase tracking-widest">Opinión de la Comunidad</span>
+          <h2 class="font-serif text-3xl sm:text-4xl font-extrabold text-brand-primary">
+            Lo que dicen quienes ya se unieron al cambio
+          </h2>
+          <div class="w-16 h-1 bg-brand-accent mx-auto"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          <!-- Testimonial 1 -->
+          <div class="bg-brand-secondary p-8 rounded-2xl border border-brand-primary/5 relative flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex space-x-1 text-brand-accentGold">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <p class="text-sm sm:text-base text-brand-dark/90 italic">
+                "Soy programador y solía tomar de dos a tres tazas de café al día, lo que me causaba reflujo. Cambié a Puka Power y ahora mantengo un enfoque absoluto sin dolor estomacal. ¡Excelente sabor!"
+              </p>
+            </div>
+            <div class="flex items-center space-x-4 pt-6 border-t border-brand-primary/10 mt-6">
+              <div class="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center font-bold text-brand-primary">M</div>
+              <div>
+                <p class="text-sm font-bold text-brand-primary">Mauricio V.</p>
+                <p class="text-[10px] text-brand-dark/60 uppercase">Desarrollador de Software</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 2 -->
+          <div class="bg-brand-secondary p-8 rounded-2xl border border-brand-primary/5 relative flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex space-x-1 text-brand-accentGold">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <p class="text-sm sm:text-base text-brand-dark/90 italic">
+                "Para mis entrenamientos diarios de Crossfit buscaba una alternativa limpia. Puka me da la fuerza del Camu Camu y no sufro la deshidratación común de otros pre-entrenos químicos."
+              </p>
+            </div>
+            <div class="flex items-center space-x-4 pt-6 border-t border-brand-primary/10 mt-6">
+              <div class="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center font-bold text-brand-primary">C</div>
+              <div>
+                <p class="text-sm font-bold text-brand-primary">Camila R.</p>
+                <p class="text-[10px] text-brand-dark/60 uppercase">Entrenadora & Atleta</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 3 -->
+          <div class="bg-brand-secondary p-8 rounded-2xl border border-brand-primary/5 relative flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex space-x-1 text-brand-accentGold">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <p class="text-sm sm:text-base text-brand-dark/90 italic">
+                "Como estudiante de medicina mis horarios son de locura. Puka Power me ayuda a mantenerme alerta y con energía para las guardias nocturnas. Me encanta que apoyen a agricultores locales."
+              </p>
+            </div>
+            <div class="flex items-center space-x-4 pt-6 border-t border-brand-primary/10 mt-6">
+              <div class="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center font-bold text-brand-primary">D</div>
+              <div>
+                <p class="text-sm font-bold text-brand-primary">Daniel F.</p>
+                <p class="text-[10px] text-brand-dark/60 uppercase">Estudiante de Medicina</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Action / Quick Checkout Form (Landing) -->
+    <section class="py-20 bg-wine-gradient text-brand-light relative overflow-hidden">
+      <div class="absolute inset-0 bg-radial-gradient from-transparent to-brand-primary opacity-50 pointer-events-none"></div>
+      
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+          <span class="text-brand-accentGold font-extrabold text-sm uppercase tracking-widest animate-pulse">⚡ Oferta Exclusiva de Lanzamiento</span>
+          <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">EMPIEZA TU CAMBIO AHORA</h2>
+          <p class="text-brand-light/80 text-base sm:text-lg font-light">
+            Únete a los miles de peruanos que ya desbloquearon su verdadero potencial. Deja tus datos para una asesoría directa o haz clic en Comprar.
+          </p>
+          <div class="w-16 h-1 bg-brand-accentGold mx-auto"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <!-- Fast Checkout / Lead Form -->
+          <div class="lg:col-span-7 bg-brand-light text-brand-dark p-6 sm:p-10 rounded-3xl shadow-2xl border border-brand-light/20 relative">
+            <h3 class="font-serif text-2xl font-bold text-brand-primary mb-2">Completar Pedido Rápido</h3>
+            <p class="text-xs text-brand-dark/60 uppercase font-bold tracking-wider mb-6">🔒 Pago y envío seguro contra entrega</p>
+            
+            <form id="checkout-form" class="space-y-6" onsubmit="handleFormSubmit(event)">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label for="name" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/70 mb-2">Nombre Completo</label>
+                  <input type="text" id="name" required placeholder="Ej. Juan Pérez" 
+                         class="w-full px-4 py-3 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all duration-200">
+                </div>
+                <div>
+                  <label for="email" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/70 mb-2">Correo Electrónico</label>
+                  <input type="email" id="email" required placeholder="Ej. juan@correo.com" 
+                         class="w-full px-4 py-3 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all duration-200">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label for="phone" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/70 mb-2">Celular / WhatsApp</label>
+                  <input type="tel" id="phone" required placeholder="Ej. 987654321" 
+                         class="w-full px-4 py-3 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all duration-200">
+                </div>
+                <div>
+                  <label for="department" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/70 mb-2">Departamento de Envío</label>
+                  <select id="department" required class="w-full px-4 py-3 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all duration-200">
+                    <option value="lima">Lima & Callao (Envío Gratis)</option>
+                    <option value="arequipa">Arequipa</option>
+                    <option value="cusco">Cusco</option>
+                    <option value="trujillo">La Libertad</option>
+                    <option value="provincia">Otros Departamentos</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-brand-dark/70 mb-3">Elige tu Pack de Energía</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label class="relative flex p-4 bg-brand-secondary rounded-xl border border-brand-primary/20 cursor-pointer hover:bg-brand-primary/5 transition-all">
+                    <input type="radio" name="product_pack" value="reto3dias" checked class="mt-1 h-4 w-4 text-brand-accent border-gray-300 focus:ring-brand-accent">
+                    <span class="ml-3 flex flex-col">
+                      <span class="block text-sm font-bold text-brand-primary">Pack Reto (3 latas)</span>
+                      <span class="block text-xs text-brand-dark/60">Prueba y convéncete</span>
+                      <span class="block text-sm font-extrabold text-brand-accent mt-1">S/ 24.90</span>
+                    </span>
+                  </label>
+                  
+                  <label class="relative flex p-4 bg-brand-secondary rounded-xl border-2 border-brand-accentGold/60 cursor-pointer hover:bg-brand-primary/5 transition-all">
+                    <input type="radio" name="product_pack" value="packpro" class="mt-1 h-4 w-4 text-brand-accent border-gray-300 focus:ring-brand-accent">
+                    <span class="ml-3 flex flex-col">
+                      <span class="block text-sm font-bold text-brand-primary flex items-center">
+                        Pack Pro (12 latas) 
+                        <span class="ml-2 bg-brand-accent text-brand-light text-[8px] uppercase tracking-wide px-1.5 py-0.5 rounded">Mejor Valor</span>
+                      </span>
+                      <span class="block text-xs text-brand-dark/60">Energía para el mes</span>
+                      <span class="block text-sm font-extrabold text-brand-accent mt-1">S/ 79.90</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <button type="submit" class="w-full py-4 bg-brand-accent text-brand-light font-extrabold text-sm uppercase tracking-widest rounded-xl hover:bg-brand-accentGold transition-all duration-300 transform hover:-translate-y-0.5 shadow-xl shadow-brand-accent/20">
+                Finalizar Compra Segura
+              </button>
+            </form>
+
+            <div id="form-feedback" class="hidden mt-4 p-4 rounded-xl text-center font-bold text-sm"></div>
+          </div>
+
+          <!-- QR Code Promo (Right) -->
+          <div class="lg:col-span-5 flex flex-col items-center text-center space-y-6">
+            <div class="bg-brand-light/10 p-8 rounded-3xl border border-brand-light/20 backdrop-blur-md w-full max-w-sm flex flex-col items-center">
+              <h4 class="font-serif text-xl font-bold text-brand-accentGold mb-2">¿Prefieres comprar con QR?</h4>
+              <p class="text-sm text-brand-light/80 mb-6">Escanea con Yape, Plin o tu banca móvil para obtener 15% de descuento directo en tu primer pedido.</p>
+              
+              <!-- QR Visual Representation -->
+              <div class="bg-brand-light p-4 rounded-2xl shadow-xl w-48 h-48 flex items-center justify-center relative">
+                <div class="w-40 h-40 grid grid-cols-5 gap-2 relative">
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-accent rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-secondary rounded-sm w-full h-full"></div>
+                  <div class="bg-brand-primary rounded-sm w-full h-full"></div>
+                  
+                  <div class="absolute inset-0 m-auto w-12 h-12 bg-brand-light rounded-xl border border-brand-accent flex items-center justify-center shadow-lg">
+                    <span class="font-serif text-[10px] font-black text-brand-primary">PUKA</span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-xs text-brand-light/60 font-bold mt-4 uppercase tracking-widest">Código: PUKAPOWER15</p>
+            </div>
+
+            <!-- Trust badges -->
+            <div class="grid grid-cols-2 gap-4 w-full">
+              <div class="flex items-center justify-center space-x-2 bg-brand-light/5 py-3 px-4 rounded-xl">
+                <svg class="w-5 h-5 text-brand-accentGold fill-current" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+                <span class="text-xs font-semibold uppercase tracking-wider">Pago Seguro</span>
+              </div>
+              <div class="flex items-center justify-center space-x-2 bg-brand-light/5 py-3 px-4 rounded-xl">
+                <svg class="w-5 h-5 text-brand-accentGold fill-current" viewBox="0 0 24 24">
+                  <path d="M20 8l-6-6H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8zm-2 12H6V4h7v5h5v11z"/>
+                </svg>
+                <span class="text-xs font-semibold uppercase tracking-wider">Boleta / Factura</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Landing Footer -->
+    <footer class="bg-brand-dark text-brand-light py-12 relative border-t border-brand-primary/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          
+          <div class="space-y-4 col-span-1 md:col-span-2">
+            <span class="font-serif text-2xl font-black text-brand-light tracking-widest">PUKA POWER</span>
+            <p class="text-sm text-brand-light/60 font-light leading-relaxed max-w-sm">
+              Nuestra misión es empoderar a cada peruano a conquistar sus metas con energía pura proveniente de la biodiversidad de nuestra tierra.
+            </p>
+            <div class="flex space-x-4 pt-2">
+              <a href="#" class="hover:text-brand-accent transition-colors" aria-label="Facebook">
+                <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                  <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+                </svg>
+              </a>
+              <a href="#" class="hover:text-brand-accent transition-colors" aria-label="Instagram">
+                <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="font-serif text-sm font-bold uppercase tracking-widest text-brand-accentGold mb-4">La Compañía</h4>
+            <ul class="space-y-2 text-sm text-brand-light/75">
+              <li><a href="#beneficios" class="hover:text-brand-accent transition-colors">Sobre Nosotros</a></li>
+              <li><a href="#ingredientes" class="hover:text-brand-accent transition-colors">Sostenibilidad</a></li>
+              <li><a href="#tienda" class="hover:text-brand-accent transition-colors">Comprar</a></li>
+              <li><a href="#" class="hover:text-brand-accent transition-colors">Puntos de Venta</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="font-serif text-sm font-bold uppercase tracking-widest text-brand-accentGold mb-4">Soporte y Legal</h4>
+            <ul class="space-y-2 text-sm text-brand-light/75">
+              <li><a href="#" class="hover:text-brand-accent transition-colors">Términos y Condiciones</a></li>
+              <li><a href="#" class="hover:text-brand-accent transition-colors">Políticas de Privacidad</a></li>
+              <li><a href="#" class="hover:text-brand-accent transition-colors">Libro de Reclamaciones</a></li>
+              <li><a href="#" class="hover:text-brand-accent transition-colors">Preguntas Frecuentes</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="border-t border-brand-light/10 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-light/50">
+          <p>© 2026 Puka Power. Todos los derechos reservados.</p>
+          <p class="mt-2 sm:mt-0 flex items-center">
+            Hecho con <span class="text-brand-accent mx-1">♥</span> en Lima, Perú.
+          </p>
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- VISTA 2: TIENDA / CHECKOUT DIRECT-TO-CONSUMER (#tienda) -->
+  <!-- ========================================================================= -->
+  <div id="view-ecommerce" class="hidden min-h-screen flex flex-col">
+
+    <!-- Header (Frictionless checkout navigation) -->
+    <header class="sticky top-0 z-50 bg-brand-secondary/95 backdrop-blur-md border-b border-brand-primary/10 py-4 transition-all duration-300">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        
+        <!-- Logo and Back Navigation -->
+        <div class="flex items-center space-x-6">
+          <a href="#inicio" class="hidden sm:flex items-center text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-colors">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Volver al inicio
+          </a>
+          <a href="#tienda" class="flex items-center space-x-2">
+            <span class="font-serif text-2xl sm:text-3xl font-extrabold tracking-wider text-brand-primary">PUKA POWER</span>
+            <span class="text-xs bg-brand-accent/15 text-brand-accent font-bold px-2 py-0.5 rounded-full hidden md:inline-block">TIENDA</span>
+          </a>
+        </div>
+
+        <!-- Navigation & Cart Icon Trigger -->
+        <div class="flex items-center space-x-4">
+          <a href="#inicio" class="sm:hidden text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-colors">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+          </a>
+          
+          <!-- Cart Badge Icon -->
+          <a href="#summary-card" class="relative p-2.5 bg-brand-primary/5 rounded-full hover:bg-brand-primary/10 transition-colors duration-200">
+            <i class="fa-solid fa-shopping-cart text-brand-primary text-lg"></i>
+            <span id="cart-badge" class="absolute -top-1 -right-1 bg-brand-accent text-brand-light text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-brand-secondary transform scale-90 transition-transform duration-300">0</span>
+          </a>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Title Section (Hero Simple) -->
+    <section class="py-10 bg-brand-secondary border-b border-brand-primary/5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
+        <span class="text-brand-accent font-extrabold text-xs uppercase tracking-widest">⚡ Desbloquea tu potencial</span>
+        <h1 class="font-serif text-4xl sm:text-5xl font-extrabold text-brand-primary">Elige tu Energía</h1>
+        <p class="text-sm sm:text-base text-brand-dark/70 font-medium max-w-xl mx-auto">
+          Ahorra más, rinde más. Selecciona tu pack ideal elaborado con súper alimentos del Perú.
+        </p>
+        <div class="w-12 h-1 bg-brand-accent mx-auto mt-2"></div>
+      </div>
+    </section>
+
+    <!-- Main E-Commerce Layout -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        
+        <!-- COLUMN LEFT: PRODUCT CATALOGUE (65%) -->
+        <section class="lg:col-span-7 space-y-6">
+          <h2 class="text-xs uppercase tracking-widest font-extrabold text-brand-dark/60 mb-2">Selecciona un Pack de Energía</h2>
+
+          <!-- Product Card 1 -->
+          <div class="bg-brand-light p-6 rounded-3xl border border-brand-primary/5 shadow-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 hover:shadow-xl transition-all duration-300">
+            <div class="flex flex-col sm:flex-row items-center gap-6 w-full">
+              <!-- Icon/Visual Frame -->
+              <div class="w-32 h-32 bg-gradient-to-b from-brand-primary/10 to-brand-primary/25 rounded-2xl flex items-center justify-center shrink-0 border border-brand-primary/10 relative overflow-hidden select-none">
+                <div class="w-14 h-24 bg-gradient-to-r from-red-800 to-red-950 rounded-2xl shadow-lg relative flex flex-col justify-between py-2 px-1 text-center">
+                  <i class="fa-solid fa-bolt text-brand-accentGold text-xs animate-pulse"></i>
+                  <span class="text-[7px] text-brand-light font-black tracking-tighter">PUKA 3x</span>
+                  <span class="text-[6px] text-brand-light/60">355ML</span>
+                </div>
+              </div>
+
+              <!-- Product details -->
+              <div class="space-y-2 text-center sm:text-left">
+                <h3 class="font-serif text-xl font-bold text-brand-primary">Reto Puka - 3 Días</h3>
+                <p class="text-xs sm:text-sm text-brand-dark/70 font-light">
+                  Ideal para probar el poder natural. Experimenta la claridad mental y el enfoque sin bajones.
+                </p>
+                <div class="flex items-center justify-center sm:justify-start space-x-3 pt-1">
+                  <span class="font-sans text-xl font-extrabold text-brand-accent">S/ 24.00</span>
+                  <span class="text-xs text-brand-dark/50">(S/ 8.00 por lata)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action block -->
+            <div class="flex sm:flex-col justify-center sm:justify-between items-center shrink-0 gap-4 w-full sm:w-auto">
+              <button onclick="addToCart(1)" class="w-full sm:w-auto px-6 py-3 bg-brand-primary text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-brand-accent transition-all duration-300 shadow-md">
+                Añadir <i class="fa-solid fa-plus ml-1.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Product Card 2 (BEST SELLER / DESTACADO) -->
+          <div class="bg-brand-light p-6 rounded-3xl border-2 border-brand-accent shadow-xl flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 relative transform lg:scale-105 my-8">
+            <span class="absolute -top-3.5 left-6 bg-brand-accent text-brand-light text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
+              🔥 10% DE DESCUENTO - Más Vendido
+            </span>
+
+            <div class="flex flex-col sm:flex-row items-center gap-6 w-full pt-2 sm:pt-0">
+              <!-- Icon/Visual Frame -->
+              <div class="w-32 h-32 bg-gradient-to-b from-brand-accent/10 to-brand-accent/20 rounded-2xl flex items-center justify-center shrink-0 border border-brand-accent/10 relative overflow-hidden select-none">
+                <div class="w-16 h-26 bg-gradient-to-r from-red-700 via-brand-primary to-red-900 rounded-2xl shadow-xl relative flex flex-col justify-between py-2.5 px-1.5 text-center">
+                  <i class="fa-solid fa-bolt text-brand-accentGold text-sm animate-bounce"></i>
+                  <span class="text-[8px] text-brand-light font-black tracking-widest">PUKA 6x</span>
+                  <span class="text-[6px] text-brand-light/60">BEST VALUE</span>
+                </div>
+              </div>
+
+              <!-- Product details -->
+              <div class="space-y-2 text-center sm:text-left">
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-brand-primary">Six Pack Poder</h3>
+                <p class="text-xs sm:text-sm text-brand-dark/70 font-light">
+                  Para tu semana. Energía sostenida. Mantén tu stock listo para rendir en tus entrenamientos.
+                </p>
+                <div class="flex items-center justify-center sm:justify-start space-x-3 pt-1">
+                  <span class="font-sans text-2xl font-extrabold text-brand-accent">S/ 43.20</span>
+                  <span class="text-sm text-brand-dark/40 line-through">S/ 48.00</span>
+                  <span class="text-xs text-brand-success font-semibold">(Ahorras S/ 4.80)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action block -->
+            <div class="flex sm:flex-col justify-center sm:justify-between items-center shrink-0 gap-4 w-full sm:w-auto">
+              <button onclick="addToCart(2)" class="w-full sm:w-auto px-6 py-4 bg-brand-accent text-brand-light font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-brand-accentGold transition-all duration-300 shadow-md animate-btn-pulse">
+                Añadir <i class="fa-solid fa-plus ml-1.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Product Card 3 -->
+          <div class="bg-brand-light p-6 rounded-3xl border border-brand-primary/5 shadow-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 hover:shadow-xl transition-all duration-300">
+            <div class="flex flex-col sm:flex-row items-center gap-6 w-full">
+              <!-- Icon/Visual Frame -->
+              <div class="w-32 h-32 bg-gradient-to-b from-brand-accentGold/10 to-brand-accentGold/20 rounded-2xl flex items-center justify-center shrink-0 border border-brand-accentGold/10 relative overflow-hidden select-none">
+                <span class="absolute -top-1 -left-1 bg-brand-success text-brand-light text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-br-lg">
+                  20% DSCTO + ENVÍO GRATIS
+                </span>
+                <div class="w-14 h-24 bg-gradient-to-r from-yellow-700 via-brand-accentGold to-yellow-900 rounded-2xl shadow-lg relative flex flex-col justify-between py-2 px-1 text-center">
+                  <i class="fa-solid fa-crown text-brand-light text-xs"></i>
+                  <span class="text-[7px] text-brand-light font-black tracking-tighter">SUBSCRIBE</span>
+                  <span class="text-[6px] text-brand-light/60">24 LATAS</span>
+                </div>
+              </div>
+
+              <!-- Product details -->
+              <div class="space-y-2 text-center sm:text-left">
+                <h3 class="font-serif text-xl font-bold text-brand-primary">Suscripción Mensual</h3>
+                <p class="text-xs sm:text-sm text-brand-dark/70 font-light">
+                  Nunca te quedes sin energía. Entregado de manera recurrente en tu puerta cada mes con el máximo descuento.
+                </p>
+                <div class="flex items-center justify-center sm:justify-start space-x-3 pt-1">
+                  <span class="font-sans text-xl font-extrabold text-brand-accent">S/ 153.60</span>
+                  <span class="text-sm text-brand-dark/40 line-through">S/ 192.00</span>
+                  <span class="text-xs text-brand-success font-semibold">(Ahorras S/ 38.40)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action block -->
+            <div class="flex sm:flex-col justify-center sm:justify-between items-center shrink-0 gap-4 w-full sm:w-auto">
+              <button onclick="addToCart(3)" class="w-full sm:w-auto px-6 py-3 bg-brand-primary text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-brand-accentGold transition-all duration-300 shadow-md">
+                Suscribirse <i class="fa-solid fa-arrow-rotate-right ml-1.5"></i>
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- COLUMN RIGHT: STICKY CHECKOUT SIDEBAR (35%) -->
+        <section class="lg:col-span-5 lg:sticky lg:top-24">
+          
+          <div id="summary-card" class="bg-brand-light rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-primary/10 space-y-6">
+            <div class="flex justify-between items-center border-b border-brand-primary/5 pb-4">
+              <h3 class="font-serif text-2xl font-black text-brand-primary flex items-center">
+                <i class="fa-solid fa-receipt mr-3 text-brand-accent"></i> Resumen de tu Pedido
+              </h3>
+              <button onclick="clearCart()" class="text-xs font-bold text-brand-accent hover:underline focus:outline-none">
+                <i class="fa-solid fa-trash-can"></i> Vaciar
+              </button>
+            </div>
+
+            <!-- Dynamic Cart Items Wrapper -->
+            <div id="cart-items-wrapper" class="space-y-4 max-h-[250px] overflow-y-auto scrollbar-hidden pr-1"></div>
+
+            <!-- Divider -->
+            <div class="border-t border-brand-primary/10 pt-4 space-y-4">
+              
+              <!-- Coupon Input Block -->
+              <div class="space-y-1.5">
+                <label for="coupon-input" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/60">¿Tienes un cupón de descuento?</label>
+                <div class="flex space-x-2">
+                  <input type="text" id="coupon-input" placeholder="Ej. BOLT15" class="flex-grow px-4 py-2.5 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none text-sm transition-all uppercase">
+                  <button onclick="applyPromoCode()" class="px-5 py-2.5 bg-brand-primary hover:bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200">
+                    Aplicar
+                  </button>
+                </div>
+                <div id="coupon-feedback" class="hidden text-xs font-bold mt-1.5"></div>
+              </div>
+
+              <!-- Billing Pricing Lines -->
+              <div class="space-y-2.5 pt-2">
+                <div class="flex justify-between text-sm text-brand-dark/80">
+                  <span>Subtotal</span>
+                  <span id="bill-subtotal" class="font-bold">S/ 0.00</span>
+                </div>
+                
+                <div id="discount-row" class="hidden flex justify-between text-sm text-brand-success">
+                  <span>Descuento adicional (<span id="discount-pct">0</span>%)</span>
+                  <span id="bill-discount" class="font-bold">- S/ 0.00</span>
+                </div>
+
+                <div class="flex justify-between text-sm text-brand-dark/80">
+                  <span>Costo de Envío</span>
+                  <span id="bill-shipping" class="font-bold text-brand-success">¡GRATIS!</span>
+                </div>
+
+                <div class="flex justify-between items-center pt-3 border-t border-brand-primary/15">
+                  <span class="font-serif text-lg font-bold text-brand-primary">Total a Pagar</span>
+                  <span id="bill-total" class="font-sans text-3xl font-extrabold text-brand-accent">S/ 0.00</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Checkout CTA -->
+            <div class="pt-2">
+              <button onclick="triggerOrderCheckout()" class="w-full py-4 bg-brand-accent hover:bg-brand-accentGold text-brand-light font-extrabold text-sm uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-xl shadow-brand-accent/20 flex items-center justify-center space-x-2">
+                <span>Proceder al Pago Seguro</span>
+                <i class="fa-solid fa-lock text-xs"></i>
+              </button>
+            </div>
+
+            <!-- Safe Trust Badges -->
+            <div class="pt-4 border-t border-brand-primary/5 flex flex-col sm:flex-row items-center justify-around gap-4 text-center">
+              <div class="flex items-center space-x-2 text-brand-dark/60 text-xs">
+                <i class="fa-solid fa-shield-halved text-brand-accent text-sm"></i>
+                <span>Garantía de Devolución</span>
+              </div>
+              <div class="flex items-center space-x-2 text-brand-dark/60 text-xs">
+                <i class="fa-solid fa-truck-fast text-brand-accent text-sm"></i>
+                <span>Envío a todo el Perú</span>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Checkout Fictional Modal Overlay -->
+    <div id="checkout-modal" class="hidden fixed inset-0 z-50 bg-brand-dark/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="bg-brand-secondary rounded-3xl p-6 sm:p-10 max-w-md w-full border border-brand-primary/10 shadow-2xl relative space-y-6">
+        <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-brand-dark/50 hover:text-brand-dark text-lg focus:outline-none">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="text-center space-y-3">
+          <div class="w-16 h-16 bg-brand-success/15 rounded-full flex items-center justify-center text-brand-success text-3xl mx-auto">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <h4 class="font-serif text-2xl font-bold text-brand-primary">¡Transacción Iniciada de Forma Segura!</h4>
+          <p class="text-sm text-brand-dark/70">
+            Tu carrito de compras ha sido procesado correctamente con nuestra plataforma contra entrega integrada.
+          </p>
+        </div>
+
+        <div class="bg-brand-light p-4 rounded-2xl border border-brand-primary/10 text-xs space-y-2">
+          <div class="flex justify-between">
+            <span class="text-brand-dark/60">N° de Operación</span>
+            <span class="font-bold text-brand-dark" id="modal-op-number">#PK-2026-9482</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-brand-dark/60">Monto Final</span>
+            <span class="font-bold text-brand-accent text-sm" id="modal-final-total">S/ 0.00</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-brand-dark/60">Método de Envío</span>
+            <span class="font-bold text-brand-dark">Envío Express (Gratis)</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-[10px] text-brand-dark/50 text-center uppercase tracking-wider font-semibold">Te contactaremos de inmediato por WhatsApp</p>
+          <button onclick="closeCheckoutModal()" class="w-full py-3.5 bg-brand-primary hover:bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-colors duration-200">
+            Entendido, gracias ⚡
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ecommerce Footer -->
+    <footer class="bg-brand-dark text-brand-light py-10 border-t border-brand-primary/20 shrink-0">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-brand-light/50">
+        <div class="space-y-1 text-center sm:text-left">
+          <p class="font-serif text-sm font-bold text-brand-light tracking-widest">PUKA POWER</p>
+          <p>© 2026 Puka Power. Todos los derechos reservados.</p>
+        </div>
+        
+        <div class="flex space-x-3 text-2xl">
+          <i class="fa-brands fa-cc-visa text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+          <i class="fa-brands fa-cc-mastercard text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+          <i class="fa-brands fa-cc-amex text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+          <i class="fa-solid fa-qrcode text-brand-light/30 hover:text-brand-light/70 transition-colors"></i>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT GLOBAL: LÓGICA DE SPA, TIENDA Y LANDING -->
+  <!-- ========================================================================= -->
+  <script>
+    
+    // SPA Router State Management
+    function router() {
+      const hash = window.location.hash || '#inicio';
+      
+      if (hash === '#tienda') {
+        // Switch view to Store/Checkout
+        document.getElementById('view-landing').classList.add('hidden');
+        document.getElementById('view-ecommerce').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Switch view to Landing Page
+        document.getElementById('view-landing').classList.remove('hidden');
+        document.getElementById('view-ecommerce').classList.add('hidden');
+        
+        // Handle inner section scrolling inside Landing Page
+        if (hash === '#inicio') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (hash.startsWith('#') && hash !== '#') {
+          const targetSection = document.querySelector(hash);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }
+    }
+
+    // Capture standard link click behavior to avoid hash-conflict bugs
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const targetHash = this.getAttribute('href');
+        
+        // If we are currently on the shop view and user wants to navigate to a landing anchor
+        if (document.getElementById('view-landing').classList.contains('hidden') && 
+            targetHash !== '#tienda' && 
+            targetHash !== '#inicio' && 
+            targetHash.startsWith('#')) {
+          e.preventDefault();
+          window.location.hash = targetHash;
+        }
+      });
+    });
+
+    window.addEventListener('hashchange', router);
+    window.addEventListener('load', router);
+
+
+    
+    // Sticky Header Scroll effect
+    const landingHeader = document.getElementById('landing-header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        landingHeader.classList.add('py-2', 'shadow-md', 'bg-brand-secondary/98');
+        landingHeader.classList.remove('py-4');
+      } else {
+        landingHeader.classList.add('py-4');
+        landingHeader.classList.remove('py-2', 'shadow-md', 'bg-brand-secondary/98');
+      }
+    });
+
+    // Mobile Navigation Toggle
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const line1 = document.getElementById('line1');
+    const line2 = document.getElementById('line2');
+    const line3 = document.getElementById('line3');
+
+    let menuOpen = false;
+    menuBtn.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      if (menuOpen) {
+        mobileMenu.classList.remove('hidden');
+        line1.style.transform = 'rotate(45deg) translate(2px, -1px)';
+        line2.style.opacity = '0';
+        line3.style.transform = 'rotate(-45deg) translate(2px, 1px)';
+      } else {
+        mobileMenu.classList.add('hidden');
+        line1.style.transform = 'none';
+        line2.style.opacity = '1';
+        line3.style.transform = 'none';
+      }
+    });
+
+    // Close mobile navigation on item click
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        line1.style.transform = 'none';
+        line2.style.opacity = '1';
+        line3.style.transform = 'none';
+        menuOpen = false;
+      });
+    });
+
+    // Interactive Ingredient Details Viewer
+    const detailBox = document.getElementById('ingredient-detail-box');
+    const detailTitle = document.getElementById('detail-title');
+    const detailText = document.getElementById('detail-text');
+
+    const ingredientDetails = {
+      1: {
+        title: "Cáscara de Café - Cafeína Limpia de un Subproducto Noble",
+        text: "La cáscara de café contiene antioxidantes excepcionales llamados polifenoles. Proporciona una asimilación paulatina de cafeína natural que, al combinarse con potasio natural, reduce la fatiga sin impactar violentamente el sistema nervioso central. Ideal para flujos de trabajo prolongados."
+      },
+      2: {
+        title: "Camu Camu - El Escudo Inmunológico de la Selva",
+        text: "Con hasta 40 veces más Vitamina C que la naranja, el Camu Camu amazónico estimula la producción de colágeno y previene el estrés oxidativo provocado por el ejercicio de alta exigencia o las largas noches de estudio de ingeniería. Incrementa el rendimiento celular orgánico."
+      },
+      3: {
+        title: "Maca Negra Andina - Adaptógeno Supremo de Resistencia",
+        text: "Cultivada por encima de los 4,000 metros, la Maca Negra actúa directamente sobre las glándulas suprarrenales para estabilizar la producción de cortisol. Esto mitiga el estrés mental, optimiza la memoria a largo plazo y mejora la resistencia aeróbica muscular de forma acumulativa."
+      }
+    };
+
+    function selectIngredient(id) {
+      const data = ingredientDetails[id];
+      if (data) {
+        detailTitle.textContent = data.title;
+        detailText.textContent = data.text;
+        
+        detailBox.classList.remove('hidden');
+        detailBox.classList.add('block');
+        
+        if (window.innerWidth < 768) {
+          detailBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+
+    // Landing Checkout Form submission handler
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      
+      const form = document.getElementById('checkout-form');
+      const feedback = document.getElementById('form-feedback');
+      
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const department = document.getElementById('department').value;
+      const selectedPack = document.querySelector('input[name="product_pack"]:checked').value;
+      
+      let packName = selectedPack === 'reto3dias' ? 'Pack Reto (3 latas)' : 'Pack Pro (12 latas)';
+      
+      feedback.classList.remove('hidden', 'bg-red-100', 'text-red-800');
+      feedback.classList.add('block', 'bg-green-100', 'text-green-800');
+      feedback.innerHTML = `
+        <p class="text-base">🎉 ¡Gracias por tu pedido, <strong>${name}</strong>!</p>
+        <p class="text-xs font-normal mt-1">Hemos registrado tu orden para el <strong>${packName}</strong> con destino a <strong>${department.toUpperCase()}</strong>. Un asesor de Puka Power te escribirá vía WhatsApp al <strong>${phone}</strong> para coordinar la entrega segura.</p>
+      `;
+
+      form.reset();
+    }
+
+
+    
+    // E-Commerce Database representation
+    const catalogData = {
+      1: {
+        id: 1,
+        name: "Reto Puka - 3 Días",
+        price: 24.00,
+        desc: "3 latas de energía constante."
+      },
+      2: {
+        id: 2,
+        name: "Six Pack Poder",
+        price: 43.20,
+        desc: "6 latas para un máximo enfoque."
+      },
+      3: {
+        id: 3,
+        name: "Suscripción Mensual",
+        price: 153.60,
+        desc: "24 latas mensuales + Envío Gratis."
+      }
+    };
+
+    // Global Shopping Cart state
+    let cart = [];
+    let promoDiscount = 0.0; // Represents percentage, eg: 0.15 = 15%
+    let activePromoCode = "";
+
+    // Initialize UI empty state
+    updateCartUI();
+
+    // Add selected product to checkout cart
+    function addToCart(productId) {
+      const product = catalogData[productId];
+      if (!product) return;
+
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.qty += 1;
+      } else {
+        cart.push({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          qty: 1,
+          desc: product.desc
+        });
+      }
+
+      updateCartUI();
+      triggerMicroAnimation();
+    }
+
+    // Decrease quantity inside checkout list
+    function decrementCartItem(productId) {
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.qty -= 1;
+        if (existingItem.qty <= 0) {
+          cart = cart.filter(item => item.id !== productId);
+        }
+      }
+      updateCartUI();
+    }
+
+    // Increase quantity inside checkout list
+    function incrementCartItem(productId) {
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.qty += 1;
+      }
+      updateCartUI();
+    }
+
+    // Remove single item completely from cart
+    function removeCartItem(productId) {
+      cart = cart.filter(item => item.id !== productId);
+      updateCartUI();
+    }
+
+    // Clear entire cart structure
+    function clearCart() {
+      cart = [];
+      updateCartUI();
+    }
+
+    
+    // Coupon Application Logic ("BOLT15")
+    function applyPromoCode() {
+      const couponInput = document.getElementById('coupon-input');
+      const feedback = document.getElementById('coupon-feedback');
+      const discountPctDisplay = document.getElementById('discount-pct');
+      const couponCode = couponInput.value.trim().toUpperCase();
+
+      if (couponCode === "BOLT15") {
+        promoDiscount = 0.15; // 15%
+        activePromoCode = "BOLT15";
+        
+        feedback.classList.remove('hidden', 'text-brand-accent');
+        feedback.classList.add('block', 'text-brand-success');
+        feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> ¡Cupón <strong>BOLT15</strong> aplicado! Obtuviste un 15% de descuento adicional.`;
+        
+        discountPctDisplay.textContent = "15";
+      } else {
+        promoDiscount = 0.0;
+        activePromoCode = "";
+        
+        feedback.classList.remove('hidden', 'text-brand-success');
+        feedback.classList.add('block', 'text-brand-accent');
+        feedback.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Código inválido. Intenta con "BOLT15"`;
+        
+        discountPctDisplay.textContent = "0";
+      }
+
+      updateCartUI();
+    }
+
+    
+    // Re-render checkout panel UI
+    function updateCartUI() {
+      const cartWrapper = document.getElementById('cart-items-wrapper');
+      const cartBadge = document.getElementById('cart-badge');
+      const billSubtotal = document.getElementById('bill-subtotal');
+      const billDiscount = document.getElementById('bill-discount');
+      const discountRow = document.getElementById('discount-row');
+      const billTotal = document.getElementById('bill-total');
+
+      cartWrapper.innerHTML = '';
+
+      if (cart.length === 0) {
+        cartWrapper.innerHTML = `
+          <div class="py-8 text-center space-y-2">
+            <i class="fa-solid fa-cart-flatbed text-brand-dark/20 text-4xl block"></i>
+            <p class="text-sm font-medium text-brand-dark/50">Tu carrito de compras está vacío</p>
+            <p class="text-xs text-brand-dark/40">¡Añade un pack para desbloquear la energía!</p>
+          </div>
+        `;
+        cartBadge.textContent = "0";
+        billSubtotal.textContent = "S/ 0.00";
+        discountRow.classList.add('hidden');
+        billTotal.textContent = "S/ 0.00";
+        return;
+      }
+
+      let totalQty = 0;
+      let calculatedSubtotal = 0.0;
+
+      cart.forEach(item => {
+        totalQty += item.qty;
+        calculatedSubtotal += (item.price * item.qty);
+
+        const itemNode = document.createElement('div');
+        itemNode.className = "flex items-center justify-between gap-4 p-3.5 bg-brand-secondary rounded-2xl border border-brand-primary/5 transition-all duration-300";
+        itemNode.innerHTML = `
+          <div class="space-y-1 flex-grow">
+            <h4 class="font-bold text-sm text-brand-primary leading-tight">${item.name}</h4>
+            <p class="text-[10px] text-brand-dark/60 font-light truncate max-w-[180px]">${item.desc}</p>
+            <div class="flex items-center space-x-1 font-sans font-extrabold text-brand-accent text-xs">
+              <span>S/ ${(item.price * item.qty).toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2.5">
+            <div class="flex items-center bg-brand-light rounded-lg border border-brand-primary/15 overflow-hidden">
+              <button onclick="decrementCartItem(${item.id})" class="px-2 py-1 text-xs font-bold text-brand-dark/60 hover:bg-brand-primary/5 hover:text-brand-primary transition-colors focus:outline-none">-</button>
+              <span class="px-2 py-1 text-xs font-bold text-brand-dark select-none">${item.qty}</span>
+              <button onclick="incrementCartItem(${item.id})" class="px-2 py-1 text-xs font-bold text-brand-dark/60 hover:bg-brand-primary/5 hover:text-brand-primary transition-colors focus:outline-none">+</button>
+            </div>
+            <button onclick="removeCartItem(${item.id})" class="text-brand-dark/40 hover:text-brand-accent transition-colors duration-200 focus:outline-none">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+        `;
+        cartWrapper.appendChild(itemNode);
+      });
+
+      cartBadge.textContent = totalQty;
+      billSubtotal.textContent = `S/ ${calculatedSubtotal.toFixed(2)}`;
+
+      if (promoDiscount > 0) {
+        const discountVal = calculatedSubtotal * promoDiscount;
+        billDiscount.textContent = `- S/ ${discountVal.toFixed(2)}`;
+        discountRow.classList.remove('hidden');
+        discountRow.classList.add('flex');
+        
+        const finalTotalVal = calculatedSubtotal - discountVal;
+        billTotal.textContent = `S/ ${finalTotalVal.toFixed(2)}`;
+      } else {
+        discountRow.classList.add('hidden');
+        discountRow.classList.remove('flex');
+        billTotal.textContent = `S/ ${calculatedSubtotal.toFixed(2)}`;
+      }
+    }
+
+    // Micro interaction badge scale pulse
+    function triggerMicroAnimation() {
+      const badge = document.getElementById('cart-badge');
+      badge.classList.remove('scale-90');
+      badge.classList.add('scale-125', 'bg-brand-accentGold');
+      setTimeout(() => {
+        badge.classList.remove('scale-125', 'bg-brand-accentGold');
+        badge.classList.add('scale-90');
+      }, 300);
+    }
+
+    // Order checkout confirmation trigger
+    function triggerOrderCheckout() {
+      if (cart.length === 0) {
+        const feedback = document.getElementById('coupon-feedback');
+        feedback.classList.remove('hidden', 'text-brand-success');
+        feedback.classList.add('block', 'text-brand-accent');
+        feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Por favor, añade al menos un producto a tu carrito.`;
+        return;
+      }
+
+      const modal = document.getElementById('checkout-modal');
+      const modalTotalDisplay = document.getElementById('modal-final-total');
+      const opDisplay = document.getElementById('modal-op-number');
+      const currentTotal = document.getElementById('bill-total').textContent;
+
+      const randomOrderNumber = Math.floor(1000 + Math.random() * 9000);
+      opDisplay.textContent = `#PK-2026-${randomOrderNumber}`;
+      modalTotalDisplay.textContent = currentTotal;
+
+      modal.classList.remove('hidden');
+    }
+
+    // Close checkout overlay modal structure
+    function closeCheckoutModal() {
+      const modal = document.getElementById('checkout-modal');
+      modal.classList.add('hidden');
+      clearCart();
+    }
+  </script>
+</body>
+</html>
