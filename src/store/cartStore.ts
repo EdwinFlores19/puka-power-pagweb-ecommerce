@@ -141,3 +141,12 @@ export function clearCoupon() {
     localStorage.removeItem(COUPON_KEY);
   }
 }
+
+export function applyGameCoupon() {
+  $coupon.set({
+    applied: true,
+    code: VALID_COUPON.code,
+    discountPercent: VALID_COUPON.discountPercent,
+    error: '',
+  });
+}
