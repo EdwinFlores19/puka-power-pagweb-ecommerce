@@ -685,7 +685,7 @@ export default function Advergame() {
       if (k.up && p.grounded && jumpMult > 0) {
         p.vy = JUMP_FORCE * jumpMult;
         p.grounded = false;
-        p.canDoubleJump = p.hasPet;
+        p.canDoubleJump = true;
         if (audioInst) audioInst.jump();
         spawnParticle(p.x, p.y + p.height, '#ccc', 10);
         k.upJustPressed = false;
@@ -947,7 +947,7 @@ export default function Advergame() {
             p.grounded = true;
             p.lastSafeX = p.x;
             p.lastSafeY = p.y;
-            if (p.hasPet) p.canDoubleJump = true;
+            p.canDoubleJump = true;
             if (!wasGrounded) { p.squashX = 1.25; p.squashY = 0.75; }
           } else if (p.vy < 0 && p.y <= entity.y + entity.height && p.y - p.vy >= entity.y + entity.height - 15) {
             p.y = entity.y + entity.height;
@@ -2228,6 +2228,12 @@ export default function Advergame() {
                 <span class="text-xl flex-shrink-0">{'\u{1F3C1}'}</span>
                 <span><strong class="text-white">¡Cuidado! Ninjas, trampas y rivales</strong> en tu camino a la meta</span>
               </li>
+              <Show when={currentLevelIndex() === 3}>
+                <li class="flex items-start gap-3 p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse">
+                  <span class="text-xl flex-shrink-0">🚀</span>
+                  <span><strong class="text-purple-300">¡DOBLE SALTO ACTIVADO!</strong> Presiona salto dos veces en el aire para superar los abismos imposibles de este nivel.</span>
+                </li>
+              </Show>
             </ul>
             <button
               onClick={() => { setShowTutorial(false); engineState.startTime = Date.now(); }}
