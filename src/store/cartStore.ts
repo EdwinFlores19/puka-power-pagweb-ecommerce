@@ -143,10 +143,14 @@ export function clearCoupon() {
 }
 
 export function applyGameCoupon() {
-  $coupon.set({
+  const state = {
     applied: true,
     code: VALID_COUPON.code,
     discountPercent: VALID_COUPON.discountPercent,
     error: '',
-  });
+  };
+  $coupon.set(state);
+  if (isClient) {
+    localStorage.setItem(COUPON_KEY, JSON.stringify(state));
+  }
 }

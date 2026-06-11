@@ -1,6 +1,12 @@
 ﻿import { createSignal, Switch, Match, Show, onMount, onCleanup } from 'solid-js';
 import { applyGameCoupon } from '@/store/cartStore';
 
+function dl(...args: unknown[]) {
+  if (typeof window !== 'undefined' && Array.isArray((window as Record<string, unknown>).dataLayer)) {
+    ((window as Record<string, unknown>).dataLayer as unknown[]).push(...args);
+  }
+}
+
 const GRAVITY = 0.6;
 const JUMP_FORCE = -14;
 const BASE_SPEED = 6;
@@ -24,6 +30,13 @@ const THEMES = {
   BEACH: { id: 'BEACH', name: 'Playa', bg: '#00BCD4', platform: '#ffe082', floor: '#ffca28', enemies: ['🦀', '🦈'], goal: '🏖️' },
 } as const;
 
+const PARALLAX_COLORS: Record<string, { far: string; mid: string }> = {
+  SCHOOL: { far: '#b3d9ff', mid: '#6b8e6b' },
+  OFFICE: { far: '#4a5568', mid: '#2d3748' },
+  SHOPPING: { far: '#f3cde0', mid: '#c8a2c8' },
+  BEACH: { far: '#81e6d9', mid: '#ecc94b' },
+};
+
 type GenderId = 'BOY' | 'GIRL' | 'MAN' | 'WOMAN';
 type ThemeId = 'SCHOOL' | 'OFFICE' | 'SHOPPING' | 'BEACH';
 
@@ -35,22 +48,31 @@ const GENDERS: Record<GenderId, { id: GenderId; name: string; idle: string; run:
 };
 
 class SoundEngine {
-  ctx: AudioContext;
+  ctx: AudioContext | null;
   constructor() {
-    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    try {
+      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch {
+      this.ctx = null;
+    }
   }
   playTone(freq: number, type: OscillatorType, duration: number, vol = 0.1) {
-    if (this.ctx.state === 'suspended') this.ctx.resume();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + duration);
+    if (!this.ctx) return;
+    try {
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch {
+      // Audio fail-safe: ignore playback errors
+    }
   }
   jump() { this.playTone(300, 'sine', 0.1, 0.05); setTimeout(() => this.playTone(500, 'sine', 0.2, 0.05), 50); }
   coin() { this.playTone(1200, 'square', 0.1, 0.05); }
@@ -65,8 +87,9 @@ class SoundEngine {
   }
 }
 
-interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; }
-interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; }
+interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; }
+interface GhostPos { x: number; y: number; alpha: number; }
+interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; }
 interface Keys { left: boolean; right: boolean; up: boolean; upJustPressed: boolean; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; alpha: number; size: number; }
 
@@ -84,6 +107,7 @@ export default function Advergame() {
     player: Player; entities: Entity[]; particles: Particle[];
     score: number; lives: number; startTime: number;
     viewport: { width: number; height: number };
+    shakeTimer: number; shakeIntensity: number; hitstopFrames: number;
   } = {} as any;
   let audioInst: SoundEngine | null = null;
   let rafId = 0;
@@ -95,17 +119,34 @@ export default function Advergame() {
     engineState = {
       keys: { left: false, right: false, up: false, upJustPressed: false },
       camera: { x: 0, y: 0 },
-      player: { x: 100, y: 100, vx: 0, vy: 0, width: 40, height: 60, grounded: false, state: PLAYER_STATE.NORMAL, stateTimer: 0, facingLeft: false, isDead: false, isGiant: false, hasPet: false, canDoubleJump: false, idleTimer: 0, lastSafeX: 100, lastSafeY: 100 },
+      player: {
+        x: 100, y: 100, vx: 0, vy: 0, width: 40, height: 60,
+        grounded: false, state: PLAYER_STATE.NORMAL, stateTimer: 0,
+        facingLeft: false, isDead: false, isGiant: false, hasPet: false,
+        canDoubleJump: false, idleTimer: 0, lastSafeX: 100, lastSafeY: 100,
+        jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1,
+        ghosts: [], sugarCrashTimer: 0,
+      },
       entities: [], particles: [], score: 0, lives: 3, startTime: 0,
       viewport: { width: 800, height: 600 },
+      shakeTimer: 0, shakeIntensity: 0, hitstopFrames: 0,
     };
     setCouponDone(false);
+  }
+
+  function triggerShake(intensity = 8, duration = 150) {
+    engineState.shakeIntensity = intensity;
+    engineState.shakeTimer = duration;
+  }
+
+  function triggerHitstop(frames = 2) {
+    engineState.hitstopFrames = frames;
   }
 
   function generateLevel(theme: typeof THEMES[keyof typeof THEMES]) {
     const s = engineState;
     s.entities = []; s.score = 0; s.lives = 3;
-    s.player = { ...s.player, x: 100, y: 100, vx: 0, vy: 0, state: PLAYER_STATE.NORMAL, isDead: false, isGiant: false, hasPet: false, canDoubleJump: false, width: 40, height: 60, idleTimer: 0, lastSafeX: 100, lastSafeY: 100 };
+    s.player = { ...s.player, x: 100, y: 100, vx: 0, vy: 0, state: PLAYER_STATE.NORMAL, isDead: false, isGiant: false, hasPet: false, canDoubleJump: false, width: 40, height: 60, idleTimer: 0, lastSafeX: 100, lastSafeY: 100, jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1, ghosts: [], sugarCrashTimer: 0 };
     s.camera.x = 0;
     let curX = 0;
     let petSpawned = false;
@@ -127,7 +168,7 @@ export default function Advergame() {
         curX += 600;
       } else if (p === 2) {
         curX += 100; addPlat(curX, 800); addPlat(curX + 200, 150, groundY - 120, 20);
-        s.entities.push({ type: ENTITY.COIN, x: curX + 260, y: groundY - 160, width: 30, height: 30, active: true });
+        s.entities.push({ type: ENTITY.COIN, x: curX + 260, y: groundY - 160, width: 30, height: 30, active: true, coinScale: 1 });
         const ee = theme.enemies[Math.floor(Math.random() * theme.enemies.length)];
         s.entities.push({ type: ENTITY.ENEMY, x: curX + 400, y: groundY - 40, width: 40, height: 40, vx: -2, startX: curX + 300, range: 300, emoji: ee, active: true });
         curX += 800;
@@ -150,7 +191,13 @@ export default function Advergame() {
 
   function spawnParticle(x: number, y: number, color: string, amount = 5, isPuka = false) {
     for (let i = 0; i < amount; i++) {
-      engineState.particles.push({ x: x + 20, y: y + 30, vx: (Math.random() - 0.5) * (isPuka ? 10 : 5), vy: (Math.random() - 0.5) * (isPuka ? 10 : 5), life: isPuka ? 800 : 400, maxLife: isPuka ? 800 : 400, color, alpha: 1, size: isPuka ? Math.random() * 8 + 4 : Math.random() * 5 + 2 });
+      engineState.particles.push({
+        x: x + 20, y: y + 30,
+        vx: (Math.random() - 0.5) * (isPuka ? 10 : 5),
+        vy: (Math.random() - 0.5) * (isPuka ? 10 : 5),
+        life: isPuka ? 800 : 400, maxLife: isPuka ? 800 : 400,
+        color, alpha: 1, size: isPuka ? Math.random() * 8 + 4 : Math.random() * 5 + 2,
+      });
     }
   }
 
@@ -166,6 +213,7 @@ export default function Advergame() {
     generateLevel(THEMES[themeId]);
     setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
     lastFrameUpdate = 0;
+    dl({ event: 'puka_game_start', character: selection().gender, level: themeId });
   }
 
   function gameLoop(time: number) {
@@ -178,7 +226,9 @@ export default function Advergame() {
     if (vp.width <= 0 || vp.height <= 0) { rafId = requestAnimationFrame(gameLoop); return; }
     const theme = THEMES[selection().theme!];
 
-    if (!showTutorial() && !s.player.isDead) {
+    if (s.hitstopFrames > 0) {
+      s.hitstopFrames--;
+    } else if (!showTutorial() && !s.player.isDead) {
       const elapsed = Math.floor((Date.now() - s.startTime) / 1000);
       const timeLeft = TIME_LIMIT - elapsed;
 
@@ -192,9 +242,12 @@ export default function Advergame() {
           if (timeLeft <= 0) s.startTime = Date.now();
           setUiState((prev) => ({ ...prev, lives: s.lives, message: '¡VIDA PERDIDA!', messageType: 'error' }));
           if (audioInst) audioInst.hurt();
+          triggerShake(12, 200);
+          triggerHitstop(3);
         } else {
           p.isDead = true;
           if (audioInst) audioInst.gameover();
+          dl({ event: 'puka_game_over', coins: s.score, timeLeft });
           setAppState(APP_STATE.GAME_OVER);
           rafId = requestAnimationFrame(gameLoop);
           return;
@@ -206,6 +259,7 @@ export default function Advergame() {
         lastFrameUpdate = time;
       }
 
+      const wasGrounded = p.grounded;
       const isRunning = Math.abs(p.vx) > 0.5;
       if (isRunning || !p.grounded || k.left || k.right || k.up) p.idleTimer = 0;
       else p.idleTimer += 16.6;
@@ -213,6 +267,9 @@ export default function Advergame() {
       let currentSpeed = p.hasPet ? BASE_SPEED * 2.2 : BASE_SPEED;
       let jumpMult = 1;
       if (p.stateTimer > 0) p.stateTimer -= 16.6;
+      if (p.sugarCrashTimer > 0) p.sugarCrashTimer -= 16.6;
+
+      let currentSpeedMult = p.sugarCrashTimer > 0 ? 0.5 : 1;
 
       switch (p.state) {
         case PLAYER_STATE.GENERIC_RUSH:
@@ -222,23 +279,32 @@ export default function Advergame() {
             p.state = PLAYER_STATE.TACHYCARDIA; p.stateTimer = 3000;
             setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.TACHYCARDIA, message: '¡TAQUICARDIA!', messageType: 'error' }));
             if (audioInst) audioInst.hurt();
+            triggerShake(6, 200);
           }
           break;
         case PLAYER_STATE.TACHYCARDIA:
           currentSpeed = BASE_SPEED * 0.3;
           jumpMult = 0.5;
           p.x += (Math.random() - 0.5) * 4;
-          if (p.stateTimer <= 0) { p.state = PLAYER_STATE.NORMAL; setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: '' })); }
+          if (p.stateTimer <= 0) {
+            p.state = PLAYER_STATE.NORMAL;
+            p.sugarCrashTimer = 3000;
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: '¡CRASH DE AZÚCAR!', messageType: 'warning' }));
+          }
           break;
         case PLAYER_STATE.PUKA_OVERDRIVE:
           currentSpeed = BASE_SPEED * 2.2; jumpMult = 1.3;
-          if (Math.random() > 0.5) spawnParticle(p.x, p.y + 40, '#ff4b4b', 1, true);
-          if (p.stateTimer <= 0) { p.state = PLAYER_STATE.NORMAL; setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: 'ENERG\u00cdA ESTABILIZADA', messageType: 'info' })); }
+          if (Math.random() > 0.5) spawnParticle(p.x, p.y + 40, '#ffd700', 2, true);
+          if (Math.random() > 0.7) spawnParticle(p.x - 5, p.y + 20, '#ff4b4b', 1, true);
+          if (p.stateTimer <= 0) {
+            p.state = PLAYER_STATE.NORMAL;
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: 'ENERGÍA ESTABILIZADA', messageType: 'info' }));
+          }
           break;
       }
 
-      if (k.left && p.state !== PLAYER_STATE.TACHYCARDIA) { p.vx = -currentSpeed; p.facingLeft = true; }
-      else if (k.right && p.state !== PLAYER_STATE.TACHYCARDIA) { p.vx = currentSpeed; p.facingLeft = false; }
+      if (k.left && p.state !== PLAYER_STATE.TACHYCARDIA) { p.vx = -currentSpeed * currentSpeedMult; p.facingLeft = true; }
+      else if (k.right && p.state !== PLAYER_STATE.TACHYCARDIA) { p.vx = currentSpeed * currentSpeedMult; p.facingLeft = false; }
       else p.vx *= 0.8;
 
       if (k.up && p.grounded && jumpMult > 0) {
@@ -248,12 +314,14 @@ export default function Advergame() {
         if (audioInst) audioInst.jump();
         spawnParticle(p.x, p.y + p.height, '#ccc', 10);
         k.upJustPressed = false;
+        p.squashX = 0.85; p.squashY = 1.2;
       } else if (k.upJustPressed && !p.grounded && p.canDoubleJump && jumpMult > 0) {
         p.vy = JUMP_FORCE * jumpMult * 0.9;
         p.canDoubleJump = false;
         if (audioInst) audioInst.jump();
         spawnParticle(p.x, p.y + p.height, '#ff4b4b', 15);
         k.upJustPressed = false;
+        p.squashX = 0.85; p.squashY = 1.2;
       }
       k.upJustPressed = false;
 
@@ -261,6 +329,19 @@ export default function Advergame() {
       p.x += p.vx;
       p.y += p.vy;
       p.grounded = false;
+
+      if (!p.grounded) p.jumpTimer += 16.6;
+      else p.jumpTimer = 0;
+
+      p.squashX += (1 - p.squashX) * 0.3;
+      p.squashY += (1 - p.squashY) * 0.3;
+
+      if (p.state === PLAYER_STATE.PUKA_OVERDRIVE && Math.random() > 0.6) {
+        p.ghosts.push({ x: p.x, y: p.y, alpha: 0.4 });
+        if (p.ghosts.length > 5) p.ghosts.shift();
+      }
+      p.ghosts.forEach((g) => g.alpha -= 0.03);
+      p.ghosts = p.ghosts.filter((g) => g.alpha > 0);
 
       s.entities.forEach((ent) => {
         if (ent.type === ENTITY.DYNAMIC_REWARD && ent.active) {
@@ -294,6 +375,9 @@ export default function Advergame() {
             } else if (p.vy > 0 && p.y + p.height - p.vy <= entity.y + 15) {
               p.y = entity.y - p.height; p.vy = 0; p.grounded = true; p.lastSafeX = p.x; p.lastSafeY = p.y;
               if (p.hasPet) p.canDoubleJump = true;
+              if (!wasGrounded) {
+                p.squashX = 1.25; p.squashY = 0.75;
+              }
             } else {
               p.vx = 0;
               if (p.x < entity.x) p.x = entity.x - p.width;
@@ -303,14 +387,14 @@ export default function Advergame() {
             entity.active = false;
             if (entity.rewardType === 'PET') {
               p.hasPet = true;
-              setUiState((prev) => ({ ...prev, message: '\u00a1MASCOTA YOSHI! Doble Salto + Velocidad', messageType: 'success' }));
+              setUiState((prev) => ({ ...prev, message: '¡MASCOTA YOSHI! Doble Salto + Velocidad', messageType: 'success' }));
               if (audioInst) audioInst.powerup();
               spawnParticle(entity.x, entity.y, '#ff4b4b', 30, true);
             } else if (entity.rewardType === 'PUKA') {
               p.state = PLAYER_STATE.PUKA_OVERDRIVE; p.stateTimer = 8000;
-              setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.PUKA_OVERDRIVE, message: '\u00a1PUKA POWER EXTRA!', messageType: 'success' }));
+              setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.PUKA_OVERDRIVE, message: '¡PUKA POWER EXTRA!', messageType: 'success' }));
               if (audioInst) audioInst.powerup();
-              spawnParticle(entity.x, entity.y, '#ff4b4b', 30, true);
+              spawnParticle(entity.x, entity.y, '#ffd700', 30, true);
             } else {
               s.score += 1;
               if (audioInst) audioInst.coin();
@@ -325,21 +409,21 @@ export default function Advergame() {
               if (audioInst) audioInst.stomp();
               spawnParticle(entity.x, entity.y, theme.floor, 15); s.score += 2;
             } else {
+              if (audioInst) audioInst.hurt();
+              triggerShake(10, 150);
+              triggerHitstop(2);
               if (p.hasPet) {
                 p.hasPet = false; p.canDoubleJump = false; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
                 entity.active = false;
-                if (audioInst) audioInst.hurt();
-                setUiState((prev) => ({ ...prev, message: '\u00a1MASCOTA PERDIDA!', messageType: 'warning' }));
+                setUiState((prev) => ({ ...prev, message: '¡MASCOTA PERDIDA!', messageType: 'warning' }));
               } else if (p.isGiant) {
                 p.isGiant = false; p.width = 40; p.height = 60; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
                 entity.active = false;
-                if (audioInst) audioInst.hurt();
-                setUiState((prev) => ({ ...prev, message: '\u00a1PODER PERDIDO!', messageType: 'warning' }));
+                setUiState((prev) => ({ ...prev, message: '¡PODER PERDIDO!', messageType: 'warning' }));
               } else {
                 p.vx = p.facingLeft ? 10 : -10; p.vy = -5;
                 s.score = Math.max(0, s.score - 1);
-                if (audioInst) audioInst.hurt();
-                setUiState((prev) => ({ ...prev, message: '\u00a1GOLPE! -1 \u{1FA99}', messageType: 'error' }));
+                setUiState((prev) => ({ ...prev, message: '¡GOLPE! -1 🪙', messageType: 'error' }));
               }
             }
           } else if (entity.type === ENTITY.SUPER_FRUIT && entity.active) {
@@ -347,7 +431,7 @@ export default function Advergame() {
             if (!p.isGiant) { p.isGiant = true; p.width = 60; p.height = 90; p.y -= 30; }
             s.lives += 1;
             if (audioInst) audioInst.powerup();
-            setUiState((prev) => ({ ...prev, message: '\u00a1CAMU CAMU! +1 VIDA', messageType: 'success', lives: s.lives }));
+            setUiState((prev) => ({ ...prev, message: '¡CAMU CAMU! +1 VIDA', messageType: 'success', lives: s.lives }));
             spawnParticle(entity.x, entity.y, '#dc143c', 20);
           } else if ((entity.type === ENTITY.VENDING_GENERIC || entity.type === ENTITY.VENDING_PUKA) && entity.active) {
             const isPuka = entity.type === ENTITY.VENDING_PUKA;
@@ -357,13 +441,16 @@ export default function Advergame() {
               if (audioInst) audioInst.powerup();
               const newState = isPuka ? PLAYER_STATE.PUKA_OVERDRIVE : PLAYER_STATE.GENERIC_RUSH;
               p.state = newState; p.stateTimer = isPuka ? 8000 : 4000;
-              setUiState((prev) => ({ ...prev, playerState: newState, message: isPuka ? '\u00a1PUKA POWER! Energ\u00eda Natural' : '\u00a1RUSH DE QU\u00cdMICOS!', messageType: isPuka ? 'success' : 'warning' }));
-              spawnParticle(entity.x, entity.y, isPuka ? '#ff4b4b' : '#3b82f6', 30);
+              setUiState((prev) => ({ ...prev, playerState: newState, message: isPuka ? '¡PUKA POWER! Energía Natural' : '¡RUSH DE QUÍMICOS!', messageType: isPuka ? 'success' : 'warning' }));
+              spawnParticle(entity.x, entity.y, isPuka ? '#ffd700' : '#3b82f6', 30);
+              if (isPuka) triggerShake(4, 100);
+              else triggerShake(8, 250);
             }
           } else if (entity.type === ENTITY.GOAL) {
             p.isDead = true;
             if (audioInst) audioInst.victory();
             if (!couponDone()) { applyGameCoupon(); setCouponDone(true); }
+            dl({ event: 'puka_game_victory', coins: s.score });
             setAppState(APP_STATE.VICTORY);
             return;
           }
@@ -374,6 +461,8 @@ export default function Advergame() {
       cam.x += (targetCamX - cam.x) * 0.1;
       if (cam.x < 0) cam.x = 0;
 
+      if (s.shakeTimer > 0) s.shakeTimer -= 16.6;
+
       s.particles.forEach((part, idx) => {
         part.life -= 16.6; part.x += part.vx; part.y += part.vy;
         part.alpha = Math.max(0, part.life / part.maxLife);
@@ -383,15 +472,38 @@ export default function Advergame() {
 
     if (canvasEl) render(canvasEl.getContext('2d')!, s, theme);
     rafId = requestAnimationFrame(gameLoop);
-  }  function render(ctx: CanvasRenderingContext2D, s: typeof engineState, theme: typeof THEMES[keyof typeof THEMES]) {
+  }
+
+  function drawParallaxLayer(ctx: CanvasRenderingContext2D, vw: number, vh: number, color: string, scrollFactor: number, isMid: boolean) {
+    const offset = -(engineState.camera.x * scrollFactor) % (vw * 2);
+    ctx.fillStyle = color + (isMid ? '30' : '15');
+    for (let x = offset - vw; x < vw + vw; x += vw * 0.8) {
+      const h = isMid ? 80 + Math.sin(x * 0.01) * 30 : 40 + Math.sin(x * 0.02) * 15;
+      ctx.beginPath();
+      ctx.arc(x, vh - 120 - h, isMid ? 120 : 60, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function render(ctx: CanvasRenderingContext2D, s: typeof engineState, theme: typeof THEMES[keyof typeof THEMES]) {
     const { camera, viewport, player } = s;
     if (viewport.width <= 0 || viewport.height <= 0) return;
     const genderData = GENDERS[selection().gender!];
+    const now = Date.now();
+    const pc = PARALLAX_COLORS[theme.id] || { far: '#ccc', mid: '#999' };
 
     ctx.save();
+
+    if (s.shakeTimer > 0) {
+      const sx = (Math.random() - 0.5) * s.shakeIntensity;
+      const sy = (Math.random() - 0.5) * s.shakeIntensity;
+      ctx.translate(sx, sy);
+    }
+
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, viewport.width, viewport.height);
-    ctx.restore();
+    drawParallaxLayer(ctx, viewport.width, viewport.height, pc.far, 0.1, false);
+    drawParallaxLayer(ctx, viewport.width, viewport.height, pc.mid, 0.4, true);
 
     ctx.save();
     ctx.translate(-camera.x, 0);
@@ -408,23 +520,37 @@ export default function Advergame() {
 
     ctx.textBaseline = 'top';
     s.entities.forEach((entity) => {
-      if (entity.x < camera.x - 200 || entity.x > camera.x + viewport.width + 200) return;
+      const isPlatform = entity.type === ENTITY.PLATFORM;
+      const cullMargin = isPlatform ? 1000 : 200;
+      if (entity.x < camera.x - cullMargin || entity.x > camera.x + viewport.width + cullMargin) return;
 
       if (entity.type === ENTITY.PLATFORM) {
-        ctx.fillStyle = theme.platform;
+        const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + 20);
+        g.addColorStop(0, theme.platform);
+        g.addColorStop(1, theme.floor);
+        ctx.fillStyle = g;
         ctx.fillRect(entity.x, entity.y, entity.width, 20);
         const rh = entity.height === 20 ? 0 : entity.height - 20;
-        ctx.fillStyle = theme.floor;
+        const g2 = ctx.createLinearGradient(entity.x, entity.y + 20, entity.x, entity.y + 20 + rh);
+        g2.addColorStop(0, theme.floor);
+        g2.addColorStop(1, theme.floor + '80');
+        ctx.fillStyle = g2;
         if (rh > 0) ctx.fillRect(entity.x, entity.y + 20, entity.width, rh);
       } else if (entity.type === ENTITY.STATIC_BLOCK) {
-        ctx.fillStyle = theme.platform;
+        const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + entity.height);
+        g.addColorStop(0, theme.platform);
+        g.addColorStop(1, theme.floor);
+        ctx.fillStyle = g;
         ctx.fillRect(entity.x, entity.y, entity.width, entity.height);
         ctx.strokeStyle = theme.floor; ctx.lineWidth = 3;
         ctx.strokeRect(entity.x, entity.y, entity.width, entity.height);
       } else if (entity.type === ENTITY.SURPRISE_BLOCK) {
-        ctx.fillStyle = entity.isHit ? '#7f8c8d' : '#f1c40f';
+        const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + entity.height);
+        g.addColorStop(0, entity.isHit ? '#95a5a6' : '#f1c40f');
+        g.addColorStop(1, entity.isHit ? '#7f8c8d' : '#e67e22');
+        ctx.fillStyle = g;
         ctx.fillRect(entity.x, entity.y, entity.width, entity.height);
-        ctx.strokeStyle = '#e67e22'; ctx.lineWidth = 2;
+        ctx.strokeStyle = '#d35400'; ctx.lineWidth = 2;
         ctx.strokeRect(entity.x, entity.y, entity.width, entity.height);
         if (!entity.isHit) {
           ctx.fillStyle = '#d35400'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
@@ -434,12 +560,23 @@ export default function Advergame() {
         ctx.font = '30px Arial'; ctx.textAlign = 'left';
         if (entity.rewardType === 'PET') {
           ctx.shadowColor = 'rgba(255, 75, 75, 1)'; ctx.shadowBlur = 15;
-          ctx.fillText('\u{1F408}', entity.x, entity.y); ctx.shadowBlur = 0;
-        } else if (entity.rewardType === 'PUKA') { ctx.fillText('\u{1F36B}', entity.x, entity.y); }
-        else { ctx.fillText('\u{1FA99}', entity.x, entity.y); }
+          ctx.fillText('🐈', entity.x, entity.y); ctx.shadowBlur = 0;
+        } else if (entity.rewardType === 'PUKA') { ctx.fillText('🍫', entity.x, entity.y); }
+        else { ctx.fillText('🪙', entity.x, entity.y); }
       } else if (entity.type === ENTITY.COIN && entity.active) {
-        ctx.textAlign = 'left'; ctx.font = '30px Arial';
-        ctx.fillText('\u{1FA99}', entity.x, entity.y);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const coinScale = 0.6 + Math.abs(Math.sin(now / 120)) * 0.4;
+        const cx = entity.x + entity.width / 2;
+        const cy = entity.y + entity.height / 2;
+        const r = ctx.createRadialGradient(cx, cy, 0, cx, cy, 20);
+        r.addColorStop(0, 'rgba(255,215,0,0.8)');
+        r.addColorStop(1, 'rgba(255,215,0,0)');
+        ctx.fillStyle = r;
+        ctx.fillRect(cx - 25, cy - 25, 50, 50);
+        ctx.font = `${Math.round(26 * coinScale)}px Arial`;
+        ctx.fillText('🪙', cx - 13 * coinScale + 5, cy + 2);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
       } else if (entity.type === ENTITY.ENEMY && entity.active) {
         ctx.save();
         ctx.font = '40px Arial'; ctx.textAlign = 'left';
@@ -448,27 +585,53 @@ export default function Advergame() {
         ctx.restore();
       } else if (entity.type === ENTITY.VENDING_GENERIC || entity.type === ENTITY.VENDING_PUKA) {
         if (!entity.active) return;
-        ctx.textAlign = 'left';
         const isPuka = entity.type === ENTITY.VENDING_PUKA;
-        ctx.fillStyle = isPuka ? '#e11d48' : '#1e3a8a';
+        ctx.textAlign = 'left';
+
+        ctx.save();
+        if (isPuka) {
+          ctx.shadowColor = '#ffd700';
+          ctx.shadowBlur = 20;
+          ctx.strokeStyle = '#ffd700';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(entity.x - 3, entity.y - 3, entity.width + 6, entity.height + 6);
+          ctx.shadowBlur = 0;
+        }
+
+        const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + entity.height);
+        if (isPuka) {
+          g.addColorStop(0, '#e11d48'); g.addColorStop(0.5, '#be123c'); g.addColorStop(1, '#881337');
+        } else {
+          g.addColorStop(0, '#1e3a8a'); g.addColorStop(0.5, '#1e40af'); g.addColorStop(1, '#172554');
+        }
+        ctx.fillStyle = g;
         ctx.fillRect(entity.x, entity.y, entity.width, entity.height);
+
+        if (isPuka) {
+          ctx.shadowColor = '#ffd700';
+          ctx.shadowBlur = 10;
+        }
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(entity.x + 10, entity.y + 10, entity.width - 20, entity.height - 40);
         ctx.font = '30px Arial';
-        ctx.fillText(isPuka ? '\u{1F36B}' : '\u{1F364}', entity.x + 25, entity.y + 20);
+        ctx.fillText(isPuka ? '🍫' : '🍤', entity.x + 25, entity.y + 20);
+        ctx.restore();
+
         const label = isPuka ? 'PUKA POWER' : 'RED BULL';
+        ctx.save();
         ctx.font = '900 18px Arial';
         const tw = ctx.measureText(label).width;
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(entity.x + (entity.width / 2) - (tw / 2) - 8, entity.y - 32, tw + 16, 24);
-        ctx.fillStyle = isPuka ? '#ff4b4b' : '#60a5fa';
-        ctx.shadowColor = isPuka ? '#ff4b4b' : 'transparent'; ctx.shadowBlur = isPuka ? 15 : 0;
+        ctx.fillStyle = isPuka ? '#ffd700' : '#60a5fa';
+        if (isPuka) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; }
         ctx.fillText(label, entity.x + (entity.width / 2) - (tw / 2), entity.y - 28);
-        ctx.shadowBlur = 0;
+        ctx.restore();
+
         ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial';
-        ctx.fillText((isPuka ? COST_PUKA : COST_GENERIC) + ' \u{1FA99}', entity.x + 20, entity.y + entity.height - 25);
+        ctx.fillText((isPuka ? COST_PUKA : COST_GENERIC) + ' 🪙', entity.x + 20, entity.y + entity.height - 25);
       } else if (entity.type === ENTITY.SUPER_FRUIT && entity.active) {
-        ctx.textAlign = 'left'; ctx.font = '40px Arial'; ctx.fillText('\u{1F352}', entity.x, entity.y);
+        ctx.textAlign = 'left'; ctx.font = '40px Arial'; ctx.fillText('🍒', entity.x, entity.y);
       } else if (entity.type === ENTITY.GOAL) {
         ctx.textAlign = 'left'; ctx.font = '100px Arial'; ctx.fillText(theme.goal, entity.x, entity.y);
       }
@@ -486,50 +649,71 @@ export default function Advergame() {
     ctx.save();
     const isRunning = Math.abs(player.vx) > 0.5;
     let emoji = isRunning ? genderData.run : genderData.idle;
-    if (player.state === PLAYER_STATE.TACHYCARDIA) emoji = '\u{1F635}';
+    if (player.state === PLAYER_STATE.TACHYCARDIA) emoji = '😵';
+    if (player.sugarCrashTimer > 0) emoji = '🥵';
 
-    if (player.state === PLAYER_STATE.PUKA_OVERDRIVE) { ctx.shadowColor = 'rgba(255,75,75,1)'; ctx.shadowBlur = 25; }
-    else if (player.state === PLAYER_STATE.TACHYCARDIA) { ctx.filter = 'grayscale(100%)'; }
+    for (const g of player.ghosts) {
+      ctx.globalAlpha = g.alpha * 0.3;
+      ctx.font = '40px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emoji, g.x + player.width / 2, g.y + player.height / 2);
+    }
+    ctx.globalAlpha = 1;
+
+    if (player.state === PLAYER_STATE.PUKA_OVERDRIVE) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 30; }
+    else if (player.state === PLAYER_STATE.TACHYCARDIA) {
+      ctx.filter = 'hue-rotate(90deg) contrast(150%) saturate(200%)';
+    }
 
     const cx = player.x + player.width / 2;
     const cy = player.y + player.height / 2;
     ctx.translate(cx, cy);
     ctx.save();
     if (!player.facingLeft) ctx.scale(-1, 1);
+    ctx.scale(player.squashX, player.squashY);
     ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
 
     if (player.hasPet) {
       ctx.shadowColor = 'rgba(255,75,75,1)'; ctx.shadowBlur = 20;
       ctx.font = '50px Arial';
-      if (isRunning && !player.isDead && player.grounded) ctx.translate(0, Math.abs(Math.sin(Date.now() / 60)) * -4);
-      ctx.fillText('\u{1F408}', 0, 15);
+      if (isRunning && !player.isDead && player.grounded) ctx.translate(0, Math.abs(Math.sin(now / 60)) * -4);
+      ctx.fillText('🐈', 0, 15);
       ctx.shadowBlur = 0;
       ctx.font = player.isGiant ? '60px Arial' : '40px Arial';
       ctx.fillText(emoji, 0, -25);
     } else {
       ctx.font = player.isGiant ? '85px Arial' : '55px Arial';
       if (isRunning && !player.isDead && player.grounded) {
-        ctx.rotate(Math.sin(Date.now() / 80) * 0.15);
-        ctx.translate(0, Math.abs(Math.sin(Date.now() / 80)) * -8);
+        ctx.rotate(Math.sin(now / 80) * 0.15);
+        ctx.translate(0, Math.abs(Math.sin(now / 80)) * -8);
       }
       ctx.fillText(emoji, 0, 0);
     }
     ctx.restore();
 
     if (player.state === PLAYER_STATE.PUKA_OVERDRIVE && !player.isDead) {
-      const pt = Date.now() / 150;
+      const pt = now / 150;
       ctx.font = player.isGiant ? '35px Arial' : '20px Arial';
+      ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 15;
+      ctx.fillText('⚡', Math.cos(pt) * (player.width * 0.9), Math.sin(pt) * (player.height * 0.7));
+      ctx.fillText('⚡', Math.cos(pt + Math.PI) * (player.width * 0.9), Math.sin(pt + Math.PI) * (player.height * 0.7));
+      ctx.fillText('✨', Math.cos(pt + 1.5) * (player.width * 1.2), Math.sin(pt + 1.5) * (player.height * 0.9));
+      ctx.fillText('✨', Math.cos(pt + 4.5) * (player.width * 1.2), Math.sin(pt + 4.5) * (player.height * 0.9));
       ctx.shadowBlur = 0;
-      ctx.fillText('\u26A1', Math.cos(pt) * (player.width * 0.9), Math.sin(pt) * (player.height * 0.7));
-      ctx.fillText('\u26A1', Math.cos(pt + Math.PI) * (player.width * 0.9), Math.sin(pt + Math.PI) * (player.height * 0.7));
     }
 
     if (player.idleTimer > 3000 && !player.isDead) {
       ctx.font = '25px Arial';
-      ctx.fillText('\u{1F4A4}', 15, -player.height / 2 - 15 + Math.sin(Date.now() / 200) * 5);
+      ctx.fillText('💤', 15, -player.height / 2 - 15 + Math.sin(now / 200) * 5);
     }
 
     ctx.restore();
+
+    if (player.state === PLAYER_STATE.PUKA_OVERDRIVE) {
+      ctx.restore();
+    }
+
     ctx.restore();
   }
 
@@ -581,6 +765,9 @@ export default function Advergame() {
     const isRush = pst === PLAYER_STATE.GENERIC_RUSH;
     const isTachy = pst === PLAYER_STATE.TACHYCARDIA;
 
+    const goalEntity = s.entities.find((e) => e.type === ENTITY.GOAL);
+    const progressPct = goalEntity ? Math.min(100, Math.max(0, (s.player.x / goalEntity.x) * 100)) : 0;
+
     return (
       <div class="fixed inset-0 bg-black overflow-hidden select-none font-sans">
         <div class="absolute top-0 left-0 right-0 z-10 flex justify-between items-start p-2 sm:p-3 pointer-events-none">
@@ -599,9 +786,11 @@ export default function Advergame() {
               <span class="text-lg sm:text-xl font-black text-white">{ui.coins}</span>
             </div>
           </div>
+          <div class="flex items-center gap-2">
             <div class="text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50"
               classList={{ 'text-red-500': ui.timeLeft < 15, 'text-white': ui.timeLeft >= 15 }}>
-            {Math.floor(ui.timeLeft / 60)}:{(ui.timeLeft % 60).toString().padStart(2, '0')}
+              {Math.floor(ui.timeLeft / 60)}:{(ui.timeLeft % 60).toString().padStart(2, '0')}
+            </div>
           </div>
         </div>
 
@@ -621,9 +810,21 @@ export default function Advergame() {
           {isPuka ? 'PUKA OVERDRIVE' : isRush ? 'GENERIC RUSH' : isTachy ? 'TACHYCARDIA' : 'SISTEMA ESTABLE'}
         </div>
 
+        <div class="absolute top-0 left-0 right-0 z-10 flex justify-center pt-1 sm:pt-2 px-20">
+          <div class="w-full max-w-md bg-slate-900/60 backdrop-blur-sm rounded-full h-1.5 sm:h-2 overflow-hidden border border-slate-700/40">
+            <div class="h-full rounded-full transition-all duration-300 ease-out"
+              classList={{
+                'bg-gradient-to-r from-red-500 to-orange-400': progressPct < 40,
+                'bg-gradient-to-r from-orange-400 to-yellow-400': progressPct >= 40 && progressPct < 70,
+                'bg-gradient-to-r from-yellow-400 to-green-400': progressPct >= 70,
+              }}
+              style={{ width: `${progressPct}%` }} />
+          </div>
+        </div>
+
         {ui.message && (
           <div class="absolute top-28 sm:top-32 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
-            <div class="px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs"
+            <div class="px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs animate-pulse"
               classList={{
                 'bg-red-500/20 text-red-400 border-red-500/40': ui.messageType === 'success',
                 'bg-gray-800/80 text-white border-gray-600/40': ui.messageType === 'error',
@@ -640,12 +841,12 @@ export default function Advergame() {
         </div>
 
         <Show when={!showTutorial()}>
-          <div class="absolute bottom-4 sm:bottom-6 left-0 right-0 px-4 sm:px-6 flex justify-between z-30 md:hidden">
-            <div class="flex gap-3">
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2190'}</button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2192'}</button>
+          <div class="absolute bottom-3 sm:bottom-6 left-0 right-0 px-3 sm:px-6 flex justify-between items-end z-30 md:hidden">
+            <div class="flex gap-3 sm:gap-4">
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60 backdrop-blur-sm rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60 backdrop-blur-sm rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
             </div>
-            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-red-500/40 backdrop-blur-sm rounded-full border border-red-500/50 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.3)] active:bg-red-500/60 transition-colors">{'\u2191'}</button>
+            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-red-500/30 backdrop-blur-sm rounded-2xl border-2 border-red-500/50 text-white text-3xl sm:text-4xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
           </div>
         </Show>
       </div>
@@ -668,15 +869,28 @@ export default function Advergame() {
     <>
       <Switch>
         <Match when={appState() === APP_STATE.MENU_GENDER}>
-          <div class="w-full min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-            <h1 class="text-5xl font-black italic mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">PUKA POWER</h1>
-            <p class="text-xl text-slate-400 mb-8">Elige a tu personaje para la aventura</p>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto w-full">
+          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-5">
+              <div class="absolute top-10 left-10 w-72 h-72 bg-red-500 rounded-full blur-3xl animate-pulse" />
+              <div class="absolute bottom-10 right-10 w-96 h-96 bg-orange-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s" />
+            </div>
+            <div class="absolute top-6 left-6 z-10">
+              <a href="/tienda"
+                class="flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+                {iconArrowLeft} Volver a la Tienda
+              </a>
+            </div>
+            <h1 class="text-5xl sm:text-7xl font-black italic mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-orange-400 drop-shadow-[0_0_30px_rgba(220,38,38,0.3)]">PUKA POWER</h1>
+            <p class="text-lg sm:text-xl text-slate-400 mb-6 sm:mb-10">Elige a tu personaje para la aventura</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto w-full px-4">
               {Object.values(GENDERS).map((g) => (
                 <button onClick={() => { setSelection({ gender: g.id, theme: null }); setAppState(APP_STATE.MENU_LEVEL); }}
-                  class="bg-slate-800 p-6 sm:p-8 rounded-2xl border-2 border-slate-700 hover:border-red-500 hover:scale-105 transition-all group">
-                  <div class="text-5xl sm:text-6xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform">{g.idle}</div>
-                  <div class="font-bold text-base sm:text-lg uppercase">{g.name}</div>
+                  class="bg-slate-800/80 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border-2 border-slate-700/50 hover:border-red-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(220,38,38,0.15)] transition-all duration-300 group relative overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-b from-red-500/0 via-red-500/0 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div class="relative z-10">
+                    <div class="text-6xl sm:text-7xl mb-3 sm:mb-4 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">{g.idle}</div>
+                    <div class="font-bold text-base sm:text-lg uppercase tracking-wider">{g.name}</div>
+                  </div>
                 </button>
               ))}
             </div>
@@ -684,21 +898,34 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.MENU_LEVEL}>
-          <div class="w-full min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-5">
+              <div class="absolute top-20 right-20 w-64 h-64 bg-blue-500 rounded-full blur-3xl animate-pulse" />
+              <div class="absolute bottom-20 left-20 w-80 h-80 bg-purple-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.7s" />
+            </div>
             <button onClick={() => setAppState(APP_STATE.MENU_GENDER)}
-              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors">
+              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors z-10">
               {iconArrowLeft} Cambiar Personaje
             </button>
-            <h2 class="text-4xl font-black mb-8">¿A dónde vas hoy?</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl mx-auto">
+            <h2 class="text-4xl sm:text-5xl font-black mb-8 sm:mb-10">¿A dónde vas hoy?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 w-full max-w-5xl mx-auto px-4">
               {Object.values(THEMES).map((t) => (
                 <button onClick={() => startGame(t.id)}
                   style={{ 'background-color': t.bg }}
-                  class="relative overflow-hidden p-6 sm:p-8 rounded-2xl border-4 border-transparent hover:border-white hover:scale-105 transition-all text-left group shadow-2xl">
-                  <div class="text-6xl sm:text-7xl absolute right-4 bottom-4 opacity-50 group-hover:opacity-100 transition-opacity">{t.goal}</div>
+                  class="relative overflow-hidden p-6 sm:p-8 rounded-2xl border-4 border-transparent hover:border-white hover:scale-105 hover:shadow-2xl transition-all duration-300 text-left group shadow-xl">
+                  <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
+                  <div class="text-6xl sm:text-7xl absolute right-3 sm:right-4 bottom-3 sm:bottom-4 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">{t.goal}</div>
                   <div class="relative z-10">
-                    <h3 class="font-black text-2xl sm:text-3xl text-black/80 uppercase">{t.name}</h3>
-                    <p class="font-bold text-black/60 mt-2 text-sm sm:text-base">Dificultad Normal</p>
+                    <h3 class="font-black text-2xl sm:text-3xl text-black/80 uppercase tracking-wide">{t.name}</h3>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="inline-block w-2 h-2 rounded-full bg-black/40" />
+                      <p class="font-bold text-black/60 text-sm sm:text-base tracking-wide">Dificultad Normal</p>
+                    </div>
+                    <div class="mt-3 flex gap-1.5">
+                      {Array.from({ length: 3 }).map(() => (
+                        <span class="inline-block w-8 h-1.5 rounded-full bg-black/30 group-hover:bg-black/50 transition-colors" />
+                      ))}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -707,36 +934,48 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.GAME_OVER}>
-          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-            <div class="text-8xl mb-6 grayscale opacity-50">{'\u{1F480}'}</div>
-            <h1 class="text-6xl font-black uppercase mb-4 text-red-500">Game Over</h1>
-            <p class="text-2xl text-slate-300 mb-8">Monedas recolectadas: <span class="text-yellow-400 font-bold">{uiState().coins} {'\u{1FA99}'}</span></p>
-            <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
-              class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
-              {iconPlay} JUGAR DE NUEVO
-            </button>
+          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-red-950/50 to-slate-900 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600 rounded-full blur-3xl animate-pulse" />
+            </div>
+            <div class="relative z-10">
+              <div class="text-8xl mb-6 grayscale opacity-60 animate-pulse">{'\u{1F480}'}</div>
+              <h1 class="text-6xl sm:text-7xl font-black uppercase mb-4 text-red-500 drop-shadow-[0_0_20px_rgba(220,38,38,0.3)]">Game Over</h1>
+              <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
+              <p class="text-base text-slate-500 mb-8">¡No te rindas! El poder del rayo te espera.</p>
+              <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
+                class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
+                {iconPlay} JUGAR DE NUEVO
+              </button>
+            </div>
           </div>
         </Match>
 
         <Match when={appState() === APP_STATE.VICTORY}>
-          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-            <div class="text-8xl mb-6 animate-bounce">{selection().theme ? THEMES[selection().theme!].goal : '\u{1F3C6}'}</div>
-            <h1 class="text-6xl font-black uppercase mb-4 text-green-400">{'\u{00A1}'}Llegaste a tiempo!</h1>
-            <p class="text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold">{uiState().coins} {'\u{1FA99}'}</span></p>
-            <Show when={couponDone()}>
-              <div class="bg-green-500/20 border border-green-500 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg">
-                {'\u{1F389}'} Cupón BOLT15 activado — 15% de descuento
+          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-green-950/30 to-slate-900 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+              <div class="absolute top-10 left-10 w-64 h-64 bg-green-500 rounded-full blur-3xl animate-pulse" />
+              <div class="absolute bottom-10 right-10 w-80 h-80 bg-yellow-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s" />
+            </div>
+            <div class="relative z-10">
+              <div class="text-8xl sm:text-9xl mb-6 animate-bounce drop-shadow-[0_0_30px_rgba(34,197,94,0.3)]">{selection().theme ? THEMES[selection().theme!].goal : '\u{1F3C6}'}</div>
+              <h1 class="text-5xl sm:text-6xl font-black uppercase mb-4 text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">{'\u{00A1}'}Llegaste a tiempo!</h1>
+              <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
+              <Show when={couponDone()}>
+                <div class="bg-green-500/20 backdrop-blur-sm border-2 border-green-500/50 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                  {'\u{1F389}'} Cupón BOLT15 activado — 15% de descuento
+                </div>
+              </Show>
+              <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
+                  class="bg-red-500 hover:bg-red-600 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
+                  {iconPlay} JUGAR DE NUEVO
+                </button>
+                <a href="/tienda"
+                  class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 animate-pulse shadow-[0_0_20px_rgba(234,179,8,0.3)]">
+                  Ir a la tienda {'\u{1F6D2}'}
+                </a>
               </div>
-            </Show>
-            <div class="flex gap-4">
-              <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
-                class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
-                {iconPlay} JUGAR DE NUEVO
-              </button>
-              <a href="/tienda"
-                class="bg-yellow-500 hover:bg-yellow-600 text-black font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 animate-pulse">
-                Ir a la tienda {'\u{1F6D2}'}
-              </a>
             </div>
           </div>
         </Match>
@@ -748,30 +987,31 @@ export default function Advergame() {
 
       <Show when={appState() === APP_STATE.PLAYING && showTutorial()}>
         <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
-          <div class="bg-slate-800 rounded-2xl border border-slate-700 max-w-sm w-full p-8 text-center text-white shadow-2xl space-y-6">
+          <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 max-w-sm w-full p-8 text-center text-white shadow-2xl shadow-red-500/5 space-y-6 relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500" />
             <div class="text-5xl">{'\u{1F3AE}'}</div>
-            <h2 class="text-2xl font-black uppercase tracking-wider">{'\u{00A1}'}A jugar!</h2>
+            <h2 class="text-2xl font-black uppercase tracking-wider drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{'\u{00A1}'}A jugar!</h2>
             <ul class="text-left space-y-3 text-sm text-slate-300">
-              <li class="flex items-start gap-3">
+              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
                 <span class="text-xl flex-shrink-0">{'\u{2190}'}{'\u{2192}'}</span>
                 <span><strong class="text-white">Flechas izquierda/derecha</strong> o botones táctiles para moverte</span>
               </li>
-              <li class="flex items-start gap-3">
+              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
                 <span class="text-xl flex-shrink-0">{'\u{2191}'}</span>
                 <span><strong class="text-white">Flecha arriba / Espacio</strong> o botón rojo para saltar</span>
               </li>
-              <li class="flex items-start gap-3">
+              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
                 <span class="text-xl flex-shrink-0">{'\u{1FA99}'}</span>
                 <span><strong class="text-white">Recolecta monedas</strong> y usa las máquinas expendedoras</span>
               </li>
-              <li class="flex items-start gap-3">
+              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
                 <span class="text-xl flex-shrink-0">{'\u{1F3C1}'}</span>
                 <span><strong class="text-white">Llega a la meta</strong> para ganar tu cupón BOLT15</span>
               </li>
             </ul>
             <button
               onClick={() => { setShowTutorial(false); engineState.startTime = Date.now(); }}
-              class="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 px-8 rounded-xl text-lg tracking-wider uppercase transition-all hover:scale-105 shadow-lg"
+              class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black py-4 px-8 rounded-xl text-lg tracking-wider uppercase transition-all hover:scale-105 shadow-lg shadow-red-500/20"
             >
               {'\u{1F680}'} ¡Comenzar!
             </button>

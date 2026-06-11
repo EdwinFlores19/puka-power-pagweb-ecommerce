@@ -5,6 +5,8 @@ import ProductCatalog from '@/islands/ProductCatalog';
 import CartSidebar from '@/islands/CartSidebar';
 
 export const prerender = false;
+
+Astro.response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 ---
 
 <BaseLayout

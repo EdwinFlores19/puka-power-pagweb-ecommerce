@@ -6,9 +6,18 @@ export const prerender = false;
 ---
 
 <BaseLayout title="Arcade Oficial | Puka Power">
-  <main class="w-full min-h-screen bg-slate-950 flex flex-col items-center justify-center overflow-hidden">
+  <main class="w-full min-h-screen bg-slate-950 flex flex-col items-center justify-center overflow-hidden relative">
     <div class="w-full max-w-5xl h-[85vh] md:h-[90vh] flex items-center justify-center relative z-10 px-4">
       <Advergame client:only="solid-js" />
+    </div>
+    <div class="fixed portrait:flex landscape:hidden inset-0 z-[100] bg-slate-950/95 backdrop-blur-md items-center justify-center p-8 text-center select-none">
+      <div class="max-w-xs space-y-6">
+        <div class="text-7xl">📱</div>
+        <h2 class="text-2xl font-black text-white uppercase tracking-wider">Gira tu dispositivo</h2>
+        <p class="text-base text-slate-400 leading-relaxed">Por favor, gira tu dispositivo a modo horizontal para disfrutar la experiencia Arcade.</p>
+        <div class="text-5xl animate-pulse text-yellow-400">↻</div>
+        <p class="text-xs text-slate-500">Modo horizontal requerido</p>
+      </div>
     </div>
   </main>
 </BaseLayout>

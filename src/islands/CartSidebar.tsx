@@ -13,7 +13,10 @@ import {
   clearCart,
   applyCoupon,
   clearCoupon,
+  applyGameCoupon,
 } from '@/store/cartStore';
+import { VALID_COUPON } from '@/lib/constants';
+import type { CouponState } from '@/lib/types';
 import OrderSuccessModal from './OrderSuccessModal';
 
 function Skeleton() {
@@ -55,6 +58,23 @@ export default function CartSidebar() {
 
   onMount(() => {
     setIsMounted(true);
+    const couponRaw = typeof window !== 'undefined' ? localStorage.getItem('puka_coupon') : null;
+    if (couponRaw) {
+      try {
+        const parsed = JSON.parse(couponRaw) as CouponState;
+        if (parsed.applied && parsed.code === VALID_COUPON.code) {
+          const current = $coupon.get();
+          if (!current.applied) {
+            applyGameCoupon();
+            if (typeof window !== 'undefined' && Array.isArray((window as Record<string, unknown>).dataLayer)) {
+              ((window as Record<string, unknown>).dataLayer as unknown[]).push({ event: 'puka_coupon_gamified_applied', coupon: 'BOLT15' });
+            }
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
   });
 
   const cart = useStore($cart);
