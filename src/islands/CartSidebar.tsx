@@ -325,13 +325,7 @@ export default function CartSidebar() {
           </div>
         </Show>
 
-        <div class="pt-4 border-t border-brand-primary/5 flex flex-col sm:flex-row items-center justify-around gap-4 text-center">
-          <div class="flex items-center space-x-2 text-brand-dark/60 text-xs">
-            <svg class="w-4 h-4 text-brand-accent" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <span>Garantía de Devolución</span>
-          </div>
+        <div class="pt-4 border-t border-brand-primary/5 flex justify-center text-center">
           <div class="flex items-center space-x-2 text-brand-dark/60 text-xs">
             <svg class="w-4 h-4 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1m9 1h3a1 1 0 001-1v-4a1 1 0 00-.293-.707l-5-5A1 1 0 0012.586 5H11"/>

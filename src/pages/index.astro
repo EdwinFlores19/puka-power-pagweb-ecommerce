@@ -60,26 +60,16 @@ import TrustBadges from '../components/TrustBadges.astro';
               <h4 class="font-serif text-xl font-bold text-brand-accentGold mb-2">¿Prefieres comprar con QR?</h4>
               <p class="text-sm text-brand-light/80 mb-6">Escanea con Yape, Plin o tu banca móvil para obtener 15% de descuento directo en tu primer pedido.</p>
 
-              <div class="bg-brand-light p-4 rounded-2xl shadow-xl w-48 h-48 flex items-center justify-center relative">
-                <div class="w-40 h-40 grid grid-cols-5 gap-2 relative">
-                  {Array.from({ length: 25 }).map((_, i) => {
-                    const darkCells = [0, 1, 3, 4, 5, 7, 9, 10, 12, 14, 16, 17, 19, 20, 22, 24, 6, 8, 18];
-                    const isAccent = i === 12;
-                    return (
-                      <div
-                        class="rounded-sm w-full h-full"
-                        classList={{
-                          'bg-brand-primary': darkCells.includes(i) && !isAccent,
-                          'bg-brand-secondary': !darkCells.includes(i) && !isAccent,
-                          'bg-brand-accent': isAccent,
-                        }}
-                      />
-                    );
-                  })}
-                  <div class="absolute inset-0 m-auto w-12 h-12 bg-brand-light rounded-xl border border-brand-accent flex items-center justify-center shadow-lg">
-                    <span class="font-serif text-[10px] font-black text-brand-primary">PUKA</span>
-                  </div>
-                </div>
+              <div class="bg-brand-light p-4 rounded-2xl shadow-xl w-48 h-48 flex items-center justify-center">
+                <img
+                  src="/sprites/qr-yape.jpeg"
+                  alt="Código QR para pagar con Yape - Escanea para obtener 15% de descuento"
+                  class="w-full h-full object-contain rounded-xl"
+                  width="192"
+                  height="192"
+                  decoding="async"
+                  loading="lazy"
+                />
               </div>
 
               <p class="text-xs text-brand-light/60 font-bold mt-4 uppercase tracking-widest">Código: PUKAPOWER15</p>

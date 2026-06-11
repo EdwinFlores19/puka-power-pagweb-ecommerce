@@ -30,31 +30,19 @@ export default function ProductCatalog() {
                 'from-brand-primary/10 to-brand-primary/25 border-brand-primary/10': product.id === 1,
               }}
             >
-              {product.id === 3 && (
-                <span class="absolute -top-1 -left-1 bg-brand-success text-brand-light text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-br-lg">
-                  {product.badge}
-                </span>
+              {product.id === 1 && (
+                <div class="flex items-end justify-center gap-0.5 h-full">
+                  <img src="/sprites/Puka-Power.png" alt="" class="w-8 h-12 object-contain opacity-70 translate-y-1.5" width="32" height="48" decoding="async" />
+                  <img src="/sprites/Puka-Power.png" alt="" class="w-10 h-16 object-contain z-10 drop-shadow-[0_4px_8px_rgba(123,17,19,0.3)]" width="40" height="64" decoding="async" />
+                  <img src="/sprites/Puka-Power.png" alt="" class="w-8 h-12 object-contain opacity-70 translate-y-1.5" width="32" height="48" decoding="async" />
+                </div>
               )}
-              <div class="w-14 h-24 bg-gradient-to-r from-red-800 to-red-950 rounded-2xl shadow-lg relative flex flex-col justify-between py-2 px-1 text-center"
-                classList={{
-                  'from-red-700 via-brand-primary to-red-900': product.id === 2,
-                  'from-yellow-700 via-brand-accentGold to-yellow-900': product.id === 3,
-                }}
-              >
-                <svg class="text-brand-accentGold text-xs mx-auto" classList={{ 'animate-pulse': product.id === 1, 'animate-bounce': product.id === 2 }} width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-                <span class="text-[7px] text-brand-light font-black tracking-tighter">
-                  {product.id === 1 && 'PUKA 3x'}
-                  {product.id === 2 && 'PUKA 6x'}
-                  {product.id === 3 && 'SUBSCRIBE'}
-                </span>
-                <span class="text-[6px] text-brand-light/60">
-                  {product.id === 1 && '355ML'}
-                  {product.id === 2 && 'BEST VALUE'}
-                  {product.id === 3 && '24 LATAS'}
-                </span>
-              </div>
+              {product.id === 2 && (
+                <img src="/sprites/six-pack-puka-power.png" alt="Six pack Puka Power - 6 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" decoding="async" />
+              )}
+              {product.id === 3 && (
+                <img src="/sprites/24-puka-power.png" alt="Suscripción mensual Puka Power - 24 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" decoding="async" />
+              )}
             </div>
 
             <div class="space-y-2 text-center sm:text-left flex-1">

@@ -9,17 +9,13 @@ const badges = [
     icon: 'document',
   },
   {
-    label: 'Garantía de Devolución',
-    icon: 'return',
-  },
-  {
     label: 'Envío a todo el Perú',
     icon: 'truck',
   },
 ];
 ---
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="grid grid-cols-3 gap-3">
   {badges.map((badge) => (
     <div class="flex items-center justify-center space-x-2 bg-brand-light/5 py-3 px-3 rounded-xl border border-brand-light/10">
       {badge.icon === 'shield' && (
@@ -30,11 +26,6 @@ const badges = [
       {badge.icon === 'document' && (
         <svg class="w-5 h-5 text-brand-accentGold shrink-0" fill="currentColor" viewBox="0 0 24 24">
           <path d="M20 8l-6-6H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8zm-2 12H6V4h7v5h5v11z"/>
-        </svg>
-      )}
-      {badge.icon === 'return' && (
-        <svg class="w-5 h-5 text-brand-accentGold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
       )}
       {badge.icon === 'truck' && (
