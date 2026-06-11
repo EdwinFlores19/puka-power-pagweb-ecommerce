@@ -56,18 +56,38 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.PORTADA]: { w: 800, h: 600 },
 };
 
-const imageCache = new Map<string, HTMLImageElement>();
+const DEBUG_MODE = true;
 
-function getSprite(src: string): HTMLImageElement | null {
-  let img = imageCache.get(src);
-  if (!img) {
-    img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = src;
-    imageCache.set(src, img);
-  }
-  if (img.complete && img.naturalWidth > 0) return img;
-  return null;
+const imageCache = new Map<string, HTMLImageElement>();
+let assetsPreloaded = false;
+
+function preloadAssets(): Promise<void> {
+  if (assetsPreloaded) return Promise.resolve();
+  const paths = Object.values(SPRITE);
+  return new Promise((resolve) => {
+    let loaded = 0;
+    const total = paths.length;
+    if (total === 0) { assetsPreloaded = true; resolve(); return; }
+    paths.forEach((src) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        imageCache.set(src, img);
+        loaded++;
+        if (loaded >= total) { assetsPreloaded = true; resolve(); }
+      };
+      img.onerror = () => {
+        loaded++;
+        if (loaded >= total) { assetsPreloaded = true; resolve(); }
+      };
+      img.src = src;
+    });
+  });
+}
+
+function usePreloadedSprite(src: string): HTMLImageElement | null {
+  const img = imageCache.get(src);
+  return img && img.complete && img.naturalWidth > 0 ? img : null;
 }
 
 function drawSprite(
@@ -77,24 +97,26 @@ function drawSprite(
   dx: number, dy: number, dw: number, dh: number,
   flipX = false,
 ) {
-  const img = getSprite(src);
+  const img = usePreloadedSprite(src);
   if (!img) {
     ctx.fillStyle = '#ff00ff40';
-    ctx.fillRect(dx, dy, dw, dh);
+    const fx = Math.floor(dx), fy = Math.floor(dy), fw = Math.floor(dw), fh = Math.floor(dh);
+    ctx.fillRect(fx, fy, fw, fh);
     return;
   }
   const totalFrames = SPRITE_FRAMES[src] || 1;
-  const sw = img.naturalWidth / totalFrames;
-  const sh = img.naturalHeight;
+  const sw = Math.floor(img.naturalWidth / totalFrames);
+  const sh = Math.floor(img.naturalHeight);
   const sx = Math.min(frameIndex, totalFrames - 1) * sw;
   const sy = 0;
+  const fx = Math.floor(dx), fy = Math.floor(dy), fw = Math.floor(dw), fh = Math.floor(dh);
   ctx.save();
   if (flipX) {
-    ctx.translate(dx + dw, dy);
+    ctx.translate(fx + fw, fy);
     ctx.scale(-1, 1);
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, fw, fh);
   } else {
-    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+    ctx.drawImage(img, sx, sy, sw, sh, fx, fy, fw, fh);
   }
   ctx.restore();
 }
@@ -284,6 +306,7 @@ export default function Advergame() {
   const [inventory, setInventory] = createSignal<string[]>([]);
   const [currentLevelIndex, setCurrentLevelIndex] = createSignal(1);
   const [ammo, setAmmo] = createSignal(10);
+  const [assetsReady, setAssetsReady] = createSignal(false);
 
   const getCameraOffset = () => (typeof window !== 'undefined' && window.innerWidth > 768 ? 400 : 150);
 
@@ -1176,6 +1199,15 @@ export default function Advergame() {
       }
     });
 
+    if (DEBUG_MODE) {
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 1.5;
+      s.entities.forEach((e) => {
+        if (!e.active && e.type !== ENTITY.PLATFORM) return;
+        ctx.strokeRect(e.x, e.y, e.width, e.height);
+      });
+    }
+
     ctx.save();
     s.particles.forEach((p) => {
       ctx.globalAlpha = p.alpha;
@@ -1353,11 +1385,17 @@ export default function Advergame() {
       ctx.fillText('💤', cx, cy - player.height / 2 - 20 + Math.sin(now / 200) * 5);
     }
 
+    if (DEBUG_MODE) {
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(player.x, player.y, player.width, player.height);
+      ctx.strokeRect(s.companion.x, s.companion.y, s.companion.width, s.companion.height);
+    }
+
+    ctx.filter = 'none';
     ctx.restore();
 
-    if (player.state === PLAYER_STATE.PUKA_OVERDRIVE) {
-      ctx.restore();
-    }
+    ctx.restore();
 
     ctx.restore();
   }
@@ -1376,8 +1414,10 @@ export default function Advergame() {
   }
 
   function PlayingScreen() {
-    onMount(() => {
+    onMount(async () => {
       if (!canvasEl || !containerEl) return;
+      if (!assetsPreloaded) await preloadAssets();
+      setAssetsReady(true);
       const ro = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const w = Math.round(entry.contentRect.width);
