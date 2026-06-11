@@ -33,6 +33,9 @@ const SPRITE = {
   ABYO: '/sprites/npc_abyo_luchador.png',
   CAT: '/sprites/gato_negro_cuerpo_completo.png',
   PORTADA: '/sprites/portada.png',
+  PUKA_POWER: '/sprites/Puka-Power.png',
+  RED_BULL: '/sprites/red-bull.png',
+  MONSTER: '/sprites/monster.png',
 } as const;
 
 const SPRITE_FRAMES: Record<string, number> = {
@@ -59,6 +62,9 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.ABYO]: { w: 44, h: 66 },
   [SPRITE.CAT]: { w: 40, h: 40 },
   [SPRITE.PORTADA]: { w: 800, h: 600 },
+  [SPRITE.PUKA_POWER]: { w: 30, h: 45 },
+  [SPRITE.RED_BULL]: { w: 24, h: 36 },
+  [SPRITE.MONSTER]: { w: 24, h: 36 },
 };
 
 const DEBUG_MODE = false;
@@ -429,7 +435,7 @@ export default function Advergame() {
         curX += 800;
       } else if (p === 3) {
         curX += 180; addPlat(curX, 800);
-        s.entities.push({ type: ENTITY.TRAP_CHEMICAL, x: curX + 200, y: groundY - 24, width: 80, height: 24, active: true });
+        s.entities.push({ type: ENTITY.TRAP_CHEMICAL, x: curX + 200, y: groundY - 36, width: 24, height: 36, active: true });
         s.entities.push({ type: ENTITY.NPC_ABYO, x: curX + 500, y: groundY - 72, width: 44, height: 66, active: true, vx: -1.5, startX: curX + 350, range: 300 });
         curX += 800;
       } else {
@@ -866,7 +872,7 @@ export default function Advergame() {
             (ninja as any).chemTimer = now_ms + 2000 + Math.random() * 2000;
             const dir = p.x < ninja.x ? -1 : 1;
             const chemSpeed = 6 * (LEVEL_CONFIG[currentLevelIndex() as keyof typeof LEVEL_CONFIG]?.chemSpeedMult || 1);
-            s.entities.push({ type: ENTITY.TRAP_CHEMICAL, x: ninja.x + (dir > 0 ? 40 : -20), y: ninja.y + 10, width: 20, height: 20, vx: dir * chemSpeed, vy: -3, active: true });
+            s.entities.push({ type: ENTITY.TRAP_CHEMICAL, x: ninja.x + (dir > 0 ? 40 : -20), y: ninja.y + 10, width: 24, height: 36, vx: dir * chemSpeed, vy: -3, active: true });
           }
         }
       });
@@ -941,7 +947,7 @@ export default function Advergame() {
             if (inventory().length < 2) {
               setInventory(prev => [...prev, 'PUKA_POWER']);
             }
-            spawnFloatingText(entity.x, entity.y - 40, '¡Toma esto, Pucca! ⚡🌸');
+            spawnFloatingText(entity.x, entity.y - 40, '¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ⚡🌸');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#ffd700', 25);
             triggerShake(4, 150);
@@ -961,7 +967,7 @@ export default function Advergame() {
                 e.active = false;
               }
             });
-            spawnFloatingText(entity.x, entity.y - 40, '¡KIAAA! ¡Siente el poder del Camu Camu! 🥋💥');
+            spawnFloatingText(entity.x, entity.y - 40, '¡KIAAA! ¡Siente la energía de Sooga, Pucca! 🥋💥');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#ef4444', 30);
             triggerShake(8, 200);
@@ -971,7 +977,7 @@ export default function Advergame() {
             entity.active = false;
             s.timerFrozen = true;
             s.timerFreezeEnd = Date.now() + 5000;
-            spawnFloatingText(entity.x, entity.y - 40, '¡Fideos listos para el camino! 🍜🔋');
+            spawnFloatingText(entity.x, entity.y - 40, '¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜🔋');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#22c55e', 25);
             break;
@@ -1214,21 +1220,21 @@ export default function Advergame() {
     ctx.translate(s2 % vw, 0);
     ctx.globalAlpha = 0.55;
     if (themeId === 'GOH_RONG') {
-      // Traditional houses (pagodas)
+      // Traditional houses (pagodas) - Raised higher for absolute visibility
       ctx.fillStyle = '#7B1113';
       for (let i = -1; i < 4; i++) {
         const bx = i * 400;
-        ctx.fillRect(bx + 50, vh - 250, 150, 250);
+        ctx.fillRect(bx + 50, vh - 400, 150, 400);
         ctx.beginPath();
-        ctx.moveTo(bx + 20, vh - 250);
-        ctx.quadraticCurveTo(bx + 125, vh - 300, bx + 230, vh - 250);
-        ctx.lineTo(bx + 200, vh - 235);
-        ctx.lineTo(bx + 50, vh - 235);
+        ctx.moveTo(bx + 20, vh - 400);
+        ctx.quadraticCurveTo(bx + 125, vh - 450, bx + 230, vh - 400);
+        ctx.lineTo(bx + 200, vh - 385);
+        ctx.lineTo(bx + 50, vh - 385);
         ctx.closePath();
         ctx.fill();
         
         ctx.beginPath();
-        ctx.arc(bx + 125, vh - 180, 15, 0, Math.PI * 2);
+        ctx.arc(bx + 125, vh - 330, 15, 0, Math.PI * 2);
         ctx.fillStyle = '#FFD700';
         ctx.fill();
         ctx.fillStyle = '#7B1113';
@@ -1305,6 +1311,42 @@ export default function Advergame() {
         ctx.fill();
       }
     }
+    ctx.restore();
+  }
+
+  function drawSpeechBubble(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
+    ctx.save();
+    ctx.font = 'bold 11px Arial';
+    const textWidth = ctx.measureText(text).width;
+    const bubbleWidth = textWidth + 16;
+    const bubbleHeight = 24;
+    const bx = x - bubbleWidth / 2;
+    const by = y - bubbleHeight - 12;
+
+    // Draw bubble background
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(bx, by, bubbleWidth, bubbleHeight, 6) : ctx.rect(bx, by, bubbleWidth, bubbleHeight);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw triangle pointing down
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(x - 6, by + bubbleHeight);
+    ctx.lineTo(x, by + bubbleHeight + 8);
+    ctx.lineTo(x + 6, by + bubbleHeight);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw text
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, by + bubbleHeight / 2);
     ctx.restore();
   }
 
@@ -1396,6 +1438,11 @@ export default function Advergame() {
         ctx.restore();
         ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('CHING', entity.x, entity.y - 8);
+        
+        // Floating Puka Power can above head!
+        drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
+        // Speech Bubble
+        drawSpeechBubble(ctx, "¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ⚡🌸", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_ABYO && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 15;
@@ -1404,6 +1451,9 @@ export default function Advergame() {
         ctx.restore();
         ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('ABYO', entity.x, entity.y - 8);
+        
+        // Speech Bubble
+        drawSpeechBubble(ctx, "¡KIAAA! ¡Siente la energía de Sooga, Pucca! 🥋💥", entity.x + entity.width / 2, entity.y - 8);
       } else if (entity.type === ENTITY.NPC_TIOS && entity.active) {
         ctx.save();
         ctx.shadowColor = '#22c55e'; ctx.shadowBlur = 20;
@@ -1412,15 +1462,13 @@ export default function Advergame() {
         ctx.restore();
         ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#22c55e'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('TÍOS', entity.x, entity.y - 8);
+        
+        // Speech Bubble
+        drawSpeechBubble(ctx, "¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜🔋", entity.x + 20, entity.y - 8);
       } else if (entity.type === ENTITY.TRAP_CHEMICAL && entity.active) {
         ctx.save();
-        ctx.globalAlpha = 0.4 + Math.sin(now / 200) * 0.2;
-        ctx.fillStyle = '#3b82f6';
-        ctx.fillRect(entity.x, entity.y, entity.width, entity.height);
-        ctx.fillStyle = '#60a5fa';
-        ctx.font = '20px Arial'; ctx.textAlign = 'center';
-        ctx.fillText('☣️', entity.x + entity.width / 2, entity.y + 2);
-        ctx.globalAlpha = 1;
+        const spriteSrc = (Math.floor(entity.x) % 2 === 0) ? SPRITE.RED_BULL : SPRITE.MONSTER;
+        drawSprite(ctx, spriteSrc, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.restore();
       } else if (entity.type === ENTITY.PROJECTILE_BULL && entity.active) {
         ctx.save();
@@ -1729,7 +1777,7 @@ export default function Advergame() {
 
     return (
       <div class="fixed inset-0 bg-black overflow-hidden select-none font-sans">
-        <div class="absolute top-0 left-0 right-0 z-10 flex justify-between items-start p-2 sm:p-3 pointer-events-none">
+        <div class="absolute top-0 left-0 right-0 z-30 flex justify-between items-start p-2 sm:p-3 pointer-events-none">
           <div class="flex items-center gap-2">
             <div class="flex gap-0.5">
               {Array.from({ length: Math.max(0, ui.lives) }).map(() => (
@@ -1759,7 +1807,7 @@ export default function Advergame() {
           </div>
         </div>
 
-        <div class="absolute top-12 sm:top-14 left-2 sm:left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none"
+        <div class="absolute top-12 sm:top-14 left-2 sm:left-3 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none"
           classList={{
             'text-red-400 bg-red-500/10 border-red-500/30': isPuka,
             'text-blue-400 bg-blue-400/10 border-blue-400/30': isRush,
@@ -1776,7 +1824,7 @@ export default function Advergame() {
         </div>
 
         <Show when={!showTutorial()}>
-          <div class="absolute top-12 sm:top-14 right-2 sm:right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-900/30 backdrop-blur-sm pointer-events-auto"
+          <div class="absolute top-12 sm:top-14 right-2 sm:right-3 z-30 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-900/30 backdrop-blur-sm pointer-events-auto"
             classList={{ 'opacity-40': inv.length === 0 }}>
             <span class="text-[10px] sm:text-xs font-bold text-purple-300 mr-1">INV</span>
             {Array.from({ length: 2 }).map((_, i) => (
@@ -1785,7 +1833,9 @@ export default function Advergame() {
                   'border-yellow-400/60 bg-yellow-400/20 shadow-[0_0_8px_rgba(234,179,8,0.3)]': i < inv.length,
                   'border-slate-600/30 bg-slate-800/30': i >= inv.length,
                 }}>
-                {i < inv.length ? '🥫' : ''}
+                {i < inv.length ? (
+                  <img src="/sprites/Puka-Power.png" class="w-5 h-5 object-contain" />
+                ) : ''}
               </div>
             ))}
             <button
@@ -1801,7 +1851,7 @@ export default function Advergame() {
           </div>
         </Show>
 
-        <div class="absolute top-0 left-0 right-0 z-10 flex justify-center pt-1 sm:pt-2 px-20">
+        <div class="absolute top-0 left-0 right-0 z-30 flex justify-center pt-1 sm:pt-2 px-20">
           <div class="w-full max-w-lg flex items-center gap-2">
             <span class="text-[10px] sm:text-xs font-bold text-slate-400 bg-slate-900/60 backdrop-blur-sm px-1.5 py-0.5 rounded border border-slate-700/40 shrink-0">
               NIVEL {currentLevelIndex()}/3
