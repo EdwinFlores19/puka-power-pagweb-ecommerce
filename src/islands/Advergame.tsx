@@ -671,6 +671,14 @@ export default function Advergame() {
       else if (k.right && p.state !== PLAYER_STATE.TACHYCARDIA) { p.vx = currentSpeed * currentSpeedMult; p.facingLeft = false; }
       else p.vx *= currentLevelIndex() === 3 ? 0.88 : 0.8;
 
+      if (typeof window !== 'undefined' && (window as any).autoNinjaJump) {
+        if (p.x >= 710 && p.x <= 750 && p.grounded) {
+          k.up = true;
+          k.upJustPressed = true;
+          console.log('[DEBUG COLLISION] Auto Ninja Jump triggered at X:', p.x);
+        }
+      }
+
       if (k.up && p.grounded && jumpMult > 0) {
         p.vy = JUMP_FORCE * jumpMult;
         p.grounded = false;
@@ -759,31 +767,33 @@ export default function Advergame() {
         s.companion.vx = Math.min(s.companion.vx, p.vx);
       }
 
-      // Platform collision resolution for Garu
+      // Platform collision resolution for Garu - Disabled while recovering so he can jump through platforms cleanly!
       s.companion.grounded = false;
-      const nearbyForGaru = s.entities.filter((e) => e.type === ENTITY.PLATFORM && e.x < s.companion.x + 300 && e.x + e.width > s.companion.x - 300);
-      for (const entity of nearbyForGaru) {
-        if (isAABBCollision(s.companion, entity)) {
-          const isHittingTop = s.companion.vy >= 0 && (s.companion.y + s.companion.height >= entity.y - 2) && (s.companion.y + s.companion.height - s.companion.vy <= entity.y + 15);
-          
-          if (isHittingTop) {
-            s.companion.y = entity.y - s.companion.height;
-            s.companion.vy = 0;
-            s.companion.grounded = true;
-          } else if (s.companion.vy < 0 && s.companion.y <= entity.y + entity.height && s.companion.y - s.companion.vy >= entity.y + entity.height - 15) {
-            s.companion.y = entity.y + entity.height;
-            s.companion.vy = 0;
-          } else {
-            s.companion.vx = 0;
-            if (s.companion.x < entity.x) {
-              s.companion.x = entity.x - s.companion.width;
-              // Wall collision: Auto jump!
-              if (s.companion.grounded) {
-                s.companion.vy = JUMP_FORCE * 1.05;
-                s.companion.grounded = false;
-              }
+      if (!s.companion.isNinjaRecovering) {
+        const nearbyForGaru = s.entities.filter((e) => e.type === ENTITY.PLATFORM && e.x < s.companion.x + 300 && e.x + e.width > s.companion.x - 300);
+        for (const entity of nearbyForGaru) {
+          if (isAABBCollision(s.companion, entity)) {
+            const isHittingTop = s.companion.vy >= 0 && (s.companion.y + s.companion.height >= entity.y - 2) && (s.companion.y + s.companion.height - s.companion.vy <= entity.y + 15);
+            
+            if (isHittingTop) {
+              s.companion.y = entity.y - s.companion.height;
+              s.companion.vy = 0;
+              s.companion.grounded = true;
+            } else if (s.companion.vy < 0 && s.companion.y <= entity.y + entity.height && s.companion.y - s.companion.vy >= entity.y + entity.height - 15) {
+              s.companion.y = entity.y + entity.height;
+              s.companion.vy = 0;
             } else {
-              s.companion.x = entity.x + entity.width;
+              s.companion.vx = 0;
+              if (s.companion.x < entity.x) {
+                s.companion.x = entity.x - s.companion.width;
+                // Wall collision: Auto jump!
+                if (s.companion.grounded) {
+                  s.companion.vy = JUMP_FORCE * 1.05;
+                  s.companion.grounded = false;
+                }
+              } else {
+                s.companion.x = entity.x + entity.width;
+              }
             }
           }
         }
@@ -823,7 +833,7 @@ export default function Advergame() {
           spawnParticle(s.companion.x, s.companion.y + 30, '#ffffff', 4);
           spawnParticle(s.companion.x + 20, s.companion.y + 30, '#60a5fa', 2);
         }
-        if (s.companion.grounded) {
+        if (s.companion.y <= 430 || s.companion.vy >= -2) {
           s.companion.isNinjaRecovering = false;
         }
       }
@@ -918,7 +928,7 @@ export default function Advergame() {
       const nearby = s.entities.filter((e) => e.x < cam.x + vp.width + 200 && e.x + (e.width || 0) > cam.x - 200);
 
       for (const entity of nearby) {
-        if (!entity.active && entity.type !== ENTITY.PLATFORM) continue;
+        if (entity.active === false && entity.type !== ENTITY.PLATFORM) continue;
 
         const isSolid = entity.type === ENTITY.PLATFORM;
 
