@@ -33,12 +33,8 @@ const messages: Message[] = [
   },
   {
     icon: '\u{1F3AE}',
-    text: '\u{00A1}Tenemos un arcade ninja! Juega, divi\u{00E9}rtete y gana un cup\u{00F3}n de 15% de descuento. \u{00BF}Aceptas el desaf\u{00ED}o? \u{1F680}',
+    text: '\u{00A1}Tenemos un arcade ninja! Completa los 3 niveles y desbloquea un descuento exclusivo. \u{00BF}Aceptas el desaf\u{00ED}o? \u{1F680}',
     action: () => { window.location.href = '/juego'; },
-  },
-  {
-    icon: '\u{1F389}',
-    text: 'Usa el c\u{00F3}digo BOLT15 para 15% de descuento en tu primer pedido. \u{00A1}El poder del rayo te espera! \u{26A1}',
   },
 ];
 

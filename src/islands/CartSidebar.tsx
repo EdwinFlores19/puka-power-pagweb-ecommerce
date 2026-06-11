@@ -11,7 +11,6 @@ import {
   decrementItemInCart,
   removeFromCart,
   clearCart,
-  applyCoupon,
   clearCoupon,
 } from '@/store/cartStore';
 import OrderSuccessModal from './OrderSuccessModal';
@@ -23,14 +22,9 @@ export default function CartSidebar() {
   const total = useStore($total);
   const discount = useStore($discount);
   const coupon = useStore($coupon);
-  const [couponInput, setCouponInput] = createSignal('');
   const [showModal, setShowModal] = createSignal(false);
   const [isProcessing, setIsProcessing] = createSignal(false);
   const [checkoutError, setCheckoutError] = createSignal('');
-
-  const handleApplyCoupon = () => {
-    applyCoupon(couponInput());
-  };
 
   const handleCheckout = async () => {
     if (cart().length === 0) return;
@@ -171,38 +165,35 @@ export default function CartSidebar() {
         <Show when={cart().length > 0}>
           <div class="border-t border-brand-primary/10 pt-4 space-y-4">
             <div class="space-y-1.5">
-              <label for="coupon-input" class="block text-xs font-bold uppercase tracking-wider text-brand-dark/60">
-                ¿Tienes un cupón de descuento?
-              </label>
-              <div class="flex space-x-2">
-                <input
-                  type="text"
-                  id="coupon-input"
-                  placeholder="Ej. BOLT15"
-                  value={couponInput()}
-                  onInput={(e) => setCouponInput(e.currentTarget.value)}
-                  class="flex-grow px-4 py-2.5 rounded-xl bg-brand-secondary border border-brand-primary/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none text-sm transition-all uppercase"
-                  aria-label="Código de cupón"
-                />
-                <button
-                  onClick={handleApplyCoupon}
-                  class="px-5 py-2.5 bg-brand-primary hover:bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200"
-                  aria-label="Aplicar cupón"
-                >
-                  Aplicar
-                </button>
-              </div>
-              <Show when={coupon().error}>
-                <p class="text-xs font-bold mt-1.5 text-brand-accent flex items-center space-x-1">
-                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
-                  <span>{coupon().error}</span>
-                </p>
+               <Show when={coupon().applied}>
+                <div class="space-y-1.5">
+                  <p class="text-xs font-bold text-brand-success flex items-center space-x-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <span>¡Descuento por juego aplicado! 15% OFF.</span>
+                  </p>
+                </div>
               </Show>
-              <Show when={coupon().applied}>
-                <p class="text-xs font-bold mt-1.5 text-brand-success flex items-center space-x-1">
-                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                  <span>¡Cupón <strong>{coupon().code}</strong> aplicado! 15% de descuento.</span>
-                </p>
+              <Show when={!coupon().applied}>
+                <div class="bg-gradient-to-br from-purple-900/5 to-brand-primary/5 rounded-2xl border border-purple-500/20 p-4">
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0 text-lg">🎮</div>
+                    <div class="space-y-1 min-w-0">
+                      <p class="text-xs font-black uppercase tracking-wider text-purple-700">¿Quieres 15% de descuento?</p>
+                      <p class="text-[10px] text-brand-dark/60 leading-relaxed">
+                        Juega nuestro arcade Ninja, completa los 3 niveles y desbloquea un descuento exclusivo. ¡El poder del rayo te espera!
+                      </p>
+                      <a
+                        href="/juego"
+                        class="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-brand-light font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-all duration-200 shadow-md"
+                      >
+                        <span>Jugar ahora</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </Show>
             </div>
 

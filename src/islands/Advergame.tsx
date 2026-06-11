@@ -863,8 +863,7 @@ export default function Advergame() {
         p.isDead = true;
         if (audioInst) audioInst.victory();
         trackGameEvent('puka_campaign_victory', { finalCoins: s.score });
-        if (!couponDone()) { applyGameCoupon(); setCouponDone(true); }
-        setAppState(APP_STATE.VICTORY);
+        setAppState(APP_STATE.LEVEL_COMPLETED);
         return;
       }
 
@@ -2144,7 +2143,7 @@ export default function Advergame() {
               <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
               <Show when={couponDone()}>
                 <div class="bg-green-500/20   border-2 border-green-500/50 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.15)]">
-                  {'\u{1F389}'} Cupón BOLT15 activado — 15% de descuento
+                  {'\u{1F389}'} Descuento de 15% activado — canjeado en tu carrito
                 </div>
               </Show>
               <Show when={!couponDone()}>
@@ -2155,7 +2154,7 @@ export default function Advergame() {
                     window.location.href = '/tienda';
                   }}
                   class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 animate-pulse shadow-[0_0_20px_rgba(234,179,8,0.3)] mx-auto mb-4">
-                  {'\u{1F389}'} Canjear descuento ahora
+                  {'\u{1F389}'} Canjear 15% de descuento ahora
                 </button>
               </Show>
               <div class="flex flex-col sm:flex-row gap-4 justify-center">
