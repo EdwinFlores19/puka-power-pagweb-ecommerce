@@ -37,6 +37,8 @@ const SPRITE = {
   RED_BULL: '/sprites/red-bull.png',
   MONSTER: '/sprites/monster.png',
   MALA_PUCCA: '/sprites/mala_pucca.png',
+  CAT_PUKA_POWER: '/sprites/Gato-Tomando-Puka-Power.png',
+  GARU_ATTACK: '/sprites/garu_con_pose_de_ataque.png',
 } as const;
 
 const SPRITE_FRAMES: Record<string, number> = {
@@ -67,6 +69,8 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.RED_BULL]: { w: 24, h: 36 },
   [SPRITE.MONSTER]: { w: 24, h: 36 },
   [SPRITE.MALA_PUCCA]: { w: 40, h: 60 },
+  [SPRITE.CAT_PUKA_POWER]: { w: 45, h: 45 },
+  [SPRITE.GARU_ATTACK]: { w: 40, h: 60 },
 };
 
 const DEBUG_MODE = false;
@@ -137,8 +141,8 @@ function drawSprite(
 }
 
 const LEVEL_CONFIG = {
-  1: { segments: 20, minCoins: 10, name: 'El Restaurante Goh-Rong', themeId: 'GOH_RONG' as ThemeId, chemSpeedMult: 1.0 },
-  2: { segments: 30, minCoins: 15, name: 'El Bosque de Bambú Místico', themeId: 'BAMBOO_FOREST' as ThemeId, chemSpeedMult: 1.4 },
+  1: { segments: 20, minCoins: 3, name: 'El Restaurante Goh-Rong', themeId: 'GOH_RONG' as ThemeId, chemSpeedMult: 1.0 },
+  2: { segments: 30, minCoins: 5, name: 'El Bosque de Bambú Místico', themeId: 'BAMBOO_FOREST' as ThemeId, chemSpeedMult: 1.4 },
   3: { segments: 40, minCoins: 0, name: 'La Montaña de la Tortuga Sagrada', themeId: 'TURTLE_MOUNTAIN' as ThemeId, chemSpeedMult: 1.0 },
 };
 
@@ -327,7 +331,7 @@ export default function Advergame() {
     score: number; lives: number; startTime: number;
     viewport: { width: number; height: number };
     shakeTimer: number; shakeIntensity: number; hitstopFrames: number;
-    companion: { x: number; y: number; vx: number; vy: number; grounded: boolean; width: number; height: number; targetDistance: number; animFrame: number; animTimer: number };
+    companion: { x: number; y: number; vx: number; vy: number; grounded: boolean; width: number; height: number; targetDistance: number; animFrame: number; animTimer: number; isNinjaRecovering?: boolean };
     playerYHistory: number[];
     floatingTexts: { x: number; y: number; text: string; life: number; maxLife: number; alpha: number }[];
     floatingScores: { x: number; y: number; text: string; life: number; maxLife: number; vy: number }[];
@@ -359,7 +363,7 @@ export default function Advergame() {
       entities: [], particles: [], envParticles: [], score: 0, lives: 3, startTime: 0,
       viewport: { width: 800, height: 600 },
       shakeTimer: 0, shakeIntensity: 0, hitstopFrames: 0,
-      companion: { x: 280, y: 100, vx: 5, vy: 0, grounded: false, width: 40, height: 60, targetDistance: 180, animFrame: 0, animTimer: 0 },
+      companion: { x: 280, y: 100, vx: 5, vy: 0, grounded: false, width: 40, height: 60, targetDistance: 180, animFrame: 0, animTimer: 0, isNinjaRecovering: false },
       playerYHistory: [],
       floatingTexts: [],
       floatingScores: [],
@@ -403,6 +407,7 @@ export default function Advergame() {
     let abyoSpawned = false;
     let tiosSpawned = false;
     let malaPuccaSpawned = false;
+    let catPowerSpawned = false;
     const groundY = 500;
     const SEGMENTS = LEVEL_CONFIG[levelIndex as keyof typeof LEVEL_CONFIG]?.segments || 20;
     const platWidth = levelIndex === 3 ? (w: number) => Math.max(40, w - 60) : (w: number) => w;
@@ -457,6 +462,9 @@ export default function Advergame() {
         if (!tiosSpawned && i > 6) {
           tiosSpawned = true;
           s.entities.push({ type: ENTITY.NPC_TIOS, x: curX + 350, y: groundY - 72, width: 48, height: 72, active: true });
+        } else if (!catPowerSpawned && i > 10) {
+          catPowerSpawned = true;
+          s.entities.push({ type: ENTITY.NPC_CAT_PUKA_POWER, x: curX + 350, y: groundY - 45, width: 45, height: 45, active: true });
         } else if (tiosSpawned && i % 4 === 0) {
           s.entities.push({ type: ENTITY.AMMO_BOX, x: curX + 300, y: groundY - 60, width: 30, height: 30, active: true });
         }
@@ -802,13 +810,24 @@ export default function Advergame() {
         }
       }
 
-      // Respawn Garu in front of Puka if he falls off a cliff
-      if (s.companion.y > 1500) {
-        s.companion.x = p.x + 200;
-        s.companion.y = p.y - 100;
-        s.companion.vx = p.vx || BASE_SPEED;
-        s.companion.vy = 0;
+      // Respawn Garu in front of Puka if he falls off a cliff - Epic Ninja Recovery
+      if (s.companion.y > 1500 && !s.companion.isNinjaRecovering) {
+        s.companion.isNinjaRecovering = true;
+        s.companion.x = p.x + 350;
+        s.companion.y = vp.height + 100;
+        s.companion.vy = -16;
+        s.companion.vx = BASE_SPEED;
         s.companion.grounded = false;
+      }
+
+      if (s.companion.isNinjaRecovering) {
+        if (Math.random() < 0.4) {
+          spawnParticle(s.companion.x, s.companion.y + 30, '#ffffff', 4);
+          spawnParticle(s.companion.x + 20, s.companion.y + 30, '#60a5fa', 2);
+        }
+        if (s.companion.grounded) {
+          s.companion.isNinjaRecovering = false;
+        }
       }
 
       // Animation tick — Garu
@@ -990,6 +1009,17 @@ export default function Advergame() {
             spawnFloatingText(entity.x, entity.y - 40, '¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜🔋');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#22c55e', 25);
+            break;
+          }
+          case ENTITY.NPC_CAT_PUKA_POWER: {
+            entity.active = false;
+            if (inventory().length < 2) {
+              setInventory(prev => [...prev, 'PUKA_POWER']);
+            }
+            spawnFloatingText(entity.x, entity.y - 40, '¡Miau! ¡Puka Power natural para ti! 🐱⚡🌸');
+            if (audioInst) audioInst.powerup();
+            spawnParticle(entity.x, entity.y, '#ffd700', 25);
+            triggerShake(4, 150);
             break;
           }
           case ENTITY.NPC_MALA_PUCCA: {
@@ -1462,6 +1492,19 @@ export default function Advergame() {
         drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
         // Speech Bubble
         drawSpeechBubble(ctx, "¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ⚡🌸", entity.x + entity.width / 2, entity.y - 48);
+      } else if (entity.type === ENTITY.NPC_CAT_PUKA_POWER && entity.active) {
+        ctx.save();
+        ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 20;
+        drawSprite(ctx, SPRITE.CAT_PUKA_POWER, 0, entity.x, entity.y, entity.width, entity.height);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText('MIO', entity.x, entity.y - 8);
+        
+        // Floating Puka Power above head
+        drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
+        // Speech Bubble
+        drawSpeechBubble(ctx, "¡Miau! ¡Toma fideos y Puka Power natural! 🐱🍜⚡", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_ABYO && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 15;
@@ -1590,7 +1633,12 @@ export default function Advergame() {
 
     // Garu companion
     ctx.save();
-    if (player.state === PLAYER_STATE.TACHYCARDIA) {
+    if (s.companion.isNinjaRecovering) {
+      ctx.shadowColor = '#60a5fa';
+      ctx.shadowBlur = 15;
+      drawSprite(ctx, SPRITE.GARU_ATTACK, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
+      ctx.shadowBlur = 0;
+    } else if (player.state === PLAYER_STATE.TACHYCARDIA) {
       ctx.shadowColor = 'rgba(255,0,0,0.5)';
       ctx.shadowBlur = 20;
       drawSprite(ctx, SPRITE.GARU_SCARED, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
