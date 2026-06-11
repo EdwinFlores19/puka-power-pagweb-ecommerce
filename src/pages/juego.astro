@@ -1,87 +1,25 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import Footer from '@/components/Footer.astro';
 import Advergame from '@/islands/Advergame';
 
 export const prerender = false;
 ---
-
-<BaseLayout
-  title="¡Juega y Gana! | Puka Power - Gana 15% de Descuento"
-  description="Juega al reto Puka Power, recolecta 10 monedas y gana un cupón de 15% de descuento en tu compra. ¿Aceptas el desafío?"
-  ogType="website"
->
-  <header class="sticky top-0 z-50 bg-brand-dark/95 backdrop-blur-md border-b border-yellow-500/10 py-3">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 flex justify-between items-center">
-      <a href="/" class="flex items-center space-x-2">
-        <span class="font-serif text-xl sm:text-2xl font-extrabold tracking-wider text-yellow-400">PUKA POWER</span>
-        <span class="text-[9px] bg-yellow-400/15 text-yellow-300 font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">Arcade</span>
-      </a>
-      <div class="flex items-center space-x-3">
-        <a
-          href="/tienda"
-          class="text-xs font-bold uppercase tracking-wider text-brand-light/60 hover:text-brand-light transition-colors flex items-center space-x-1"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-          </svg>
-          <span>Tienda</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <section class="py-10 sm:py-16 bg-brand-secondary">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-3">
-      <span class="text-yellow-500 font-extrabold text-xs uppercase tracking-widest">⚡ Desafío relámpago</span>
-      <h1 class="font-serif text-3xl sm:text-5xl font-extrabold text-brand-primary leading-tight">
-        ¡Juega y Gana el <span class="text-brand-accent">15% de Descuento</span>!
-      </h1>
-      <p class="text-sm sm:text-base text-brand-dark/70 font-medium max-w-xl mx-auto">
-        Elige tu personaje, atraviesa el nivel lleno de obstáculos, enemigos y máquinas expendedoras. <strong class="text-brand-primary">¡Llega a la meta</strong> y desbloquea tu código <strong class="text-brand-accent">BOLT15</strong>!
-      </p>
-    </div>
-  </section>
-
-  <main class="flex-grow py-8 sm:py-12 bg-[#0D0518]">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6">
-      <Advergame client:only="solid-js" />
-    </div>
-  </main>
-
-  <section class="py-10 sm:py-14 bg-brand-dark border-t border-yellow-500/5">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-        <div class="space-y-2 p-4">
-          <div class="w-10 h-10 bg-yellow-400/10 rounded-xl flex items-center justify-center mx-auto">
-            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-          </div>
-          <h3 class="font-bold text-sm text-brand-light uppercase tracking-wider">Elige tu Personaje</h3>
-          <p class="text-xs text-brand-light/50">Selecciona entre 4 personajes y elige tu escenario: Colegio, Oficina, Mall o Playa.</p>
-        </div>
-        <div class="space-y-2 p-4">
-          <div class="w-10 h-10 bg-brand-success/10 rounded-xl flex items-center justify-center mx-auto">
-            <svg class="w-5 h-5 text-brand-success" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-          </div>
-          <h3 class="font-bold text-sm text-brand-light uppercase tracking-wider">Llega a la Meta</h3>
-          <p class="text-xs text-brand-light/50">Evita enemigos, usa máquinas expendedoras, consigue la mascota y llega a la meta para ganar.</p>
-        </div>
-        <div class="space-y-2 p-4">
-          <div class="w-10 h-10 bg-brand-accent/10 rounded-xl flex items-center justify-center mx-auto">
-            <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-            </svg>
-          </div>
-          <h3 class="font-bold text-sm text-brand-light uppercase tracking-wider">Canjea al Instante</h3>
-          <p class="text-xs text-brand-light/50">Al llegar a la meta, tu cupón <strong class="text-yellow-400">BOLT15</strong> se activa automáticamente. Solo ve a la tienda y completa tu pedido.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <Footer />
-</BaseLayout>
+<!doctype html>
+<html lang="es" class="m-0 p-0 w-full h-full overflow-hidden">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>¡Juega y Gana! | Puka Power</title>
+    <meta name="description" content="Juega al reto Puka Power, recolecta monedas y gana un cupón de 15% de descuento." />
+    <meta property="og:title" content="¡Juega y Gana! | Puka Power" />
+    <meta property="og:description" content="Juega, gana y consigue tu cupón BOLT15 de 15% de descuento." />
+    <meta property="og:type" content="website" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #0f172a; }
+      body { font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    </style>
+  </head>
+  <body>
+    <Advergame client:only="solid-js" />
+  </body>
+</html>

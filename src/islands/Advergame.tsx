@@ -32,7 +32,9 @@ const GENDERS: Record<GenderId, { id: GenderId; name: string; idle: string; run:
   GIRL: { id: 'GIRL', name: 'Niña', idle: '🧍', run: '🏃' },
   MAN: { id: 'MAN', name: 'Hombre', idle: '🧍‍♂️', run: '🏃‍♂️' },
   WOMAN: { id: 'WOMAN', name: 'Mujer', idle: '🧍‍♀️', run: '🏃‍♀️' },
-};class SoundEngine {
+};
+
+class SoundEngine {
   ctx: AudioContext;
   constructor() {
     this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -66,12 +68,14 @@ const GENDERS: Record<GenderId, { id: GenderId; name: string; idle: string; run:
 interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; }
 interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; }
 interface Keys { left: boolean; right: boolean; up: boolean; upJustPressed: boolean; }
-interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; alpha: number; size: number; }export default function Advergame() {
+interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; alpha: number; size: number; }
+
+export default function Advergame() {
   const [appState, setAppState] = createSignal<number>(APP_STATE.MENU_GENDER);
   const [selection, setSelection] = createSignal<{ gender: GenderId | null; theme: ThemeId | null }>({ gender: null, theme: null });
-  const [uiState, setUiState] = createSignal({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
+  const [uiState, setUiState] = createSignal<{ coins: number; timeLeft: number; message: string; messageType: string; playerState: string; lives: number }>({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
   const [couponDone, setCouponDone] = createSignal(false);
-  const [soundReady, setSoundReady] = createSignal(false);
+  const [showTutorial, setShowTutorial] = createSignal(true);
 
   const getCameraOffset = () => (typeof window !== 'undefined' && window.innerWidth > 768 ? 400 : 150);
 
@@ -155,13 +159,16 @@ interface Particle { x: number; y: number; vx: number; vy: number; life: number;
   }
 
   function startGame(themeId: ThemeId) {
-    if (!audioInst) { audioInst = new SoundEngine(); setSoundReady(true); }
+    if (!audioInst) { audioInst = new SoundEngine(); }
+    resetEngine();
     setSelection((prev) => ({ ...prev, theme: themeId }));
     setAppState(APP_STATE.PLAYING);
     generateLevel(THEMES[themeId]);
     setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
     lastFrameUpdate = 0;
-  }  function gameLoop(time: number) {
+  }
+
+  function gameLoop(time: number) {
     if (appState() !== APP_STATE.PLAYING) { rafId = requestAnimationFrame(gameLoop); return; }
     const s = engineState;
     const p = s.player;
@@ -170,7 +177,7 @@ interface Particle { x: number; y: number; vx: number; vy: number; life: number;
     const vp = s.viewport;
     const theme = THEMES[selection().theme!];
 
-    if (!p.isDead) {
+    if (!showTutorial() && !s.player.isDead) {
       const elapsed = Math.floor((Date.now() - s.startTime) / 1000);
       const timeLeft = TIME_LIMIT - elapsed;
 
@@ -512,7 +519,9 @@ interface Particle { x: number; y: number; vx: number; vy: number; life: number;
 
     ctx.restore();
     ctx.restore();
-  }  function PlayingScreen() {
+  }
+
+  function PlayingScreen() {
     onMount(() => {
       if (!canvasEl || !containerEl) return;
       const ro = new ResizeObserver((entries) => {
@@ -558,59 +567,57 @@ interface Particle { x: number; y: number; vx: number; vy: number; life: number;
     const isTachy = pst === PLAYER_STATE.TACHYCARDIA;
 
     return (
-      <div class="w-full h-screen bg-black overflow-hidden relative flex flex-col select-none font-sans">
-        <div class="absolute top-0 w-full p-4 z-10 flex justify-between items-start pointer-events-none">
-          <div class="flex flex-col gap-2">
-            <div class="flex gap-1 mb-1">
-              {Array.from({ length: Math.max(0, ui.lives) }).map((_, i) => (
-                <svg key={i} class="w-8 h-8 text-red-500 fill-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse" viewBox="0 0 24 24">
+      <div class="fixed inset-0 bg-stone-950 overflow-hidden select-none font-sans">
+        <div class="absolute top-0 w-full p-2 sm:p-3 z-10 flex justify-between items-start pointer-events-none">
+          <div class="flex items-center gap-2">
+            <div class="flex gap-0.5">
+              {Array.from({ length: Math.max(0, ui.lives) }).map(() => (
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-500 fill-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" viewBox="0 0 24 24">
                   <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                 </svg>
               ))}
             </div>
-            <div class="flex items-center gap-2 bg-slate-800/90 px-4 py-2 rounded-xl border border-slate-700 shadow-xl">
-              <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg">
+              <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              <span class="text-2xl font-black text-white">{ui.coins}</span>
-            </div>
-            <div class={"flex items-center gap-2 px-4 py-2 rounded-xl border font-bold text-sm tracking-wide transition-colors shadow-lg " + (isPuka ? 'text-red-500 bg-red-500/10 border-red-500' : isRush ? 'text-blue-400 bg-blue-400/10 border-blue-400' : isTachy ? 'text-gray-400 bg-gray-600/30 border-gray-500' : 'text-green-400 bg-green-400/10 border-green-400')}>
-              <svg class={"w-5 h-5 " + (isPuka ? 'animate-pulse' : '')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isPuka || isRush || isTachy
-                  ? <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  : <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                }
-              </svg>
-              {isPuka ? 'PUKA OVERDRIVE' : isRush ? 'GENERIC RUSH' : isTachy ? 'TACHYCARDIA' : 'SISTEMA ESTABLE'}
+              <span class="text-lg sm:text-xl font-black text-white">{ui.coins}</span>
             </div>
           </div>
-          <div class="text-right flex flex-col items-end">
-            <div class={"text-3xl font-black bg-slate-800/80 px-4 py-1 rounded-lg border border-slate-700 " + (ui.timeLeft < 15 ? 'text-red-500 animate-pulse' : 'text-white')}>
-              {Math.floor(ui.timeLeft / 60)}:{(ui.timeLeft % 60).toString().padStart(2, '0')}
-            </div>
+          <div class={"text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 " + (ui.timeLeft < 15 ? 'text-red-500' : 'text-white')}>
+            {Math.floor(ui.timeLeft / 60)}:{(ui.timeLeft % 60).toString().padStart(2, '0')}
           </div>
         </div>
 
+        <div class={"absolute top-12 sm:top-14 left-2 sm:left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none " + (isPuka ? 'text-red-400 bg-red-500/10 border-red-500/30' : isRush ? 'text-blue-400 bg-blue-400/10 border-blue-400/30' : isTachy ? 'text-gray-400 bg-gray-600/30 border-gray-500/30' : 'text-green-400 bg-green-400/10 border-green-400/30')}>
+          <svg class={"w-3 h-3 " + (isPuka ? 'animate-pulse' : '')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isPuka || isRush || isTachy
+              ? <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              : <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            }
+          </svg>
+          {isPuka ? 'PUKA OVERDRIVE' : isRush ? 'GENERIC RUSH' : isTachy ? 'TACHYCARDIA' : 'SISTEMA ESTABLE'}
+        </div>
+
         {ui.message && (
-          <div class="absolute top-24 w-full flex justify-center z-20 pointer-events-none">
-            <div class={"px-6 py-3 rounded-full backdrop-blur-lg border font-bold uppercase text-sm flex gap-2 items-center " + (ui.messageType === 'success' ? 'bg-red-500/20 text-red-400 border-red-500' : ui.messageType === 'error' ? 'bg-gray-800/80 text-white border-gray-600' : ui.messageType === 'warning' ? 'bg-orange-500/20 text-orange-400 border-orange-500' : 'bg-blue-500/20 text-blue-400 border-blue-500')}>
+          <div class="absolute top-28 sm:top-32 w-full flex justify-center z-20 pointer-events-none px-4">
+            <div class={"px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs " + (ui.messageType === 'success' ? 'bg-red-500/20 text-red-400 border-red-500/40' : ui.messageType === 'error' ? 'bg-gray-800/80 text-white border-gray-600/40' : ui.messageType === 'warning' ? 'bg-orange-500/20 text-orange-400 border-orange-500/40' : 'bg-blue-500/20 text-blue-400 border-blue-500/40')}>
               {ui.message}
             </div>
           </div>
         )}
 
-        <div ref={containerEl} class="flex-1 w-full relative">
+        <div ref={containerEl} class="absolute inset-0">
           <canvas ref={canvasEl} class="block w-full h-full" style={{ 'image-rendering': 'pixelated' }} />
         </div>
 
-        <div class="absolute bottom-8 w-full px-8 flex justify-between z-30 md:hidden opacity-70">
-          <div class="flex gap-4">
-            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-16 h-16 bg-black/50 rounded-full border border-white/20 text-white text-2xl font-black touch-none flex items-center justify-center">{'\u2190'}</button>
-            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-16 h-16 bg-black/50 rounded-full border border-white/20 text-white text-2xl font-black touch-none flex items-center justify-center">{'\u2192'}</button>
+        <div class="absolute bottom-4 sm:bottom-6 w-full px-4 sm:px-6 flex justify-between z-30 md:hidden">
+          <div class="flex gap-3">
+            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2190'}</button>
+            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2192'}</button>
           </div>
-          <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-20 h-20 bg-red-500/50 rounded-full border border-red-500 text-white text-2xl font-black touch-none flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.5)]">{'\u2191'}</button>
+          <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-red-500/40 backdrop-blur-sm rounded-full border border-red-500/50 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.3)] active:bg-red-500/60 transition-colors">{'\u2191'}</button>
         </div>
-
       </div>
     );
   }
@@ -628,84 +635,119 @@ interface Particle { x: number; y: number; vx: number; vy: number; life: number;
   );
 
   return (
-    <Switch>
-      <Match when={appState() === APP_STATE.MENU_GENDER}>
-        <div class="w-full h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-          <h1 class="text-5xl font-black italic mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">PUKA POWER</h1>
-          <p class="text-xl text-slate-400 mb-10">Elige a tu personaje para la aventura</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {Object.values(GENDERS).map((g) => (
-              <button onClick={() => { setSelection({ gender: g.id, theme: null }); setAppState(APP_STATE.MENU_LEVEL); }}
-                class="bg-slate-800 p-8 rounded-2xl border-2 border-slate-700 hover:border-red-500 hover:scale-105 transition-all group">
-                <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">{g.idle}</div>
-                <div class="font-bold text-lg uppercase">{g.name}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </Match>
-
-      <Match when={appState() === APP_STATE.MENU_LEVEL}>
-        <div class="w-full h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-          <button onClick={() => setAppState(APP_STATE.MENU_GENDER)}
-            class="absolute top-6 left-6 flex items-center text-slate-400 hover:text-white">
-            {iconArrowLeft} Cambiar Personaje
-          </button>
-          <h2 class="text-4xl font-black mb-10">¿A dónde vas hoy?</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-            {Object.values(THEMES).map((t) => (
-              <button key={t.id} onClick={() => startGame(t.id)}
-                style={{ 'background-color': t.bg }}
-                class="relative overflow-hidden p-8 rounded-2xl border-4 border-transparent hover:border-white hover:scale-105 transition-all text-left group shadow-2xl">
-                <div class="text-7xl mb-4 absolute right-4 bottom-4 opacity-50 group-hover:opacity-100 transition-opacity">{t.goal}</div>
-                <div class="relative z-10">
-                  <h3 class="font-black text-3xl text-black/80 uppercase">{t.name}</h3>
-                  <p class="font-bold text-black/60 mt-2">Dificultad Normal</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </Match>
-
-      <Match when={appState() === APP_STATE.GAME_OVER}>
-        <div class="w-full h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-          <div class="text-8xl mb-6 grayscale opacity-50">💀</div>
-          <h1 class="text-6xl font-black uppercase mb-4 text-red-500">Game Over</h1>
-          <p class="text-2xl text-slate-300 mb-8">Monedas recolectadas: <span class="text-yellow-400 font-bold">{uiState().coins} 🪙</span></p>
-          <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
-            class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
-            {iconPlay} JUGAR DE NUEVO
-          </button>
-        </div>
-      </Match>
-
-      <Match when={appState() === APP_STATE.VICTORY}>
-        <div class="w-full h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-          <div class="text-8xl mb-6 animate-bounce">{selection().theme ? THEMES[selection().theme!].goal : '\u{1F3C6}'}</div>
-          <h1 class="text-6xl font-black uppercase mb-4 text-green-400">¡Llegaste a tiempo!</h1>
-          <p class="text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold">{uiState().coins} 🪙</span></p>
-          <Show when={couponDone()}>
-            <div class="bg-green-500/20 border border-green-500 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg">
-              🎉 Cupón BOLT15 activado — 15% de descuento
+    <>
+      <Switch>
+        <Match when={appState() === APP_STATE.MENU_GENDER}>
+          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+            <h1 class="text-5xl font-black italic mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">PUKA POWER</h1>
+            <p class="text-xl text-slate-400 mb-10">Elige a tu personaje para la aventura</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {Object.values(GENDERS).map((g) => (
+                <button onClick={() => { setSelection({ gender: g.id, theme: null }); setAppState(APP_STATE.MENU_LEVEL); }}
+                  class="bg-slate-800 p-8 rounded-2xl border-2 border-slate-700 hover:border-red-500 hover:scale-105 transition-all group">
+                  <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">{g.idle}</div>
+                  <div class="font-bold text-lg uppercase">{g.name}</div>
+                </button>
+              ))}
             </div>
-          </Show>
-          <div class="flex gap-4">
+          </div>
+        </Match>
+
+        <Match when={appState() === APP_STATE.MENU_LEVEL}>
+          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+            <button onClick={() => setAppState(APP_STATE.MENU_GENDER)}
+              class="absolute top-6 left-6 flex items-center text-slate-400 hover:text-white">
+              {iconArrowLeft} Cambiar Personaje
+            </button>
+            <h2 class="text-4xl font-black mb-10">¿A dónde vas hoy?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+              {Object.values(THEMES).map((t) => (
+                <button onClick={() => startGame(t.id)}
+                  style={{ 'background-color': t.bg }}
+                  class="relative overflow-hidden p-8 rounded-2xl border-4 border-transparent hover:border-white hover:scale-105 transition-all text-left group shadow-2xl">
+                  <div class="text-7xl mb-4 absolute right-4 bottom-4 opacity-50 group-hover:opacity-100 transition-opacity">{t.goal}</div>
+                  <div class="relative z-10">
+                    <h3 class="font-black text-3xl text-black/80 uppercase">{t.name}</h3>
+                    <p class="font-bold text-black/60 mt-2">Dificultad Normal</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </Match>
+
+        <Match when={appState() === APP_STATE.GAME_OVER}>
+          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+            <div class="text-8xl mb-6 grayscale opacity-50">{'\u{1F480}'}</div>
+            <h1 class="text-6xl font-black uppercase mb-4 text-red-500">Game Over</h1>
+            <p class="text-2xl text-slate-300 mb-8">Monedas recolectadas: <span class="text-yellow-400 font-bold">{uiState().coins} {'\u{1FA99}'}</span></p>
             <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
               class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
               {iconPlay} JUGAR DE NUEVO
             </button>
-            <a href="/tienda"
-              class="bg-yellow-500 hover:bg-yellow-600 text-black font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 animate-pulse">
-              Ir a la tienda 🛒
-            </a>
+          </div>
+        </Match>
+
+        <Match when={appState() === APP_STATE.VICTORY}>
+          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+            <div class="text-8xl mb-6 animate-bounce">{selection().theme ? THEMES[selection().theme!].goal : '\u{1F3C6}'}</div>
+            <h1 class="text-6xl font-black uppercase mb-4 text-green-400">{'\u{00A1}'}Llegaste a tiempo!</h1>
+            <p class="text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold">{uiState().coins} {'\u{1FA99}'}</span></p>
+            <Show when={couponDone()}>
+              <div class="bg-green-500/20 border border-green-500 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg">
+                {'\u{1F389}'} Cupón BOLT15 activado — 15% de descuento
+              </div>
+            </Show>
+            <div class="flex gap-4">
+              <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
+                class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
+                {iconPlay} JUGAR DE NUEVO
+              </button>
+              <a href="/tienda"
+                class="bg-yellow-500 hover:bg-yellow-600 text-black font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 animate-pulse">
+                Ir a la tienda {'\u{1F6D2}'}
+              </a>
+            </div>
+          </div>
+        </Match>
+
+        <Match when={appState() === APP_STATE.PLAYING}>
+          <PlayingScreen />
+        </Match>
+      </Switch>
+
+      <Show when={appState() === APP_STATE.PLAYING && showTutorial()}>
+        <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
+          <div class="bg-slate-800 rounded-2xl border border-slate-700 max-w-sm w-full p-8 text-center text-white shadow-2xl space-y-6">
+            <div class="text-5xl">{'\u{1F3AE}'}</div>
+            <h2 class="text-2xl font-black uppercase tracking-wider">{'\u{00A1}'}A jugar!</h2>
+            <ul class="text-left space-y-3 text-sm text-slate-300">
+              <li class="flex items-start gap-3">
+                <span class="text-xl flex-shrink-0">{'\u{2190}'}{'\u{2192}'}</span>
+                <span><strong class="text-white">Flechas izquierda/derecha</strong> o botones táctiles para moverte</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-xl flex-shrink-0">{'\u{2191}'}</span>
+                <span><strong class="text-white">Flecha arriba / Espacio</strong> o botón rojo para saltar</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-xl flex-shrink-0">{'\u{1FA99}'}</span>
+                <span><strong class="text-white">Recolecta monedas</strong> y usa las máquinas expendedoras</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-xl flex-shrink-0">{'\u{1F3C1}'}</span>
+                <span><strong class="text-white">Llega a la meta</strong> para ganar tu cupón BOLT15</span>
+              </li>
+            </ul>
+            <button
+              onClick={() => { setShowTutorial(false); engineState.startTime = Date.now(); }}
+              class="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 px-8 rounded-xl text-lg tracking-wider uppercase transition-all hover:scale-105 shadow-lg"
+            >
+              {'\u{1F680}'} ¡Comenzar!
+            </button>
           </div>
         </div>
-      </Match>
-
-      <Match when={appState() === APP_STATE.PLAYING}>
-        <PlayingScreen />
-      </Match>
-    </Switch>
+      </Show>
+    </>
   );
 }
