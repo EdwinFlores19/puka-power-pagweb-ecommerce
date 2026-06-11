@@ -308,6 +308,7 @@ export default function Advergame() {
     totalLevelLength: number;
     projectiles: Projectile[];
     nextProjectileId: number;
+    isPaused: boolean;
   } = {} as any;
   let audioInst: SoundEngine | null = null;
   let rafId = 0;
@@ -339,6 +340,7 @@ export default function Advergame() {
       totalLevelLength: 8000,
       projectiles: [],
       nextProjectileId: 0,
+      isPaused: false,
     };
     setAmmo(10);
     setCouponDone(false);
@@ -494,6 +496,7 @@ export default function Advergame() {
 
   function gameLoop(time: number) {
     if (appState() !== APP_STATE.PLAYING) { return; }
+    if (engineState.isPaused) { rafId = requestAnimationFrame(gameLoop); return; }
     const s = engineState;
     const p = s.player;
     const k = s.keys;
@@ -1413,6 +1416,9 @@ export default function Advergame() {
       });
       ro.observe(containerEl);
 
+      const onVisibility = () => { engineState.isPaused = document.hidden; };
+      document.addEventListener('visibilitychange', onVisibility);
+
       const hKD = (e: KeyboardEvent) => {
         if (appState() !== APP_STATE.PLAYING) return;
         if (e.code === 'ArrowLeft') engineState.keys.left = true;
@@ -1440,6 +1446,7 @@ export default function Advergame() {
       onCleanup(() => {
         window.removeEventListener('keydown', hKD);
         window.removeEventListener('keyup', hKU);
+        document.removeEventListener('visibilitychange', onVisibility);
         cancelAnimationFrame(rafId);
         ro.disconnect();
       });
@@ -1560,8 +1567,11 @@ export default function Advergame() {
           </div>
         )}
 
-        <div ref={containerEl} class="w-full min-h-[85vh] lg:h-[90vh] bg-black mx-auto relative">
-          <canvas ref={canvasEl} class="block w-full h-full" style={{ 'image-rendering': 'pixelated' }} />
+        <div class="relative w-full bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat overflow-hidden">
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none"></div>
+          <div ref={containerEl} class="w-full min-h-[85vh] lg:h-[90vh] mx-auto relative max-w-[1920px]">
+            <canvas ref={canvasEl} class="block w-full h-full" style={{ 'image-rendering': 'pixelated' }} />
+          </div>
         </div>
 
         <Show when={!showTutorial()}>
