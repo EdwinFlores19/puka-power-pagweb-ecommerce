@@ -127,7 +127,7 @@ const LEVEL_CONFIG = {
   3: { segments: 40, minCoins: 0, name: 'La Montaña de la Tortuga Sagrada', themeId: 'TURTLE_MOUNTAIN' as ThemeId, chemSpeedMult: 1.0 },
 };
 
-const APP_STATE = { MENU_GENDER: 0, MENU_LEVEL: 1, PLAYING: 2, GAME_OVER: 3, VICTORY: 4 } as const;
+const APP_STATE = { START_SCREEN: 0, CHARACTER_SELECTION: 1, PLAYING: 2, GAME_OVER: 3, VICTORY: 4 } as const;
 
 const ENTITY = {
   PLATFORM: 0, COIN: 1, ENEMY_NINJA: 2, GOAL: 3,
@@ -161,15 +161,7 @@ const THEMES = {
   },
 } as const;
 
-type GenderId = 'BOY' | 'GIRL' | 'MAN' | 'WOMAN';
 type ThemeId = 'GOH_RONG' | 'BAMBOO_FOREST' | 'TURTLE_MOUNTAIN';
-
-const GENDERS: Record<GenderId, { id: GenderId; name: string; idle: string; run: string }> = {
-  BOY: { id: 'BOY', name: 'Niño', idle: '🧍', run: '🏃' },
-  GIRL: { id: 'GIRL', name: 'Niña', idle: '🧍', run: '🏃' },
-  MAN: { id: 'MAN', name: 'Hombre', idle: '🧍‍♂️', run: '🏃‍♂️' },
-  WOMAN: { id: 'WOMAN', name: 'Mujer', idle: '🧍‍♀️', run: '🏃‍♀️' },
-};
 
 class SoundEngine {
   ctx: AudioContext | null;
@@ -299,7 +291,7 @@ interface Projectile { id: number; type: number; x: number; y: number; vx: numbe
 
 export default function Advergame() {
   const [appState, setAppState] = createSignal<number>(APP_STATE.MENU_GENDER);
-  const [selection, setSelection] = createSignal<{ gender: GenderId | null; theme: ThemeId | null }>({ gender: null, theme: null });
+  const [selection, setSelection] = createSignal<{ theme: ThemeId | null }>({ theme: null });
   const [uiState, setUiState] = createSignal<{ coins: number; timeLeft: number; message: string; messageType: string; playerState: string; lives: number }>({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
   const [couponDone, setCouponDone] = createSignal(false);
   const [showTutorial, setShowTutorial] = createSignal(true);
@@ -484,7 +476,7 @@ export default function Advergame() {
     generateLevel(THEMES[themeId], levelIdx);
     setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
     lastFrameUpdate = 0;
-    trackGameEvent('puka_campaign_start', { character: selection().gender, stage: levelIdx });
+    trackGameEvent('puka_campaign_start', { stage: levelIdx });
   }
 
   function advanceToNextLevel() {
@@ -506,7 +498,7 @@ export default function Advergame() {
   let lastHeartbeatTime = 0;
 
   function gameLoop(time: number) {
-    if (appState() !== APP_STATE.PLAYING) { rafId = requestAnimationFrame(gameLoop); return; }
+    if (appState() !== APP_STATE.PLAYING) { return; }
     const s = engineState;
     const p = s.player;
     const k = s.keys;
@@ -538,14 +530,13 @@ export default function Advergame() {
           if (audioInst) audioInst.hurt();
           triggerShake(12, 200);
           triggerHitstop(3);
-        } else {
-          p.isDead = true;
-          if (audioInst) audioInst.gameover();
-          trackGameEvent('puka_game_over', { stage: currentLevelIndex(), score: s.score, timeLeft });
-          setAppState(APP_STATE.GAME_OVER);
-          rafId = requestAnimationFrame(gameLoop);
-          return;
-        }
+          } else {
+            p.isDead = true;
+            if (audioInst) audioInst.gameover();
+            trackGameEvent('puka_game_over', { stage: currentLevelIndex(), score: s.score, timeLeft });
+            setAppState(APP_STATE.GAME_OVER);
+            return;
+          }
       }
 
       if (time - lastFrameUpdate > 100) {
@@ -611,7 +602,6 @@ export default function Advergame() {
             if (audioInst) audioInst.gameover();
             trackGameEvent('puka_game_over', { stage: currentLevelIndex(), score: s.score, timeLeft });
             setAppState(APP_STATE.GAME_OVER);
-            rafId = requestAnimationFrame(gameLoop);
             return;
           }
           break;
@@ -716,7 +706,6 @@ export default function Advergame() {
         trackGameEvent('puka_campaign_victory', { finalCoins: s.score });
         if (!couponDone()) { applyGameCoupon(); setCouponDone(true); }
         setAppState(APP_STATE.VICTORY);
-        rafId = requestAnimationFrame(gameLoop);
         return;
       }
 
@@ -912,6 +901,7 @@ export default function Advergame() {
               p.isDead = true;
               if (audioInst) audioInst.victory();
               setTimeout(() => advanceToNextLevel(), 300);
+              rafId = requestAnimationFrame(gameLoop);
               return;
             }
             p.isDead = true;
@@ -1606,88 +1596,39 @@ export default function Advergame() {
     );
   }
 
-  const iconArrowLeft = (
-    <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-    </svg>
-  );
-
-  const iconPlay = (
-    <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
-      <path d="M8 5v14l11-7z"/>
-    </svg>
-  );
-
   return (
     <>
       <Switch>
-        <Match when={appState() === APP_STATE.MENU_GENDER}>
-          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center relative overflow-hidden">
-            <div class="absolute inset-0 opacity-5">
-              <div class="absolute top-10 left-10 w-72 h-72 bg-red-500 rounded-full blur-3xl animate-pulse" />
-              <div class="absolute bottom-10 right-10 w-96 h-96 bg-orange-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s" />
-            </div>
-            <div class="absolute top-6 left-6 z-10">
-              <a href="/tienda"
-                class="flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors">
-                {iconArrowLeft} Volver a la Tienda
-              </a>
-            </div>
-            <h1 class="text-5xl sm:text-7xl font-black italic mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-orange-400 drop-shadow-[0_0_30px_rgba(220,38,38,0.3)]">PUKA POWER</h1>
-            <p class="text-lg sm:text-xl text-slate-400 mb-6 sm:mb-10">Elige a tu personaje para la aventura</p>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto w-full px-4">
-              {Object.values(GENDERS).map((g) => (
-                <button onClick={() => { setSelection({ gender: g.id, theme: null }); setAppState(APP_STATE.MENU_LEVEL); }}
-                  class="bg-slate-800/80 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border-2 border-slate-700/50 hover:border-red-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(220,38,38,0.15)] transition-all duration-300 group relative overflow-hidden">
-                  <div class="absolute inset-0 bg-gradient-to-b from-red-500/0 via-red-500/0 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div class="relative z-10">
-                    <div class="text-6xl sm:text-7xl mb-3 sm:mb-4 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">{g.idle}</div>
-                    <div class="font-bold text-base sm:text-lg uppercase tracking-wider">{g.name}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
+        <Match when={appState() === APP_STATE.START_SCREEN}>
+          <div class="w-screen h-screen overflow-hidden relative bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
+            <button
+              onClick={() => setAppState(APP_STATE.CHARACTER_SELECTION)}
+              class="absolute bottom-[15%] left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-500 text-white font-black text-3xl sm:text-5xl py-5 px-16 rounded-2xl shadow-2xl shadow-red-500/40 hover:shadow-red-500/60 hover:scale-105 active:scale-95 transition-all duration-200 uppercase tracking-widest border-2 border-red-400/30">
+              EMPEZAR
+            </button>
           </div>
         </Match>
 
-        <Match when={appState() === APP_STATE.MENU_LEVEL}>
-          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center relative overflow-hidden">
-            <div class="absolute inset-0 opacity-5">
-              <div class="absolute top-20 right-20 w-64 h-64 bg-blue-500 rounded-full blur-3xl animate-pulse" />
-              <div class="absolute bottom-20 left-20 w-80 h-80 bg-purple-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.7s" />
-            </div>
-            <button onClick={() => setAppState(APP_STATE.MENU_GENDER)}
-              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors z-10">
-              {iconArrowLeft} Cambiar Personaje
-            </button>
+        <Match when={appState() === APP_STATE.CHARACTER_SELECTION}>
+          <div class="w-screen h-screen overflow-hidden relative bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <a href="/tienda"
-              class="absolute top-6 right-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
-              {iconArrowLeft} Volver a la Tienda
+              class="absolute top-6 left-6 z-20 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+              <svg class="w-5 h-5 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+              Volver a la Tienda
             </a>
-            <h2 class="text-4xl sm:text-5xl font-black mb-2">CAMPAÑA SOOGA</h2>
-            <p class="text-base sm:text-lg text-slate-400 mb-6 sm:mb-8 max-w-xl">Persigue a Garu a través de 3 niveles épicos. Completa cada templo para desbloquear el siguiente.</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 w-full max-w-5xl mx-auto px-4 mb-8">
-              {Object.values(THEMES).map((t, i) => (
-                <div
-                  style={{ 'background-color': t.bg }}
-                  class="relative overflow-hidden p-5 sm:p-6 rounded-2xl border-2 border-white/10 text-left shadow-xl opacity-90">
-                  <div class="text-5xl sm:text-6xl absolute right-2 sm:right-3 bottom-2 sm:bottom-3 opacity-30">{t.goalEmoji}</div>
-                  <div class="relative z-10">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-xs font-black">{(i + 1)}</span>
-                      <h3 class="font-black text-lg sm:text-xl text-black/80 uppercase tracking-wide">{t.name}</h3>
-                    </div>
-                    <p class="font-bold text-black/60 text-xs sm:text-sm tracking-wide">{t.difficulty}</p>
-                    <div class="mt-2 text-black/50 text-xs">{LEVEL_CONFIG[(i + 1) as keyof typeof LEVEL_CONFIG]?.segments} segmentos · mín. {LEVEL_CONFIG[(i + 1) as keyof typeof LEVEL_CONFIG]?.minCoins || 0} 🪙</div>
-                  </div>
-                </div>
-              ))}
+            <div class="relative z-10 w-full h-full flex flex-col items-center justify-center p-4">
+              <h1 class="text-5xl sm:text-7xl font-black text-white drop-shadow-[0_0_20px_rgba(0,0,0,0.9)] mb-4 sm:mb-6 tracking-tight text-center">
+                PUKA POWER
+              </h1>
+              <button
+                onClick={() => startGame(THEMES.GOH_RONG.id)}
+                class="bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black text-xl sm:text-2xl py-4 px-14 rounded-full shadow-2xl shadow-red-500/30 hover:shadow-red-500/50 transition-all duration-200 uppercase tracking-wider border-2 border-red-400/30">
+                COMENZAR
+              </button>
             </div>
-            <button
-              onClick={() => startGame(THEMES.GOH_RONG.id)}
-              class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black text-xl py-4 px-12 rounded-full flex items-center gap-3 transition-all hover:scale-105 shadow-lg shadow-red-500/20 uppercase tracking-wider">
-              {iconPlay} Iniciar Campaña
-            </button>
           </div>
         </Match>
 
