@@ -471,7 +471,11 @@ export default function Advergame() {
     lastFrameUpdate = 0;
     trackGameEvent('puka_campaign_start', { stage: levelIdx });
     preloadAssets().then(() => {
+      if (!canvasEl) { console.error('Error: Canvas no montado'); return; }
       cancelAnimationFrame(rafId);
+      canvasEl.width = window.innerWidth;
+      canvasEl.height = window.innerHeight;
+      engineState.viewport = { width: window.innerWidth, height: window.innerHeight };
       rafId = requestAnimationFrame(gameLoop);
     });
   }
@@ -495,15 +499,16 @@ export default function Advergame() {
   let lastHeartbeatTime = 0;
 
   function gameLoop(time: number) {
-    if (appState() !== APP_STATE.PLAYING) { return; }
-    if (engineState.isPaused) { rafId = requestAnimationFrame(gameLoop); return; }
-    const s = engineState;
-    const p = s.player;
-    const k = s.keys;
-    const cam = s.camera;
-    const vp = s.viewport;
-    if (vp.width <= 0 || vp.height <= 0) { rafId = requestAnimationFrame(gameLoop); return; }
-    const theme = THEMES[selection().theme!];
+    try {
+      if (appState() !== APP_STATE.PLAYING) { return; }
+      if (engineState.isPaused) { rafId = requestAnimationFrame(gameLoop); return; }
+      const s = engineState;
+      const p = s.player;
+      const k = s.keys;
+      const cam = s.camera;
+      const vp = s.viewport;
+      if (vp.width <= 0 || vp.height <= 0) { rafId = requestAnimationFrame(gameLoop); return; }
+      const theme = THEMES[selection().theme!];
 
     if (s.hitstopFrames > 0) {
       s.hitstopFrames--;
@@ -997,6 +1002,10 @@ export default function Advergame() {
 
     if (canvasEl) render(canvasEl.getContext('2d')!, s, theme);
     rafId = requestAnimationFrame(gameLoop);
+    } catch (error) {
+      console.error('Fallo crítico en gameLoop:', error);
+      cancelAnimationFrame(rafId);
+    }
   }
 
   function drawParallaxMid(ctx: CanvasRenderingContext2D, s: typeof engineState, vw: number, vh: number, theme: typeof THEMES[keyof typeof THEMES]) {
@@ -1061,6 +1070,8 @@ export default function Advergame() {
 
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, viewport.width, viewport.height);
+    ctx.fillStyle = 'red';
+    ctx.fillRect(100, 100, 200, 200);
     const grad = ctx.createLinearGradient(0, viewport.height * 0.7, 0, viewport.height);
     grad.addColorStop(0, 'transparent');
     grad.addColorStop(1, '#00000040');
@@ -1567,10 +1578,10 @@ export default function Advergame() {
           </div>
         )}
 
-        <div class="relative w-full bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat overflow-hidden">
-          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none"></div>
-          <div ref={containerEl} class="w-full min-h-[85vh] lg:h-[90vh] mx-auto relative max-w-[1920px]">
-            <canvas ref={canvasEl} class="block w-full h-full" style={{ 'image-rendering': 'pixelated' }} />
+        <div class="relative w-full h-[85vh] lg:h-[90vh] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat overflow-hidden">
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none z-0"></div>
+          <div ref={containerEl} class="absolute inset-0 mx-auto max-w-[1920px]">
+            <canvas ref={canvasEl} class="relative z-10 w-full h-full block" style={{ 'image-rendering': 'pixelated' }} />
           </div>
         </div>
 
