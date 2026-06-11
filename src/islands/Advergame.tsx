@@ -36,6 +36,7 @@ const SPRITE = {
   PUKA_POWER: '/sprites/Puka-Power.png',
   RED_BULL: '/sprites/red-bull.png',
   MONSTER: '/sprites/monster.png',
+  MALA_PUCCA: '/sprites/mala_pucca.png',
 } as const;
 
 const SPRITE_FRAMES: Record<string, number> = {
@@ -65,6 +66,7 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.PUKA_POWER]: { w: 30, h: 45 },
   [SPRITE.RED_BULL]: { w: 24, h: 36 },
   [SPRITE.MONSTER]: { w: 24, h: 36 },
+  [SPRITE.MALA_PUCCA]: { w: 40, h: 60 },
 };
 
 const DEBUG_MODE = false;
@@ -140,13 +142,14 @@ const LEVEL_CONFIG = {
   3: { segments: 40, minCoins: 0, name: 'La Montaña de la Tortuga Sagrada', themeId: 'TURTLE_MOUNTAIN' as ThemeId, chemSpeedMult: 1.0 },
 };
 
-const APP_STATE = { START_SCREEN: 0, CHARACTER_SELECTION: 1, PLAYING: 2, GAME_OVER: 3, VICTORY: 4 } as const;
+const APP_STATE = { START_SCREEN: 0, CHARACTER_SELECTION: 1, PLAYING: 2, GAME_OVER: 3, VICTORY: 4, LEVEL_COMPLETED: 5 } as const;
 
 const ENTITY = {
   PLATFORM: 0, COIN: 1, ENEMY_NINJA: 2, GOAL: 3,
   NPC_CHING: 4, NPC_ABYO: 5, NPC_TIOS: 6,
   TRAP_CHEMICAL: 7, PROJECTILE_BULL: 8,
   PROJECTILE_KUNAI: 9, PROJECTILE_SHURIKEN: 10, AMMO_BOX: 11,
+  NPC_MALA_PUCCA: 12,
 } as const;
 
 const PLAYER_STATE = {
@@ -397,7 +400,9 @@ export default function Advergame() {
     setAmmo(10);
     let curX = 0;
     let chingSpawned = false;
+    let abyoSpawned = false;
     let tiosSpawned = false;
+    let malaPuccaSpawned = false;
     const groundY = 500;
     const SEGMENTS = LEVEL_CONFIG[levelIndex as keyof typeof LEVEL_CONFIG]?.segments || 20;
     const platWidth = levelIndex === 3 ? (w: number) => Math.max(40, w - 60) : (w: number) => w;
@@ -432,11 +437,18 @@ export default function Advergame() {
         const ee = theme.enemies[Math.floor(Math.random() * theme.enemies.length)];
         const ninjaVx = levelIndex === 2 ? -3 : -2;
         s.entities.push({ type: ENTITY.ENEMY_NINJA, x: curX + 400, y: groundY - 40, width: 40, height: 40, vx: ninjaVx, startX: curX + 300, range: 300, emoji: ee, active: true, lastShot: 0 });
+        if (!malaPuccaSpawned && i > 8) {
+          malaPuccaSpawned = true;
+          s.entities.push({ type: ENTITY.NPC_MALA_PUCCA, x: curX + 150, y: groundY - 60, width: 40, height: 60, active: true });
+        }
         curX += 800;
       } else if (p === 3) {
         curX += 180; addPlat(curX, 800);
         s.entities.push({ type: ENTITY.TRAP_CHEMICAL, x: curX + 200, y: groundY - 36, width: 24, height: 36, active: true });
-        s.entities.push({ type: ENTITY.NPC_ABYO, x: curX + 500, y: groundY - 72, width: 44, height: 66, active: true, vx: -1.5, startX: curX + 350, range: 300 });
+        if (!abyoSpawned && i > 4) {
+          abyoSpawned = true;
+          s.entities.push({ type: ENTITY.NPC_ABYO, x: curX + 500, y: groundY - 72, width: 44, height: 66, active: true, vx: -1.5, startX: curX + 350, range: 300 });
+        }
         curX += 800;
       } else {
         curX += 150; addPlat(curX, 600);
@@ -633,11 +645,9 @@ export default function Advergame() {
             audioInst.heartbeatTachycardia();
           }
           if (p.stateTimer <= 0) {
-            p.isDead = true;
-            if (audioInst) audioInst.gameover();
-            trackGameEvent('puka_game_over', { stage: currentLevelIndex(), score: s.score, timeLeft });
-            setAppState(APP_STATE.GAME_OVER);
-            return;
+            p.state = PLAYER_STATE.NORMAL;
+            p.sugarCrashTimer = 6000;
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: '¡RECUPERADA! Fatiga de azúcar 😭💨', messageType: 'warning' }));
           }
           break;
         case PLAYER_STATE.PUKA_OVERDRIVE:
@@ -982,6 +992,16 @@ export default function Advergame() {
             spawnParticle(entity.x, entity.y, '#22c55e', 25);
             break;
           }
+          case ENTITY.NPC_MALA_PUCCA: {
+            entity.active = false;
+            p.state = PLAYER_STATE.CHEMICAL_RUSH;
+            p.stateTimer = 2000;
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.CHEMICAL_RUSH, message: '¡RUSH INDUSTRIAL! 😈⚡', messageType: 'warning' }));
+            if (audioInst) { audioInst.powerup(); audioInst.rushEnergy(); }
+            spawnParticle(entity.x, entity.y, '#8b5cf6', 25);
+            triggerShake(6, 150);
+            break;
+          }
           case ENTITY.TRAP_CHEMICAL: {
             if (p.state === PLAYER_STATE.PUKA_OVERDRIVE) break;
             p.state = PLAYER_STATE.CHEMICAL_RUSH; p.stateTimer = 2000;
@@ -1029,8 +1049,7 @@ export default function Advergame() {
             if (curLevel < 3) {
               p.isDead = true;
               if (audioInst) audioInst.victory();
-              setTimeout(() => advanceToNextLevel(), 300);
-              rafId = requestAnimationFrame(gameLoop);
+              setAppState(APP_STATE.LEVEL_COMPLETED);
               return;
             }
             p.isDead = true;
@@ -1465,6 +1484,20 @@ export default function Advergame() {
         
         // Speech Bubble
         drawSpeechBubble(ctx, "¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜🔋", entity.x + 20, entity.y - 8);
+      } else if (entity.type === ENTITY.NPC_MALA_PUCCA && entity.active) {
+        ctx.save();
+        ctx.shadowColor = '#8b5cf6'; ctx.shadowBlur = 15;
+        drawSprite(ctx, SPRITE.MALA_PUCCA, 0, entity.x, entity.y, entity.width, entity.height);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#8b5cf6'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText('MALA PUCCA', entity.x, entity.y - 8);
+        
+        // Float a Monster or Red Bull above her head
+        const spriteSrc = (Math.floor(entity.x) % 2 === 0) ? SPRITE.RED_BULL : SPRITE.MONSTER;
+        drawSprite(ctx, spriteSrc, 0, entity.x + entity.width/2 - 12, entity.y - 45, 24, 36);
+        // Speech Bubble
+        drawSpeechBubble(ctx, "¡Toma esta bebida oscura! ¡Te hará volar! 😈⚡", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.TRAP_CHEMICAL && entity.active) {
         ctx.save();
         const spriteSrc = (Math.floor(entity.x) % 2 === 0) ? SPRITE.RED_BULL : SPRITE.MONSTER;
@@ -1765,22 +1798,21 @@ export default function Advergame() {
       });
     });
 
-    const ui = uiState();
-    const pst = ui.playerState;
-    const s = engineState;
-    const isPuka = pst === PLAYER_STATE.PUKA_OVERDRIVE || s.player.hasPet;
-    const isRush = pst === PLAYER_STATE.CHEMICAL_RUSH;
-    const isTachy = pst === PLAYER_STATE.TACHYCARDIA;
-    const inv = inventory();
+    const ui = uiState;
+    const s = () => engineState;
+    const isPuka = () => ui().playerState === PLAYER_STATE.PUKA_OVERDRIVE || s().player.hasPet;
+    const isRush = () => ui().playerState === PLAYER_STATE.CHEMICAL_RUSH;
+    const isTachy = () => ui().playerState === PLAYER_STATE.TACHYCARDIA;
+    const inv = inventory;
 
-    const progressPct = s.totalLevelLength > 0 ? Math.min(100, Math.max(0, (s.player.x / s.totalLevelLength) * 100)) : 0;
+    const progressPct = () => s().totalLevelLength > 0 ? Math.min(100, Math.max(0, (s().player.x / s().totalLevelLength) * 100)) : 0;
 
     return (
       <div class="fixed inset-0 bg-black overflow-hidden select-none font-sans">
         <div class="absolute top-0 left-0 right-0 z-30 flex justify-between items-start p-2 sm:p-3 pointer-events-none">
           <div class="flex items-center gap-2">
             <div class="flex gap-0.5">
-              {Array.from({ length: Math.max(0, ui.lives) }).map(() => (
+              {Array.from({ length: Math.max(0, ui().lives) }).map(() => (
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-500 fill-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" viewBox="0 0 24 24">
                   <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                 </svg>
@@ -1790,7 +1822,7 @@ export default function Advergame() {
               <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              <span class="text-lg sm:text-xl font-black text-white">{ui.coins}</span>
+              <span class="text-lg sm:text-xl font-black text-white">{ui().coins}</span>
             </div>
             <div class="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg"
               classList={{ 'animate-pulse border-red-500/50': ammo() === 0 }}>
@@ -1801,49 +1833,49 @@ export default function Advergame() {
           </div>
           <div class="flex items-center gap-2">
             <div class="text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50"
-              classList={{ 'text-red-500': ui.timeLeft < 15, 'text-white': ui.timeLeft >= 15 }}>
-              {Math.floor(ui.timeLeft / 60)}:{(ui.timeLeft % 60).toString().padStart(2, '0')}
+              classList={{ 'text-red-500': ui().timeLeft < 15, 'text-white': ui().timeLeft >= 15 }}>
+              {Math.floor(ui().timeLeft / 60)}:{(ui().timeLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>
         </div>
 
         <div class="absolute top-12 sm:top-14 left-2 sm:left-3 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none"
           classList={{
-            'text-red-400 bg-red-500/10 border-red-500/30': isPuka,
-            'text-blue-400 bg-blue-400/10 border-blue-400/30': isRush,
-            'text-gray-400 bg-gray-600/30 border-gray-500/30': isTachy,
-            'text-green-400 bg-green-400/10 border-green-400/30': !isPuka && !isRush && !isTachy,
+            'text-red-400 bg-red-500/10 border-red-500/30': isPuka(),
+            'text-blue-400 bg-blue-400/10 border-blue-400/30': isRush(),
+            'text-gray-400 bg-gray-600/30 border-gray-500/30': isTachy(),
+            'text-green-400 bg-green-400/10 border-green-400/30': !isPuka() && !isRush() && !isTachy(),
           }}>
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {isPuka || isRush || isTachy
+            {isPuka() || isRush() || isTachy()
               ? <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               : <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
             }
           </svg>
-          {isPuka ? 'PUKA OVERDRIVE' : isRush ? 'CHEMICAL RUSH' : isTachy ? 'TACHYCARDIA' : 'SISTEMA ESTABLE'}
+          {isPuka() ? 'PUKA OVERDRIVE' : isRush() ? 'CHEMICAL RUSH' : isTachy() ? 'TACHYCARDIA' : 'SISTEMA ESTABLE'}
         </div>
 
         <Show when={!showTutorial()}>
           <div class="absolute top-12 sm:top-14 right-2 sm:right-3 z-30 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-900/30 backdrop-blur-sm pointer-events-auto"
-            classList={{ 'opacity-40': inv.length === 0 }}>
+            classList={{ 'opacity-40': inv().length === 0 }}>
             <span class="text-[10px] sm:text-xs font-bold text-purple-300 mr-1">INV</span>
             {Array.from({ length: 2 }).map((_, i) => (
               <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-md border flex items-center justify-center text-xs transition-all duration-200"
                 classList={{
-                  'border-yellow-400/60 bg-yellow-400/20 shadow-[0_0_8px_rgba(234,179,8,0.3)]': i < inv.length,
-                  'border-slate-600/30 bg-slate-800/30': i >= inv.length,
+                  'border-yellow-400/60 bg-yellow-400/20 shadow-[0_0_8px_rgba(234,179,8,0.3)]': i < inv().length,
+                  'border-slate-600/30 bg-slate-800/30': i >= inv().length,
                 }}>
-                {i < inv.length ? (
+                {i < inv().length ? (
                   <img src="/sprites/Puka-Power.png" class="w-5 h-5 object-contain" />
                 ) : ''}
               </div>
             ))}
             <button
               onClick={() => consumeBoost()}
-              disabled={inv.length === 0}
+              disabled={inv().length === 0}
               classList={{
-                'opacity-30 cursor-not-allowed': inv.length === 0,
-                'hover:bg-purple-500/30 active:scale-90': inv.length > 0,
+                'opacity-30 cursor-not-allowed': inv().length === 0,
+                'hover:bg-purple-500/30 active:scale-90': inv().length > 0,
               }}
               class="ml-1.5 w-6 h-6 sm:w-7 sm:h-7 rounded-md border border-yellow-400/40 bg-yellow-400/10 flex items-center justify-center text-xs transition-all duration-100">
               ⚡
@@ -1859,25 +1891,25 @@ export default function Advergame() {
             <div class="flex-1 bg-slate-900/60 backdrop-blur-sm rounded-full h-1.5 sm:h-2 overflow-hidden border border-slate-700/40">
               <div class="h-full rounded-full transition-all duration-300 ease-out"
                 classList={{
-                  'bg-gradient-to-r from-red-500 to-orange-400': progressPct < 40,
-                  'bg-gradient-to-r from-orange-400 to-yellow-400': progressPct >= 40 && progressPct < 70,
-                  'bg-gradient-to-r from-yellow-400 to-green-400': progressPct >= 70,
+                  'bg-gradient-to-r from-red-500 to-orange-400': progressPct() < 40,
+                  'bg-gradient-to-r from-orange-400 to-yellow-400': progressPct() >= 40 && progressPct() < 70,
+                  'bg-gradient-to-r from-yellow-400 to-green-400': progressPct() >= 70,
                 }}
-                style={{ width: `${progressPct}%` }} />
+                style={{ width: `${progressPct()}%` }} />
             </div>
           </div>
         </div>
 
-        {ui.message && (
+        {ui().message && (
           <div class="absolute top-28 sm:top-32 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
             <div class="px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs animate-pulse"
               classList={{
-                'bg-red-500/20 text-red-400 border-red-500/40': ui.messageType === 'success',
-                'bg-gray-800/80 text-white border-gray-600/40': ui.messageType === 'error',
-                'bg-orange-500/20 text-orange-400 border-orange-500/40': ui.messageType === 'warning',
-                'bg-blue-500/20 text-blue-400 border-blue-500/40': ui.messageType !== 'success' && ui.messageType !== 'error' && ui.messageType !== 'warning',
+                'bg-red-500/20 text-red-400 border-red-500/40': ui().messageType === 'success',
+                'bg-gray-800/80 text-white border-gray-600/40': ui().messageType === 'error',
+                'bg-orange-500/20 text-orange-400 border-orange-500/40': ui().messageType === 'warning',
+                'bg-blue-500/20 text-blue-400 border-blue-500/40': ui().messageType !== 'success' && ui().messageType !== 'error' && ui().messageType !== 'warning',
               }}>
-              {ui.message}
+              {ui().message}
             </div>
           </div>
         )}
@@ -2008,11 +2040,34 @@ export default function Advergame() {
                   class="bg-red-500 hover:bg-red-600 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
                   {iconPlay} JUGAR DE NUEVO
                 </button>
-                <a href="/tienda"
+                 <a href="/tienda"
                   class="bg-slate-700 hover:bg-slate-600 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
                   Ir a la tienda {'\u{1F6D2}'}
                 </a>
               </div>
+            </div>
+          </div>
+        </Match>
+
+        <Match when={appState() === APP_STATE.LEVEL_COMPLETED}>
+          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/40 to-slate-900 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-600 rounded-full blur-3xl animate-pulse" />
+            </div>
+            <a href="/tienda"
+              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
+              {iconArrowLeft} Volver a la Tienda
+            </a>
+            <div class="relative z-10 flex flex-col items-center max-w-md w-full">
+              <img src="/sprites/pucca_besando_garu_sticker.png" class="w-64 h-64 object-contain animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)] mb-4" />
+              <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡NIVEL COMPLETADO!</h1>
+              <p class="text-lg text-slate-300 mb-6 leading-relaxed">
+                ¡Pucca ha logrado atrapar a Garu y darle un tierno beso de victoria! 💋🌸
+              </p>
+              <button onClick={() => advanceToNextLevel()}
+                class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">
+                Siguiente Nivel {iconPlay}
+              </button>
             </div>
           </div>
         </Match>
