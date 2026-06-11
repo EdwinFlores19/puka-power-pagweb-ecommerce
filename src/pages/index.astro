@@ -11,6 +11,7 @@ import Footer from '../components/Footer.astro';
 import IngredientsViewer from '../islands/IngredientsViewer.tsx';
 import QuickForm from '../islands/QuickForm.tsx';
 import TrustBadges from '../components/TrustBadges.astro';
+import MascotGuide from '../islands/MascotGuide.tsx';
 ---
 
 <BaseLayout
@@ -82,6 +83,7 @@ import TrustBadges from '../components/TrustBadges.astro';
     </section>
   </main>
 
+  <MascotGuide client:load />
   <Footer />
 </BaseLayout>
 

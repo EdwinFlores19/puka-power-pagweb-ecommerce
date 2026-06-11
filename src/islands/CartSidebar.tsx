@@ -1,4 +1,4 @@
-import { createSignal, onMount, Show } from 'solid-js';
+import { createSignal, Show } from 'solid-js';
 import { useStore } from '@nanostores/solid';
 import {
   $cart,
@@ -13,70 +13,10 @@ import {
   clearCart,
   applyCoupon,
   clearCoupon,
-  applyGameCoupon,
 } from '@/store/cartStore';
-import { VALID_COUPON } from '@/lib/constants';
-import type { CouponState } from '@/lib/types';
 import OrderSuccessModal from './OrderSuccessModal';
 
-function Skeleton() {
-  return (
-    <div class="bg-brand-light rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-primary/10 space-y-6 animate-pulse">
-      <div class="flex justify-between items-center border-b border-brand-primary/5 pb-4">
-        <div class="h-6 w-48 bg-brand-primary/10 rounded" />
-        <div class="h-4 w-16 bg-brand-accent/10 rounded" />
-      </div>
-      <div class="space-y-4">
-        {[1, 2].map(() => (
-          <div class="flex items-center justify-between gap-4 p-3.5 bg-brand-secondary rounded-2xl">
-            <div class="space-y-2 flex-grow">
-              <div class="h-4 w-32 bg-brand-primary/10 rounded" />
-              <div class="h-3 w-48 bg-brand-dark/5 rounded" />
-              <div class="h-4 w-16 bg-brand-accent/10 rounded" />
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="h-8 w-20 bg-brand-primary/10 rounded-lg" />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div class="border-t border-brand-primary/10 pt-4 space-y-4">
-        <div class="h-10 w-full bg-brand-primary/10 rounded-xl" />
-        <div class="space-y-2">
-          <div class="h-4 w-full bg-brand-dark/5 rounded" />
-          <div class="h-4 w-full bg-brand-dark/5 rounded" />
-          <div class="h-8 w-full bg-brand-primary/10 rounded" />
-        </div>
-      </div>
-      <div class="h-14 w-full bg-brand-accent/20 rounded-xl" />
-    </div>
-  );
-}
-
 export default function CartSidebar() {
-  const [isMounted, setIsMounted] = createSignal(false);
-
-  onMount(() => {
-    setIsMounted(true);
-    const couponRaw = typeof window !== 'undefined' ? localStorage.getItem('puka_coupon') : null;
-    if (couponRaw) {
-      try {
-        const parsed = JSON.parse(couponRaw) as CouponState;
-        if (parsed.applied && parsed.code === VALID_COUPON.code) {
-          const current = $coupon.get();
-          if (!current.applied) {
-            applyGameCoupon();
-            if (typeof window !== 'undefined' && Array.isArray((window as Record<string, unknown>).dataLayer)) {
-              ((window as Record<string, unknown>).dataLayer as unknown[]).push({ event: 'puka_coupon_gamified_applied', coupon: 'BOLT15' });
-            }
-          }
-        }
-      } catch {
-        // ignore parse errors
-      }
-    }
-  });
-
   const cart = useStore($cart);
   const subtotal = useStore($subtotal);
   const totalQty = useStore($totalQty);
@@ -87,10 +27,6 @@ export default function CartSidebar() {
   const [showModal, setShowModal] = createSignal(false);
   const [isProcessing, setIsProcessing] = createSignal(false);
   const [checkoutError, setCheckoutError] = createSignal('');
-
-  if (!isMounted()) {
-    return <Skeleton />;
-  }
 
   const handleApplyCoupon = () => {
     applyCoupon(couponInput());
@@ -149,9 +85,7 @@ export default function CartSidebar() {
 
   return (
     <>
-      <div class="bg-brand-light rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-primary/10 space-y-6 opacity-0 transition-opacity duration-500"
-        classList={{ 'opacity-100': isMounted() }}
-      >
+      <div class="bg-brand-light rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-primary/10 space-y-6">
         <div class="flex justify-between items-center border-b border-brand-primary/5 pb-4">
           <h3 class="font-serif text-2xl font-black text-brand-primary flex items-center">
             <svg class="w-6 h-6 mr-3 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">

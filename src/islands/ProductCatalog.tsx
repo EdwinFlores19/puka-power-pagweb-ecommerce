@@ -31,11 +31,7 @@ export default function ProductCatalog() {
               }}
             >
               {product.id === 1 && (
-                <div class="flex items-end justify-center gap-0.5 h-full">
-                  <img src="/sprites/Puka-Power.png" alt="" class="w-8 h-12 object-contain opacity-70 translate-y-1.5" width="32" height="48" decoding="async" />
-                  <img src="/sprites/Puka-Power.png" alt="" class="w-10 h-16 object-contain z-10 drop-shadow-[0_4px_8px_rgba(123,17,19,0.3)]" width="40" height="64" decoding="async" />
-                  <img src="/sprites/Puka-Power.png" alt="" class="w-8 h-12 object-contain opacity-70 translate-y-1.5" width="32" height="48" decoding="async" />
-                </div>
+                <img src="/sprites/3-puka-power.png" alt="Pack Reto Puka Power - 3 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" decoding="async" />
               )}
               {product.id === 2 && (
                 <img src="/sprites/six-pack-puka-power.png" alt="Six pack Puka Power - 6 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" decoding="async" />
