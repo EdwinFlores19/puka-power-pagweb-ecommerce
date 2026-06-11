@@ -1899,13 +1899,13 @@ export default function Advergame() {
                 </svg>
               ))}
             </div>
-            <div class="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg">
+            <div class="flex items-center gap-1.5 bg-slate-900/80   px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg">
               <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <span class="text-lg sm:text-xl font-black text-white">{ui().coins}</span>
             </div>
-            <div class="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg"
+            <div class="flex items-center gap-1.5 bg-slate-900/80   px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg"
               classList={{ 'animate-pulse border-red-500/50': ammo() === 0 }}>
               <span class="text-sm sm:text-base">🗡️</span>
               <span class="text-lg sm:text-xl font-black"
@@ -1913,14 +1913,14 @@ export default function Advergame() {
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <div class="text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50"
+            <div class="text-xl sm:text-2xl font-black bg-slate-900/80   px-2.5 py-1 rounded-lg border border-slate-700/50"
               classList={{ 'text-red-500': ui().timeLeft < 15, 'text-white': ui().timeLeft >= 15 }}>
               {Math.floor(ui().timeLeft / 60)}:{(ui().timeLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>
         </div>
 
-        <div class="hidden md:flex absolute bottom-4 left-4 z-30 flex-col gap-1 bg-slate-900/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-slate-700/50 text-white text-xs font-semibold">
+        <div class="hidden md:flex absolute bottom-4 left-4 z-30 flex-col gap-1 bg-slate-900/80   px-3 py-2 rounded-lg border border-slate-700/50 text-white text-xs font-semibold">
           <div class="flex items-center gap-1.5">
             <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">←</span>
             <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">→</span>
@@ -1960,7 +1960,7 @@ export default function Advergame() {
         </div>
 
         <Show when={!showTutorial()}>
-          <div class="absolute top-12 sm:top-14 right-2 sm:right-3 z-30 flex items-center gap-1 px-3 py-1 rounded-lg border border-purple-500/30 bg-purple-900/45 backdrop-blur-sm pointer-events-auto shadow-lg"
+          <div class="absolute top-12 sm:top-14 right-2 sm:right-3 z-30 flex items-center gap-1 px-3 py-1 rounded-lg border border-purple-500/30 bg-purple-900/45   pointer-events-auto shadow-lg"
             classList={{ 'opacity-40': inv().length === 0 }}>
             <span class="text-[10px] sm:text-xs font-black text-purple-300 mr-1.5 tracking-wide">INV</span>
             
@@ -1993,10 +1993,10 @@ export default function Advergame() {
 
         <div class="absolute top-0 left-0 right-0 z-30 flex justify-center pt-1 sm:pt-2 px-20">
           <div class="w-full max-w-lg flex items-center gap-2">
-            <span class="text-[10px] sm:text-xs font-bold text-slate-400 bg-slate-900/60 backdrop-blur-sm px-1.5 py-0.5 rounded border border-slate-700/40 shrink-0">
+            <span class="text-[10px] sm:text-xs font-bold text-slate-400 bg-slate-900/60   px-1.5 py-0.5 rounded border border-slate-700/40 shrink-0">
               NIVEL {currentLevelIndex()}/3
             </span>
-            <div class="flex-1 bg-slate-900/60 backdrop-blur-sm rounded-full h-1.5 sm:h-2 overflow-hidden border border-slate-700/40">
+            <div class="flex-1 bg-slate-900/60   rounded-full h-1.5 sm:h-2 overflow-hidden border border-slate-700/40">
               <div class="h-full rounded-full transition-all duration-300 ease-out"
                 classList={{
                   'bg-gradient-to-r from-red-500 to-orange-400': progressPct() < 40,
@@ -2010,7 +2010,7 @@ export default function Advergame() {
 
         {ui().message && (
           <div class="absolute top-28 sm:top-32 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
-            <div class="px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs animate-pulse"
+            <div class="px-4 py-2 rounded-full border font-bold uppercase text-[10px] sm:text-xs animate-pulse"
               classList={{
                 'bg-red-500/20 text-red-400 border-red-500/40': ui().messageType === 'success',
                 'bg-gray-800/80 text-white border-gray-600/40': ui().messageType === 'error',
@@ -2023,7 +2023,7 @@ export default function Advergame() {
         )}
 
         <div class="relative w-full h-[85vh] lg:h-[90vh] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat overflow-hidden">
-          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none z-0"></div>
+          <div class="absolute inset-0 bg-black/50   pointer-events-none z-0"></div>
           <div ref={containerEl} class="absolute inset-0 mx-auto max-w-[1920px]">
             <canvas ref={canvasEl} class="relative z-10 w-full h-full block" style={{ 'image-rendering': 'pixelated' }} />
           </div>
@@ -2032,20 +2032,20 @@ export default function Advergame() {
         <Show when={!showTutorial()}>
           <div class="absolute bottom-3 sm:bottom-6 left-0 right-0 px-3 sm:px-6 flex justify-between items-end z-30 md:hidden">
             <div class="flex gap-3 sm:gap-4">
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60 backdrop-blur-sm rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60 backdrop-blur-sm rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
             </div>
             <div class="flex gap-3 sm:gap-4 items-end">
               <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.attack = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.attack = false; }} onMouseDown={() => { engineState.keys.attack = true; }} onMouseUp={() => { engineState.keys.attack = false; }}
-                class="w-14 h-14 sm:w-18 sm:h-18 bg-blue-500/20 backdrop-blur-sm rounded-2xl border-2 border-blue-500/40 text-blue-300 text-xl sm:text-2xl font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
+                class="w-14 h-14 sm:w-18 sm:h-18 bg-blue-500/20   rounded-2xl border-2 border-blue-500/40 text-blue-300 text-xl sm:text-2xl font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
                 🗡️
               </button>
               <button onTouchStart={(e) => { e.preventDefault(); consumeBoost(); }} onMouseDown={() => { consumeBoost(); }} disabled={inv.length === 0}
                 classList={{ 'opacity-40': inv.length === 0 }}
-                class="w-14 h-14 sm:w-18 sm:h-18 bg-yellow-500/20 backdrop-blur-sm rounded-2xl border-2 border-yellow-500/40 text-yellow-300 text-xl sm:text-2xl font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
+                class="w-14 h-14 sm:w-18 sm:h-18 bg-yellow-500/20   rounded-2xl border-2 border-yellow-500/40 text-yellow-300 text-xl sm:text-2xl font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
                 ⚡
               </button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-red-500/30 backdrop-blur-sm rounded-2xl border-2 border-red-500/50 text-white text-3xl sm:text-4xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-red-500/30   rounded-2xl border-2 border-red-500/50 text-white text-3xl sm:text-4xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
             </div>
           </div>
         </Show>
@@ -2068,7 +2068,7 @@ export default function Advergame() {
 
         <Match when={appState() === APP_STATE.CHARACTER_SELECTION}>
           <div class="w-screen h-screen overflow-hidden relative bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
-            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div class="absolute inset-0 bg-black/60  " />
             <a href="/tienda"
               class="absolute top-6 left-6 z-20 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors">
               <svg class="w-5 h-5 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2128,7 +2128,7 @@ export default function Advergame() {
               <p class="text-lg sm:text-xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
               <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
               <Show when={couponDone()}>
-                <div class="bg-green-500/20 backdrop-blur-sm border-2 border-green-500/50 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                <div class="bg-green-500/20   border-2 border-green-500/50 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.15)]">
                   {'\u{1F389}'} Cupón BOLT15 activado — 15% de descuento
                 </div>
               </Show>
@@ -2202,7 +2202,7 @@ export default function Advergame() {
       </Switch>
 
       <Show when={appState() === APP_STATE.PLAYING && showTutorial()}>
-        <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
+        <div class="fixed inset-0 z-50 bg-black/80   flex items-center justify-center p-6">
           <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 max-w-sm w-full p-8 text-center text-white shadow-2xl shadow-red-500/5 space-y-6 relative overflow-hidden">
             <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500" />
             <div class="text-5xl">{'\u{1F3AE}'}</div>
