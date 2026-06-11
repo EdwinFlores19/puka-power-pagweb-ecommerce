@@ -175,6 +175,7 @@ export default function Advergame() {
     const k = s.keys;
     const cam = s.camera;
     const vp = s.viewport;
+    if (vp.width <= 0 || vp.height <= 0) { rafId = requestAnimationFrame(gameLoop); return; }
     const theme = THEMES[selection().theme!];
 
     if (!showTutorial() && !s.player.isDead) {
@@ -384,17 +385,25 @@ export default function Advergame() {
     rafId = requestAnimationFrame(gameLoop);
   }  function render(ctx: CanvasRenderingContext2D, s: typeof engineState, theme: typeof THEMES[keyof typeof THEMES]) {
     const { camera, viewport, player } = s;
+    if (viewport.width <= 0 || viewport.height <= 0) return;
     const genderData = GENDERS[selection().gender!];
 
+    ctx.save();
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, viewport.width, viewport.height);
+    ctx.restore();
+
     ctx.save();
     ctx.translate(-camera.x, 0);
 
+    const clamp = (v: number) => Math.max(0, Math.min(v, viewport.width));
+
     ctx.fillStyle = theme.floor + '40';
     for (let i = 0; i < 30; i++) {
-      const px = (i * 400) + (camera.x * 0.7);
-      ctx.beginPath(); ctx.arc(px, 400, 100, 0, Math.PI * 2); ctx.fill();
+      const px = clamp((i * 400) + (camera.x * 0.7));
+      if (px > -200 && px < viewport.width + 200) {
+        ctx.beginPath(); ctx.arc(px, clamp(viewport.height * 0.65), 100, 0, Math.PI * 2); ctx.fill();
+      }
     }
 
     ctx.textBaseline = 'top';
@@ -432,7 +441,8 @@ export default function Advergame() {
         ctx.textAlign = 'left'; ctx.font = '30px Arial';
         ctx.fillText('\u{1FA99}', entity.x, entity.y);
       } else if (entity.type === ENTITY.ENEMY && entity.active) {
-        ctx.font = '40px Arial'; ctx.textAlign = 'left'; ctx.save();
+        ctx.save();
+        ctx.font = '40px Arial'; ctx.textAlign = 'left';
         if (entity.vx! > 0) { ctx.translate(entity.x + entity.width, entity.y); ctx.scale(-1, 1); ctx.fillText(entity.emoji!, 0, 0); }
         else { ctx.fillText(entity.emoji!, entity.x, entity.y); }
         ctx.restore();
@@ -464,18 +474,20 @@ export default function Advergame() {
       }
     });
 
+    ctx.save();
     s.particles.forEach((p) => {
       ctx.globalAlpha = p.alpha;
       ctx.fillStyle = p.color;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
     });
     ctx.globalAlpha = 1;
+    ctx.restore();
 
+    ctx.save();
     const isRunning = Math.abs(player.vx) > 0.5;
     let emoji = isRunning ? genderData.run : genderData.idle;
     if (player.state === PLAYER_STATE.TACHYCARDIA) emoji = '\u{1F635}';
 
-    ctx.save();
     if (player.state === PLAYER_STATE.PUKA_OVERDRIVE) { ctx.shadowColor = 'rgba(255,75,75,1)'; ctx.shadowBlur = 25; }
     else if (player.state === PLAYER_STATE.TACHYCARDIA) { ctx.filter = 'grayscale(100%)'; }
 
@@ -526,9 +538,12 @@ export default function Advergame() {
       if (!canvasEl || !containerEl) return;
       const ro = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          canvasEl!.width = entry.contentRect.width;
-          canvasEl!.height = entry.contentRect.height;
-          engineState.viewport = { width: canvasEl!.width, height: canvasEl!.height };
+          const w = Math.round(entry.contentRect.width);
+          const h = Math.round(entry.contentRect.height);
+          if (w <= 0 || h <= 0) return;
+          canvasEl!.width = w;
+          canvasEl!.height = h;
+          engineState.viewport = { width: w, height: h };
         }
       });
       ro.observe(containerEl);
@@ -567,8 +582,8 @@ export default function Advergame() {
     const isTachy = pst === PLAYER_STATE.TACHYCARDIA;
 
     return (
-      <div class="fixed inset-0 bg-stone-950 overflow-hidden select-none font-sans">
-        <div class="absolute top-0 w-full p-2 sm:p-3 z-10 flex justify-between items-start pointer-events-none">
+      <div class="fixed inset-0 bg-black overflow-hidden select-none font-sans">
+        <div class="absolute top-0 left-0 right-0 z-10 flex justify-between items-start p-2 sm:p-3 pointer-events-none">
           <div class="flex items-center gap-2">
             <div class="flex gap-0.5">
               {Array.from({ length: Math.max(0, ui.lives) }).map(() => (
@@ -600,24 +615,26 @@ export default function Advergame() {
         </div>
 
         {ui.message && (
-          <div class="absolute top-28 sm:top-32 w-full flex justify-center z-20 pointer-events-none px-4">
+          <div class="absolute top-28 sm:top-32 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
             <div class={"px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs " + (ui.messageType === 'success' ? 'bg-red-500/20 text-red-400 border-red-500/40' : ui.messageType === 'error' ? 'bg-gray-800/80 text-white border-gray-600/40' : ui.messageType === 'warning' ? 'bg-orange-500/20 text-orange-400 border-orange-500/40' : 'bg-blue-500/20 text-blue-400 border-blue-500/40')}>
               {ui.message}
             </div>
           </div>
         )}
 
-        <div ref={containerEl} class="absolute inset-0">
+        <div ref={containerEl} class="w-full min-h-[85vh] lg:h-[90vh] bg-black mx-auto relative">
           <canvas ref={canvasEl} class="block w-full h-full" style={{ 'image-rendering': 'pixelated' }} />
         </div>
 
-        <div class="absolute bottom-4 sm:bottom-6 w-full px-4 sm:px-6 flex justify-between z-30 md:hidden">
-          <div class="flex gap-3">
-            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2190'}</button>
-            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2192'}</button>
+        <Show when={!showTutorial()}>
+          <div class="absolute bottom-4 sm:bottom-6 left-0 right-0 px-4 sm:px-6 flex justify-between z-30 md:hidden">
+            <div class="flex gap-3">
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2190'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-14 h-14 sm:w-16 sm:h-16 bg-black/60 backdrop-blur-sm rounded-full border border-white/15 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center active:bg-white/10 transition-colors">{'\u2192'}</button>
+            </div>
+            <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-red-500/40 backdrop-blur-sm rounded-full border border-red-500/50 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.3)] active:bg-red-500/60 transition-colors">{'\u2191'}</button>
           </div>
-          <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-red-500/40 backdrop-blur-sm rounded-full border border-red-500/50 text-white text-xl sm:text-2xl font-black touch-none flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.3)] active:bg-red-500/60 transition-colors">{'\u2191'}</button>
-        </div>
+        </Show>
       </div>
     );
   }
@@ -638,15 +655,15 @@ export default function Advergame() {
     <>
       <Switch>
         <Match when={appState() === APP_STATE.MENU_GENDER}>
-          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+          <div class="w-full min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
             <h1 class="text-5xl font-black italic mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">PUKA POWER</h1>
-            <p class="text-xl text-slate-400 mb-10">Elige a tu personaje para la aventura</p>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <p class="text-xl text-slate-400 mb-8">Elige a tu personaje para la aventura</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto w-full">
               {Object.values(GENDERS).map((g) => (
                 <button onClick={() => { setSelection({ gender: g.id, theme: null }); setAppState(APP_STATE.MENU_LEVEL); }}
-                  class="bg-slate-800 p-8 rounded-2xl border-2 border-slate-700 hover:border-red-500 hover:scale-105 transition-all group">
-                  <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">{g.idle}</div>
-                  <div class="font-bold text-lg uppercase">{g.name}</div>
+                  class="bg-slate-800 p-6 sm:p-8 rounded-2xl border-2 border-slate-700 hover:border-red-500 hover:scale-105 transition-all group">
+                  <div class="text-5xl sm:text-6xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform">{g.idle}</div>
+                  <div class="font-bold text-base sm:text-lg uppercase">{g.name}</div>
                 </button>
               ))}
             </div>
@@ -654,21 +671,21 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.MENU_LEVEL}>
-          <div class="w-full h-dvh bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+          <div class="w-full min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
             <button onClick={() => setAppState(APP_STATE.MENU_GENDER)}
-              class="absolute top-6 left-6 flex items-center text-slate-400 hover:text-white">
+              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors">
               {iconArrowLeft} Cambiar Personaje
             </button>
-            <h2 class="text-4xl font-black mb-10">¿A dónde vas hoy?</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+            <h2 class="text-4xl font-black mb-8">¿A dónde vas hoy?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl mx-auto">
               {Object.values(THEMES).map((t) => (
                 <button onClick={() => startGame(t.id)}
                   style={{ 'background-color': t.bg }}
-                  class="relative overflow-hidden p-8 rounded-2xl border-4 border-transparent hover:border-white hover:scale-105 transition-all text-left group shadow-2xl">
-                  <div class="text-7xl mb-4 absolute right-4 bottom-4 opacity-50 group-hover:opacity-100 transition-opacity">{t.goal}</div>
+                  class="relative overflow-hidden p-6 sm:p-8 rounded-2xl border-4 border-transparent hover:border-white hover:scale-105 transition-all text-left group shadow-2xl">
+                  <div class="text-6xl sm:text-7xl absolute right-4 bottom-4 opacity-50 group-hover:opacity-100 transition-opacity">{t.goal}</div>
                   <div class="relative z-10">
-                    <h3 class="font-black text-3xl text-black/80 uppercase">{t.name}</h3>
-                    <p class="font-bold text-black/60 mt-2">Dificultad Normal</p>
+                    <h3 class="font-black text-2xl sm:text-3xl text-black/80 uppercase">{t.name}</h3>
+                    <p class="font-bold text-black/60 mt-2 text-sm sm:text-base">Dificultad Normal</p>
                   </div>
                 </button>
               ))}
