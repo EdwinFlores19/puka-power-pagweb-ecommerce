@@ -64,25 +64,16 @@ let assetsPreloaded = false;
 function preloadAssets(): Promise<void> {
   if (assetsPreloaded) return Promise.resolve();
   const paths = Object.values(SPRITE);
-  return new Promise((resolve) => {
-    let loaded = 0;
-    const total = paths.length;
-    if (total === 0) { assetsPreloaded = true; resolve(); return; }
-    paths.forEach((src) => {
+  const promises = paths.map((src) => {
+    return new Promise<void>((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        imageCache.set(src, img);
-        loaded++;
-        if (loaded >= total) { assetsPreloaded = true; resolve(); }
-      };
-      img.onerror = () => {
-        loaded++;
-        if (loaded >= total) { assetsPreloaded = true; resolve(); }
-      };
+      img.onload = () => { imageCache.set(src, img); resolve(); };
+      img.onerror = () => { resolve(); };
       img.src = src;
     });
   });
+  return Promise.allSettled(promises).then(() => { assetsPreloaded = true; });
 }
 
 function usePreloadedSprite(src: string): HTMLImageElement | null {
@@ -477,6 +468,10 @@ export default function Advergame() {
     setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
     lastFrameUpdate = 0;
     trackGameEvent('puka_campaign_start', { stage: levelIdx });
+    preloadAssets().then(() => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(gameLoop);
+    });
   }
 
   function advanceToNextLevel() {
@@ -1404,10 +1399,8 @@ export default function Advergame() {
   }
 
   function PlayingScreen() {
-    onMount(async () => {
+    onMount(() => {
       if (!canvasEl || !containerEl) return;
-      if (!assetsPreloaded) await preloadAssets();
-      setAssetsReady(true);
       const ro = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const w = Math.round(entry.contentRect.width);
@@ -1419,7 +1412,6 @@ export default function Advergame() {
         }
       });
       ro.observe(containerEl);
-      rafId = requestAnimationFrame(gameLoop);
 
       const hKD = (e: KeyboardEvent) => {
         if (appState() !== APP_STATE.PLAYING) return;
