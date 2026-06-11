@@ -19,6 +19,86 @@ const BASE_SPEED = 6;
 const TIME_LIMIT = 150;
 const COOLDOWN_SHURIKEN = 2000;
 
+const SPRITE = {
+  PUKA_RUN: '/sprites/pucca_animacion_caminata_sprite_sheet.png',
+  PUKA_IDLE: '/sprites/pucca_idle_cuerpo_completo.png',
+  PUKA_JUMP: '/sprites/puka_saltando_hacia_arriba.png',
+  PUKA_ATTACK: '/sprites/pucca_guerrera_gato_espada.png',
+  PUKA_VICTORY: '/sprites/pucca_abrazando_garu_mareado_victoria.png',
+  GARU_RUN: '/sprites/garu_animacion_carrera_sprite_sheet.png',
+  GARU_IDLE: '/sprites/amigo_garu_de_pie_negro.png',
+  GARU_SCARED: '/sprites/garu_asustado_inclinado_derecha.png',
+  NINJA: '/sprites/enemigo_ninja_morado_espada.png',
+  CHING: '/sprites/personaje_cocinero_rojo_con_cubos_variante.png',
+  ABYO: '/sprites/npc_abyo_luchador.png',
+  CAT: '/sprites/gato_negro_cuerpo_completo.png',
+  PORTADA: '/sprites/portada.png',
+} as const;
+
+const SPRITE_FRAMES: Record<string, number> = {
+  [SPRITE.PUKA_RUN]: 4,
+  [SPRITE.GARU_RUN]: 4,
+};
+
+const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
+  [SPRITE.PUKA_RUN]: { w: 40, h: 60 },
+  [SPRITE.PUKA_IDLE]: { w: 40, h: 60 },
+  [SPRITE.PUKA_JUMP]: { w: 40, h: 60 },
+  [SPRITE.PUKA_ATTACK]: { w: 40, h: 60 },
+  [SPRITE.PUKA_VICTORY]: { w: 40, h: 60 },
+  [SPRITE.GARU_RUN]: { w: 40, h: 60 },
+  [SPRITE.GARU_IDLE]: { w: 40, h: 60 },
+  [SPRITE.GARU_SCARED]: { w: 40, h: 60 },
+  [SPRITE.NINJA]: { w: 40, h: 40 },
+  [SPRITE.CHING]: { w: 48, h: 72 },
+  [SPRITE.ABYO]: { w: 44, h: 66 },
+  [SPRITE.CAT]: { w: 40, h: 40 },
+  [SPRITE.PORTADA]: { w: 800, h: 600 },
+};
+
+const imageCache = new Map<string, HTMLImageElement>();
+
+function getSprite(src: string): HTMLImageElement | null {
+  let img = imageCache.get(src);
+  if (!img) {
+    img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = src;
+    imageCache.set(src, img);
+  }
+  if (img.complete && img.naturalWidth > 0) return img;
+  return null;
+}
+
+function drawSprite(
+  ctx: CanvasRenderingContext2D,
+  src: string,
+  frameIndex: number,
+  dx: number, dy: number, dw: number, dh: number,
+  flipX = false,
+) {
+  const img = getSprite(src);
+  if (!img) {
+    ctx.fillStyle = '#ff00ff40';
+    ctx.fillRect(dx, dy, dw, dh);
+    return;
+  }
+  const totalFrames = SPRITE_FRAMES[src] || 1;
+  const sw = img.naturalWidth / totalFrames;
+  const sh = img.naturalHeight;
+  const sx = Math.min(frameIndex, totalFrames - 1) * sw;
+  const sy = 0;
+  ctx.save();
+  if (flipX) {
+    ctx.translate(dx + dw, dy);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh);
+  } else {
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+  ctx.restore();
+}
+
 const LEVEL_CONFIG = {
   1: { segments: 20, minCoins: 10, name: 'El Restaurante Goh-Rong', themeId: 'GOH_RONG' as ThemeId, chemSpeedMult: 1.0 },
   2: { segments: 30, minCoins: 15, name: 'El Bosque de Bambú Místico', themeId: 'BAMBOO_FOREST' as ThemeId, chemSpeedMult: 1.4 },
@@ -189,7 +269,7 @@ class SoundEngine {
 
 interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; lastShot?: number; }
 interface GhostPos { x: number; y: number; alpha: number; }
-interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; }
+interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; animFrame: number; animTimer: number; }
 interface Keys { left: boolean; right: boolean; up: boolean; upJustPressed: boolean; attack: boolean; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; alpha: number; size: number; }
 interface EnvParticle { x: number; y: number; vx: number; vy: number; size: number; rotation: number; rotationSpeed: number; alpha: number; }
@@ -213,7 +293,7 @@ export default function Advergame() {
     score: number; lives: number; startTime: number;
     viewport: { width: number; height: number };
     shakeTimer: number; shakeIntensity: number; hitstopFrames: number;
-    companion: { x: number; y: number; width: number; height: number; targetDistance: number };
+    companion: { x: number; y: number; width: number; height: number; targetDistance: number; animFrame: number; animTimer: number };
     playerYHistory: number[];
     floatingTexts: { x: number; y: number; text: string; life: number; maxLife: number; alpha: number }[];
     floatingScores: { x: number; y: number; text: string; life: number; maxLife: number; vy: number }[];
@@ -239,12 +319,12 @@ export default function Advergame() {
         facingLeft: false, isDead: false, isGiant: false, hasPet: false,
         canDoubleJump: false, idleTimer: 0, lastSafeX: 100, lastSafeY: 100,
         jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1,
-        ghosts: [], sugarCrashTimer: 0, attackCooldown: 0,
+        ghosts: [], sugarCrashTimer: 0, attackCooldown: 0, animFrame: 0, animTimer: 0,
       },
       entities: [], particles: [], envParticles: [], score: 0, lives: 3, startTime: 0,
       viewport: { width: 800, height: 600 },
       shakeTimer: 0, shakeIntensity: 0, hitstopFrames: 0,
-      companion: { x: 280, y: 100, width: 40, height: 60, targetDistance: 180 },
+      companion: { x: 280, y: 100, width: 40, height: 60, targetDistance: 180, animFrame: 0, animTimer: 0 },
       playerYHistory: [],
       floatingTexts: [],
       floatingScores: [],
@@ -279,7 +359,7 @@ export default function Advergame() {
     const s = engineState;
     s.entities = []; s.score = 0; s.lives = 3;
     s.projectiles = []; s.nextProjectileId = 0;
-    s.player = { ...s.player, x: 100, y: 100, vx: 0, vy: 0, state: PLAYER_STATE.NORMAL, isDead: false, isGiant: false, hasPet: false, canDoubleJump: false, width: 40, height: 60, idleTimer: 0, lastSafeX: 100, lastSafeY: 100, jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1, ghosts: [], sugarCrashTimer: 0, attackCooldown: 0 };
+    s.player = { ...s.player, x: 100, y: 100, vx: 0, vy: 0, state: PLAYER_STATE.NORMAL, isDead: false, isGiant: false, hasPet: false, canDoubleJump: false, width: 40, height: 60, idleTimer: 0, lastSafeX: 100, lastSafeY: 100, jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1, ghosts: [], sugarCrashTimer: 0, attackCooldown: 0, animFrame: 0, animTimer: 0 };
     s.camera.x = 0;
     setAmmo(10);
     let curX = 0;
@@ -563,6 +643,22 @@ export default function Advergame() {
       p.ghosts.forEach((g) => g.alpha -= 0.03);
       p.ghosts = p.ghosts.filter((g) => g.alpha > 0);
 
+      // Animation tick — player
+      {
+        const moving = Math.abs(p.vx) > 0.5;
+        const runFrames = SPRITE_FRAMES[SPRITE.PUKA_RUN] || 1;
+        if (moving && p.grounded) {
+          p.animTimer += 16.6;
+          if (p.animTimer >= 120) {
+            p.animTimer = 0;
+            p.animFrame = (p.animFrame + 1) % runFrames;
+          }
+        } else {
+          p.animFrame = 0;
+          p.animTimer = 0;
+        }
+      }
+
       // Garu companion movement
       if (p.state !== PLAYER_STATE.PUKA_OVERDRIVE) {
         s.companion.x = p.x + s.companion.targetDistance;
@@ -574,6 +670,20 @@ export default function Advergame() {
         s.companion.targetDistance = Math.min(s.companion.targetDistance + 20, 2000);
       } else {
         s.companion.targetDistance = 180;
+      }
+      {
+        const garuMoving = p.state !== PLAYER_STATE.TACHYCARDIA && (Math.abs(p.vx) > 0.5 || !p.grounded);
+        const garuRunFrames = SPRITE_FRAMES[SPRITE.GARU_RUN] || 1;
+        if (garuMoving) {
+          s.companion.animTimer += 16.6;
+          if (s.companion.animTimer >= 140) {
+            s.companion.animTimer = 0;
+            s.companion.animFrame = (s.companion.animFrame + 1) % garuRunFrames;
+          }
+        } else {
+          s.companion.animFrame = 0;
+          s.companion.animTimer = 0;
+        }
       }
 
       // PUKA_OVERDRIVE victory check — catch Garu
@@ -928,7 +1038,6 @@ export default function Advergame() {
   function render(ctx: CanvasRenderingContext2D, s: typeof engineState, theme: typeof THEMES[keyof typeof THEMES]) {
     const { camera, viewport, player } = s;
     if (viewport.width <= 0 || viewport.height <= 0) return;
-    const genderData = GENDERS[selection().gender!];
     const now = Date.now();
 
     ctx.save();
@@ -1013,38 +1122,31 @@ export default function Advergame() {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
       } else if (entity.type === ENTITY.ENEMY_NINJA && entity.active) {
-        ctx.save();
-        ctx.font = '40px Arial'; ctx.textAlign = 'left';
-        if (entity.vx! > 0) { ctx.translate(entity.x + entity.width, entity.y); ctx.scale(-1, 1); ctx.fillText(entity.emoji!, 0, 0); }
-        else { ctx.fillText(entity.emoji!, entity.x, entity.y); }
-        ctx.restore();
+        drawSprite(ctx, SPRITE.NINJA, 0, entity.x, entity.y, entity.width, entity.height, (entity.vx ?? 0) > 0);
       } else if (entity.type === ENTITY.NPC_CHING && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 25;
-        ctx.font = '50px Arial'; ctx.textAlign = 'left';
-        ctx.fillText('🥷', entity.x, entity.y);
+        drawSprite(ctx, SPRITE.CHING, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ffd700';
-        ctx.fillText('CHING', entity.x, entity.y - 18);
         ctx.restore();
+        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText('CHING', entity.x, entity.y - 8);
       } else if (entity.type === ENTITY.NPC_ABYO && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 15;
-        ctx.font = '46px Arial'; ctx.textAlign = 'left';
-        ctx.fillText('😤', entity.x, entity.y);
+        drawSprite(ctx, SPRITE.ABYO, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ef4444';
-        ctx.fillText('ABYO', entity.x, entity.y - 18);
         ctx.restore();
+        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText('ABYO', entity.x, entity.y - 8);
       } else if (entity.type === ENTITY.NPC_TIOS && entity.active) {
         ctx.save();
         ctx.shadowColor = '#22c55e'; ctx.shadowBlur = 20;
-        ctx.font = '50px Arial'; ctx.textAlign = 'left';
-        ctx.fillText('🍜', entity.x, entity.y);
+        drawSprite(ctx, SPRITE.CAT, 0, entity.x, entity.y, 40, 40);
         ctx.shadowBlur = 0;
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#22c55e';
-        ctx.fillText('TÍOS', entity.x, entity.y - 18);
         ctx.restore();
+        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#22c55e'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText('TÍOS', entity.x, entity.y - 8);
       } else if (entity.type === ENTITY.TRAP_CHEMICAL && entity.active) {
         ctx.save();
         ctx.globalAlpha = 0.4 + Math.sin(now / 200) * 0.2;
@@ -1064,15 +1166,13 @@ export default function Advergame() {
         ctx.save();
         ctx.globalAlpha = 0.6 + Math.sin(now / 250) * 0.3;
         ctx.shadowColor = '#60a5fa'; ctx.shadowBlur = 15;
-        ctx.font = '30px Arial'; ctx.textAlign = 'left';
-        ctx.fillText('🗡️', entity.x, entity.y);
+        drawSprite(ctx, SPRITE.PUKA_ATTACK, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
-        ctx.font = 'bold 12px Arial'; ctx.fillStyle = '#60a5fa';
-        ctx.fillText('AMMO', entity.x, entity.y - 16);
-        ctx.globalAlpha = 1;
         ctx.restore();
+        ctx.font = 'bold 12px Arial'; ctx.fillStyle = '#60a5fa'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText('AMMO', entity.x, entity.y - 8);
       } else if (entity.type === ENTITY.GOAL) {
-        ctx.textAlign = 'left'; ctx.font = '100px Arial'; ctx.fillText(theme.goalEmoji, entity.x, entity.y);
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '100px Arial'; ctx.fillText(theme.goalEmoji, entity.x, entity.y);
       }
     });
 
@@ -1135,79 +1235,122 @@ export default function Advergame() {
 
     // Garu companion
     ctx.save();
-    const garuEmoji = player.state === PLAYER_STATE.TACHYCARDIA ? '🏃‍♂️💨' : '😈';
-    ctx.font = '50px Arial';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
     if (player.state === PLAYER_STATE.TACHYCARDIA) {
       ctx.shadowColor = 'rgba(255,0,0,0.5)';
       ctx.shadowBlur = 20;
+      drawSprite(ctx, SPRITE.GARU_SCARED, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
+      ctx.shadowBlur = 0;
+    } else {
+      const garuMoving = Math.abs(player.vx) > 0.5 || !player.grounded;
+      if (garuMoving) {
+        drawSprite(ctx, SPRITE.GARU_RUN, s.companion.animFrame, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
+      } else {
+        drawSprite(ctx, SPRITE.GARU_IDLE, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
+      }
     }
-    ctx.fillText(garuEmoji, s.companion.x, s.companion.y);
-    ctx.shadowBlur = 0;
+    ctx.restore();
     ctx.font = 'bold 14px Arial';
     ctx.fillStyle = '#a855f7';
-    ctx.fillText('GARU', s.companion.x, s.companion.y - 18);
-    ctx.restore();
+    ctx.textAlign = 'center';
+    ctx.fillText('GARU', s.companion.x + s.companion.width / 2, s.companion.y - 12);
 
     ctx.save();
-    const isRunning = Math.abs(player.vx) > 0.5;
-    let emoji = isRunning ? genderData.run : genderData.idle;
-    if (player.state === PLAYER_STATE.TACHYCARDIA) emoji = '😭';
-    if (player.sugarCrashTimer > 0) emoji = '🥵';
 
+    // Ghost trail for PUKA_OVERDRIVE
     for (const g of player.ghosts) {
       ctx.globalAlpha = g.alpha * 0.3;
-      ctx.font = '40px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(emoji, g.x + player.width / 2, g.y + player.height / 2);
+      const ghostSprite = SPRITE.PUKA_RUN;
+      drawSprite(ctx, ghostSprite, player.animFrame, g.x, g.y, player.width, player.height, player.facingLeft);
     }
     ctx.globalAlpha = 1;
 
     if (player.state === PLAYER_STATE.PUKA_OVERDRIVE) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 30; }
     else if (player.state === PLAYER_STATE.TACHYCARDIA) {
       ctx.filter = 'hue-rotate(130deg) contrast(175%) saturate(250%)';
+    } else if (player.sugarCrashTimer > 0) {
+      ctx.filter = 'saturate(30%) brightness(60%)';
+    }
+
+    // Determine which sprite to use based on state
+    let currentSrc = SPRITE.PUKA_IDLE;
+    let currentFrame = 0;
+    const moving = Math.abs(player.vx) > 0.5;
+
+    if (player.isDead) {
+      currentSrc = SPRITE.PUKA_IDLE;
+      currentFrame = 0;
+    } else if (player.state === PLAYER_STATE.TACHYCARDIA) {
+      currentSrc = SPRITE.PUKA_JUMP;
+      currentFrame = 0;
+    } else if (!player.grounded) {
+      currentSrc = SPRITE.PUKA_JUMP;
+      currentFrame = 0;
+      // Vertical bob for jumping
+      const jb = Math.sin(now / 120) * 3;
+      if (player.vy < -2) {
+        // Rising — show upward sprite
+      }
+    } else if (moving) {
+      currentSrc = SPRITE.PUKA_RUN;
+      currentFrame = player.animFrame;
+    } else if (player.idleTimer > 3000) {
+      currentSrc = SPRITE.PUKA_IDLE;
+      currentFrame = 0;
+    } else {
+      currentSrc = SPRITE.PUKA_IDLE;
+      currentFrame = 0;
     }
 
     const cx = player.x + player.width / 2;
     const cy = player.y + player.height / 2;
-    ctx.translate(cx, cy);
-    ctx.save();
-    if (!player.facingLeft) ctx.scale(-1, 1);
-    ctx.scale(player.squashX, player.squashY);
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
 
     if (player.hasPet) {
       ctx.shadowColor = 'rgba(255,75,75,1)'; ctx.shadowBlur = 20;
-      ctx.font = '50px Arial';
-      if (isRunning && !player.isDead && player.grounded) ctx.translate(0, Math.abs(Math.sin(now / 60)) * -4);
-      ctx.fillText('🐈', 0, 15);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(player.squashX, player.squashY);
+      // Draw pet cat (small sprite above player)
+      drawSprite(ctx, SPRITE.CAT, 0, -player.width / 2, -player.height / 2 - 15, 24, 24, player.facingLeft);
+      ctx.restore();
       ctx.shadowBlur = 0;
-      ctx.font = player.isGiant ? '60px Arial' : '40px Arial';
-      ctx.fillText(emoji, 0, -25);
+      // Draw player below the pet
+      ctx.save();
+      ctx.translate(cx, cy + 12);
+      ctx.scale(player.squashX, player.squashY);
+      if (moving && player.grounded) ctx.translate(0, Math.abs(Math.sin(now / 60)) * -3);
+      drawSprite(ctx, currentSrc, currentFrame, -player.width / 2, -player.height / 2, player.width, player.height, player.facingLeft);
+      ctx.restore();
     } else {
-      ctx.font = player.isGiant ? '85px Arial' : '55px Arial';
-      if (isRunning && !player.isDead && player.grounded) {
-        ctx.rotate(Math.sin(now / 80) * 0.15);
-        ctx.translate(0, Math.abs(Math.sin(now / 80)) * -8);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(player.squashX, player.squashY);
+      if (moving && player.grounded) {
+        ctx.translate(0, Math.abs(Math.sin(now / 80)) * -4);
       }
-      ctx.fillText(emoji, 0, 0);
+      ctx.save();
+      drawSprite(ctx, currentSrc, currentFrame, -player.width / 2, -player.height / 2, player.width, player.height, player.facingLeft);
+      ctx.restore();
+      ctx.restore();
     }
-    ctx.restore();
 
+    // PUKA_OVERDRIVE lightning bolts
     if (player.state === PLAYER_STATE.PUKA_OVERDRIVE && !player.isDead) {
       const pt = now / 150;
-      ctx.font = player.isGiant ? '35px Arial' : '20px Arial';
+      ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 15;
-      ctx.fillText('⚡', Math.cos(pt) * (player.width * 0.9), Math.sin(pt) * (player.height * 0.7));
-      ctx.fillText('⚡', Math.cos(pt + Math.PI) * (player.width * 0.9), Math.sin(pt + Math.PI) * (player.height * 0.7));
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText('⚡', cx + Math.cos(pt) * (player.width * 0.9), cy + Math.sin(pt) * (player.height * 0.7));
+      ctx.fillText('⚡', cx + Math.cos(pt + Math.PI) * (player.width * 0.9), cy + Math.sin(pt + Math.PI) * (player.height * 0.7));
       ctx.shadowBlur = 0;
     }
 
+    // Idle sleep Zzz
     if (player.idleTimer > 3000 && !player.isDead) {
       ctx.font = '25px Arial';
-      ctx.fillText('💤', 15, -player.height / 2 - 15 + Math.sin(now / 200) * 5);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText('💤', cx, cy - player.height / 2 - 20 + Math.sin(now / 200) * 5);
     }
 
     ctx.restore();
