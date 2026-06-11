@@ -26,7 +26,7 @@ const SPRITE = {
   PUKA_ATTACK: '/sprites/pucca_guerrera_gato_espada.png',
   PUKA_VICTORY: '/sprites/pucca_abrazando_garu_mareado_victoria.png',
   GARU_RUN: '/sprites/garu_animacion_carrera_sprite_sheet.png',
-  GARU_IDLE: '/sprites/amigo_garu_de_pie_negro.png',
+  GARU_IDLE: '/sprites/garu_de_pie_enojado.png',
   GARU_SCARED: '/sprites/garu_asustado_inclinado_derecha.png',
   NINJA: '/sprites/enemigo_ninja_morado_espada.png',
   CHING: '/sprites/personaje_cocinero_rojo_con_cubos_variante.png',
@@ -36,8 +36,13 @@ const SPRITE = {
 } as const;
 
 const SPRITE_FRAMES: Record<string, number> = {
-  [SPRITE.PUKA_RUN]: 4,
-  [SPRITE.GARU_RUN]: 4,
+  [SPRITE.PUKA_RUN]: 8,
+  [SPRITE.GARU_RUN]: 8,
+};
+
+const SPRITE_GRID: Record<string, { cols: number; rows: number }> = {
+  [SPRITE.PUKA_RUN]: { cols: 4, rows: 2 },
+  [SPRITE.GARU_RUN]: { cols: 4, rows: 2 },
 };
 
 const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
@@ -56,13 +61,15 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.PORTADA]: { w: 800, h: 600 },
 };
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 const imageCache = new Map<string, HTMLImageElement>();
 let assetsPreloaded = false;
 
 function preloadAssets(): Promise<void> {
-  if (assetsPreloaded) return Promise.resolve();
+  if (assetsPreloaded) {
+    return Promise.resolve();
+  }
   const paths = Object.values(SPRITE);
   const promises = paths.map((src) => {
     return new Promise<void>((resolve) => {
@@ -73,7 +80,9 @@ function preloadAssets(): Promise<void> {
       img.src = src;
     });
   });
-  return Promise.allSettled(promises).then(() => { assetsPreloaded = true; });
+  return Promise.allSettled(promises).then((results) => {
+    assetsPreloaded = true;
+  });
 }
 
 function usePreloadedSprite(src: string): HTMLImageElement | null {
@@ -95,11 +104,18 @@ function drawSprite(
     ctx.fillRect(fx, fy, fw, fh);
     return;
   }
-  const totalFrames = SPRITE_FRAMES[src] || 1;
-  const sw = Math.floor(img.naturalWidth / totalFrames);
-  const sh = Math.floor(img.naturalHeight);
-  const sx = Math.min(frameIndex, totalFrames - 1) * sw;
-  const sy = 0;
+  const grid = SPRITE_GRID[src] || { cols: 1, rows: 1 };
+  const sw = Math.floor(img.naturalWidth / grid.cols);
+  const sh = Math.floor(img.naturalHeight / grid.rows);
+  
+  const totalFrames = grid.cols * grid.rows;
+  const index = Math.min(frameIndex, totalFrames - 1);
+  
+  const col = index % grid.cols;
+  const row = Math.floor(index / grid.cols);
+  
+  const sx = col * sw;
+  const sy = row * sh;
   const fx = Math.floor(dx), fy = Math.floor(dy), fw = Math.floor(dw), fh = Math.floor(dh);
   ctx.save();
   if (flipX) {
@@ -281,7 +297,7 @@ interface EnvParticle { x: number; y: number; vx: number; vy: number; size: numb
 interface Projectile { id: number; type: number; x: number; y: number; vx: number; vy: number; width: number; height: number; angle: number; active: boolean; facingLeft: boolean; }
 
 export default function Advergame() {
-  const [appState, setAppState] = createSignal<number>(APP_STATE.MENU_GENDER);
+  const [appState, setAppState] = createSignal<number>(APP_STATE.START_SCREEN);
   const [selection, setSelection] = createSignal<{ theme: ThemeId | null }>({ theme: null });
   const [uiState, setUiState] = createSignal<{ coins: number; timeLeft: number; message: string; messageType: string; playerState: string; lives: number }>({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
   const [couponDone, setCouponDone] = createSignal(false);
@@ -299,7 +315,7 @@ export default function Advergame() {
     score: number; lives: number; startTime: number;
     viewport: { width: number; height: number };
     shakeTimer: number; shakeIntensity: number; hitstopFrames: number;
-    companion: { x: number; y: number; width: number; height: number; targetDistance: number; animFrame: number; animTimer: number };
+    companion: { x: number; y: number; vx: number; vy: number; grounded: boolean; width: number; height: number; targetDistance: number; animFrame: number; animTimer: number };
     playerYHistory: number[];
     floatingTexts: { x: number; y: number; text: string; life: number; maxLife: number; alpha: number }[];
     floatingScores: { x: number; y: number; text: string; life: number; maxLife: number; vy: number }[];
@@ -331,7 +347,7 @@ export default function Advergame() {
       entities: [], particles: [], envParticles: [], score: 0, lives: 3, startTime: 0,
       viewport: { width: 800, height: 600 },
       shakeTimer: 0, shakeIntensity: 0, hitstopFrames: 0,
-      companion: { x: 280, y: 100, width: 40, height: 60, targetDistance: 180, animFrame: 0, animTimer: 0 },
+      companion: { x: 280, y: 100, vx: 5, vy: 0, grounded: false, width: 40, height: 60, targetDistance: 180, animFrame: 0, animTimer: 0 },
       playerYHistory: [],
       floatingTexts: [],
       floatingScores: [],
@@ -471,12 +487,13 @@ export default function Advergame() {
     lastFrameUpdate = 0;
     trackGameEvent('puka_campaign_start', { stage: levelIdx });
     preloadAssets().then(() => {
-      if (!canvasEl) { console.error('Error: Canvas no montado'); return; }
-      cancelAnimationFrame(rafId);
-      canvasEl.width = window.innerWidth;
-      canvasEl.height = window.innerHeight;
-      engineState.viewport = { width: window.innerWidth, height: window.innerHeight };
-      rafId = requestAnimationFrame(gameLoop);
+      if (canvasEl) {
+        cancelAnimationFrame(rafId);
+        canvasEl.width = window.innerWidth;
+        canvasEl.height = window.innerHeight;
+        engineState.viewport = { width: window.innerWidth, height: window.innerHeight };
+        rafId = requestAnimationFrame(gameLoop);
+      }
     });
   }
 
@@ -507,7 +524,10 @@ export default function Advergame() {
       const k = s.keys;
       const cam = s.camera;
       const vp = s.viewport;
-      if (vp.width <= 0 || vp.height <= 0) { rafId = requestAnimationFrame(gameLoop); return; }
+      if (vp.width <= 0 || vp.height <= 0) {
+        rafId = requestAnimationFrame(gameLoop);
+        return;
+      }
       const theme = THEMES[selection().theme!];
 
     if (s.hitstopFrames > 0) {
@@ -643,6 +663,10 @@ export default function Advergame() {
 
       p.vy += GRAVITY;
       p.x += p.vx;
+      if (p.x < cam.x) {
+        p.x = cam.x;
+        if (p.vx < 0) p.vx = 0;
+      }
       p.y += p.vy;
       p.grounded = false;
 
@@ -675,24 +699,90 @@ export default function Advergame() {
         }
       }
 
-      // Garu companion movement
-      if (p.state !== PLAYER_STATE.PUKA_OVERDRIVE) {
-        s.companion.x = p.x + s.companion.targetDistance;
-      }
-      s.playerYHistory.unshift(p.y);
-      if (s.playerYHistory.length > 6) s.playerYHistory.pop();
-      s.companion.y = s.playerYHistory[s.playerYHistory.length - 1];
+      // Garu companion independent physics & AI
+      s.companion.vy += GRAVITY;
+      s.companion.y += s.companion.vy;
+
+      let targetVx = BASE_SPEED;
+      const distance = s.companion.x - p.x;
       if (p.state === PLAYER_STATE.TACHYCARDIA) {
-        s.companion.targetDistance = Math.min(s.companion.targetDistance + 20, 2000);
+        targetVx = 8;
+      } else if (p.state === PLAYER_STATE.PUKA_OVERDRIVE) {
+        targetVx = 10;
+      } else if (distance < 160) {
+        targetVx = Math.max(p.vx + 1.5, 7.5);
+      } else if (distance > 300) {
+        targetVx = Math.max(1, p.vx - 1);
       } else {
-        s.companion.targetDistance = 180;
+        targetVx = Math.max(p.vx, BASE_SPEED - 0.5);
       }
+      s.companion.vx += (targetVx - s.companion.vx) * 0.1;
+      s.companion.x += s.companion.vx;
+
+      // Clamp Garu's position relative to Puka so he stays visible on the screen
+      const minDistance = 100;
+      const maxDistance = 320;
+      const currentDistance = s.companion.x - p.x;
+      if (currentDistance < minDistance) {
+        s.companion.x = p.x + minDistance;
+        s.companion.vx = Math.max(s.companion.vx, p.vx);
+      } else if (currentDistance > maxDistance) {
+        s.companion.x = p.x + maxDistance;
+        s.companion.vx = Math.min(s.companion.vx, p.vx);
+      }
+
+      // Platform collision resolution for Garu
+      s.companion.grounded = false;
+      const nearbyForGaru = s.entities.filter((e) => e.type === ENTITY.PLATFORM && e.x < s.companion.x + 300 && e.x + e.width > s.companion.x - 300);
+      for (const entity of nearbyForGaru) {
+        if (isAABBCollision(s.companion, entity)) {
+          if (s.companion.vy < 0 && s.companion.y <= entity.y + entity.height && s.companion.y - s.companion.vy >= entity.y + entity.height - 15) {
+            s.companion.y = entity.y + entity.height; s.companion.vy = 0;
+          } else if (s.companion.vy > 0 && s.companion.y + s.companion.height - s.companion.vy <= entity.y + 15) {
+            s.companion.y = entity.y - s.companion.height; s.companion.vy = 0; s.companion.grounded = true;
+          } else {
+            s.companion.vx = 0;
+            if (s.companion.x < entity.x) s.companion.x = entity.x - s.companion.width;
+            else s.companion.x = entity.x + entity.width;
+          }
+        }
+      }
+
+      // Gap AI Jumping for Garu
+      if (s.companion.grounded) {
+        let platformAhead = false;
+        const checkX = s.companion.x + 100;
+        const checkY = s.companion.y + s.companion.height + 20;
+        for (const entity of s.entities) {
+          if (entity.type === ENTITY.PLATFORM) {
+            if (checkX >= entity.x && checkX <= entity.x + entity.width && checkY >= entity.y && checkY <= entity.y + entity.height) {
+              platformAhead = true;
+              break;
+            }
+          }
+        }
+        if (!platformAhead) {
+          s.companion.vy = JUMP_FORCE * 0.95;
+          s.companion.grounded = false;
+        }
+      }
+
+      // Respawn Garu in front of Puka if he falls off a cliff
+      if (s.companion.y > 1500) {
+        s.companion.x = p.x + 200;
+        s.companion.y = p.y - 100;
+        s.companion.vx = p.vx || BASE_SPEED;
+        s.companion.vy = 0;
+        s.companion.grounded = false;
+      }
+
+      // Animation tick — Garu
       {
-        const garuMoving = p.state !== PLAYER_STATE.TACHYCARDIA && (Math.abs(p.vx) > 0.5 || !p.grounded);
+        const garuMoving = Math.abs(s.companion.vx) > 0.5 && s.companion.grounded;
         const garuRunFrames = SPRITE_FRAMES[SPRITE.GARU_RUN] || 1;
         if (garuMoving) {
           s.companion.animTimer += 16.6;
-          if (s.companion.animTimer >= 140) {
+          if (s.companion.animTimer >= 120) {
             s.companion.animTimer = 0;
             s.companion.animFrame = (s.companion.animFrame + 1) % garuRunFrames;
           }
@@ -1008,50 +1098,183 @@ export default function Advergame() {
     }
   }
 
-  function drawParallaxMid(ctx: CanvasRenderingContext2D, s: typeof engineState, vw: number, vh: number, theme: typeof THEMES[keyof typeof THEMES]) {
-    const camX = s.camera.x;
+  function drawParallaxBackground(
+    ctx: CanvasRenderingContext2D,
+    themeId: ThemeId,
+    scrollX: number,
+    vw: number,
+    vh: number,
+  ) {
+    // Clear screen with theme's sky/base background
+    let bgGrad = ctx.createLinearGradient(0, 0, 0, vh);
+    if (themeId === 'GOH_RONG') {
+      bgGrad.addColorStop(0, '#1A080A');
+      bgGrad.addColorStop(1, '#33080c');
+    } else if (themeId === 'BAMBOO_FOREST') {
+      bgGrad.addColorStop(0, '#02120b');
+      bgGrad.addColorStop(1, '#0e2417');
+    } else {
+      bgGrad.addColorStop(0, '#0a0d1a');
+      bgGrad.addColorStop(1, '#1b223c');
+    }
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, vw, vh);
+
+    // Layer 1: Far background (slowest movement, speed factor 0.05)
     ctx.save();
-    ctx.translate(-camX * 0.15, 0);
-    ctx.globalAlpha = 0.3;
-    if (theme.id === 'GOH_RONG') {
-      ctx.fillStyle = '#7B111330';
-      for (let i = 0; i < 12; i++) {
-        const bx = i * 300 - (camX * 0.15 % 300);
-        ctx.fillRect(bx, vh * 0.4, 40, vh * 0.5);
-        ctx.fillRect(bx + 80, vh * 0.35, 30, vh * 0.55);
+    const s1 = -scrollX * 0.05;
+    ctx.translate(s1 % vw, 0);
+    ctx.globalAlpha = 0.45;
+    if (themeId === 'GOH_RONG') {
+      // Far mountains
+      ctx.fillStyle = '#4c1115';
+      for (let i = -1; i < 3; i++) {
+        const x = i * vw;
         ctx.beginPath();
-        ctx.arc(bx + 20, vh * 0.35, 15, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFD70030';
+        ctx.moveTo(x - 50, vh);
+        ctx.lineTo(x + vw * 0.3, vh - 220);
+        ctx.lineTo(x + vw * 0.6, vh - 120);
+        ctx.lineTo(x + vw * 0.8, vh - 260);
+        ctx.lineTo(x + vw + 50, vh);
+        ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = '#7B111330';
       }
-    } else if (theme.id === 'BAMBOO_FOREST') {
-      ctx.fillStyle = '#1E462025';
-      for (let i = 0; i < 10; i++) {
-        const bx = i * 360 - (camX * 0.15 % 360);
-        ctx.fillRect(bx + 30, vh * 0.2, 18, vh * 0.7);
-        ctx.fillRect(bx + 30, vh * 0.35, 18, 5);
-        ctx.fillRect(bx + 30, vh * 0.55, 18, 5);
-        ctx.fillRect(bx + 160, vh * 0.3, 14, vh * 0.6);
-        ctx.fillRect(bx + 160, vh * 0.45, 14, 4);
+    } else if (themeId === 'BAMBOO_FOREST') {
+      // Misty sky mountains/clouds
+      ctx.fillStyle = '#0f3825';
+      for (let i = -1; i < 3; i++) {
+        const x = i * vw;
+        ctx.beginPath();
+        ctx.moveTo(x - 100, vh);
+        ctx.quadraticCurveTo(x + vw * 0.25, vh - 180, x + vw * 0.5, vh - 100);
+        ctx.quadraticCurveTo(x + vw * 0.75, vh - 200, x + vw + 100, vh);
+        ctx.closePath();
+        ctx.fill();
       }
     } else {
-      ctx.fillStyle = '#33415525';
-      for (let i = 0; i < 8; i++) {
-        const bx = i * 450 - (camX * 0.15 % 450);
+      // Snowy mountain peaks
+      ctx.fillStyle = '#1e293b';
+      for (let i = -1; i < 3; i++) {
+        const x = i * vw;
         ctx.beginPath();
-        ctx.moveTo(bx, vh * 0.8);
-        ctx.lineTo(bx + 80, vh * 0.05);
-        ctx.lineTo(bx + 160, vh * 0.55);
-        ctx.lineTo(bx + 240, vh * 0.15);
-        ctx.lineTo(bx + 320, vh * 0.65);
-        ctx.lineTo(bx + 400, vh * 0.3);
-        ctx.lineTo(bx + 480, vh * 0.85);
+        ctx.moveTo(x - 20, vh);
+        ctx.lineTo(x + vw * 0.25, vh - 320);
+        ctx.lineTo(x + vw * 0.5, vh - 150);
+        ctx.lineTo(x + vw * 0.75, vh - 350);
+        ctx.lineTo(x + vw + 20, vh);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Draw snow cap highlights
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.moveTo(x + vw * 0.25 - 40, vh - 270);
+        ctx.lineTo(x + vw * 0.25, vh - 320);
+        ctx.lineTo(x + vw * 0.25 + 40, vh - 270);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#1e293b';
+      }
+    }
+    ctx.restore();
+
+    // Layer 2: Middle background (medium speed, speed factor 0.15)
+    ctx.save();
+    const s2 = -scrollX * 0.15;
+    ctx.translate(s2 % vw, 0);
+    ctx.globalAlpha = 0.55;
+    if (themeId === 'GOH_RONG') {
+      // Traditional houses (pagodas)
+      ctx.fillStyle = '#7B1113';
+      for (let i = -1; i < 4; i++) {
+        const bx = i * 400;
+        ctx.fillRect(bx + 50, vh - 250, 150, 250);
+        ctx.beginPath();
+        ctx.moveTo(bx + 20, vh - 250);
+        ctx.quadraticCurveTo(bx + 125, vh - 300, bx + 230, vh - 250);
+        ctx.lineTo(bx + 200, vh - 235);
+        ctx.lineTo(bx + 50, vh - 235);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(bx + 125, vh - 180, 15, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFD700';
+        ctx.fill();
+        ctx.fillStyle = '#7B1113';
+      }
+    } else if (themeId === 'BAMBOO_FOREST') {
+      // Blurred bamboo stalks
+      ctx.filter = 'blur(2px)';
+      ctx.fillStyle = '#14532d';
+      for (let i = -1; i < 6; i++) {
+        const bx = i * 250;
+        ctx.fillRect(bx + 30, vh - 400, 12, 400);
+        for (let y = vh - 350; y < vh; y += 80) {
+          ctx.fillRect(bx + 28, y, 16, 4);
+        }
+      }
+      ctx.filter = 'none';
+    } else {
+      // Steep rocky cliffs
+      ctx.fillStyle = '#334155';
+      for (let i = -1; i < 4; i++) {
+        const bx = i * 450;
+        ctx.beginPath();
+        ctx.moveTo(bx, vh);
+        ctx.lineTo(bx + 100, vh - 220);
+        ctx.lineTo(bx + 220, vh - 200);
+        ctx.lineTo(bx + 320, vh - 300);
+        ctx.lineTo(bx + 400, vh - 180);
+        ctx.lineTo(bx + 480, vh);
         ctx.closePath();
         ctx.fill();
       }
     }
-    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // Layer 3: Foreground (fast speed, speed factor 0.3)
+    ctx.save();
+    const s3 = -scrollX * 0.3;
+    ctx.translate(s3 % vw, 0);
+    ctx.globalAlpha = 0.7;
+    if (themeId === 'GOH_RONG') {
+      // Restaurant tables & columns
+      ctx.fillStyle = '#3A0003';
+      for (let i = -1; i < 5; i++) {
+        const bx = i * 350;
+        ctx.fillRect(bx + 80, 0, 18, vh);
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(bx + 80, vh - 180, 18, 6);
+        ctx.fillStyle = '#3A0003';
+        ctx.fillRect(bx + 180, vh - 120, 120, 120);
+        ctx.fillRect(bx + 160, vh - 130, 160, 12);
+      }
+    } else if (themeId === 'BAMBOO_FOREST') {
+      // Crisp, defined vertical bamboos
+      ctx.fillStyle = '#22c55e';
+      for (let i = -1; i < 7; i++) {
+        const bx = i * 200;
+        ctx.fillRect(bx + 50, vh - 500, 14, 500);
+        for (let y = vh - 450; y < vh; y += 70) {
+          ctx.fillStyle = '#a3e635';
+          ctx.fillRect(bx + 47, y, 20, 4);
+        }
+        ctx.fillStyle = '#22c55e';
+      }
+    } else {
+      // Clouds passing by horizontally
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      for (let i = -1; i < 4; i++) {
+        const bx = i * 450;
+        ctx.beginPath();
+        ctx.arc(bx + 100, vh - 150, 40, 0, Math.PI * 2);
+        ctx.arc(bx + 140, vh - 170, 50, 0, Math.PI * 2);
+        ctx.arc(bx + 180, vh - 150, 40, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
     ctx.restore();
   }
 
@@ -1068,17 +1291,7 @@ export default function Advergame() {
       ctx.translate(sx, sy);
     }
 
-    ctx.fillStyle = theme.bg;
-    ctx.fillRect(0, 0, viewport.width, viewport.height);
-    ctx.fillStyle = 'red';
-    ctx.fillRect(100, 100, 200, 200);
-    const grad = ctx.createLinearGradient(0, viewport.height * 0.7, 0, viewport.height);
-    grad.addColorStop(0, 'transparent');
-    grad.addColorStop(1, '#00000040');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, viewport.width, viewport.height);
-
-    drawParallaxMid(ctx, s, viewport.width, viewport.height, theme);
+    drawParallaxBackground(ctx, theme.id, camera.x, viewport.width, viewport.height);
 
     ctx.save();
     ctx.translate(-camera.x, 0);
@@ -1272,7 +1485,7 @@ export default function Advergame() {
       drawSprite(ctx, SPRITE.GARU_SCARED, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
       ctx.shadowBlur = 0;
     } else {
-      const garuMoving = Math.abs(player.vx) > 0.5 || !player.grounded;
+      const garuMoving = Math.abs(s.companion.vx) > 0.5 && s.companion.grounded;
       if (garuMoving) {
         drawSprite(ctx, SPRITE.GARU_RUN, s.companion.animFrame, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
       } else {
@@ -1415,6 +1628,7 @@ export default function Advergame() {
   function PlayingScreen() {
     onMount(() => {
       if (!canvasEl || !containerEl) return;
+      
       const ro = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const w = Math.round(entry.contentRect.width);
@@ -1426,6 +1640,16 @@ export default function Advergame() {
         }
       });
       ro.observe(containerEl);
+
+      preloadAssets().then(() => {
+        cancelAnimationFrame(rafId);
+        const w = containerEl!.clientWidth || window.innerWidth;
+        const h = containerEl!.clientHeight || window.innerHeight;
+        canvasEl!.width = w;
+        canvasEl!.height = h;
+        engineState.viewport = { width: w, height: h };
+        rafId = requestAnimationFrame(gameLoop);
+      });
 
       const onVisibility = () => { engineState.isPaused = document.hidden; };
       document.addEventListener('visibilitychange', onVisibility);
@@ -1615,7 +1839,7 @@ export default function Advergame() {
         <Match when={appState() === APP_STATE.START_SCREEN}>
           <div class="w-screen h-screen overflow-hidden relative bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
             <button
-              onClick={() => setAppState(APP_STATE.CHARACTER_SELECTION)}
+              onClick={() => startGame(THEMES.GOH_RONG.id)}
               class="absolute bottom-[15%] left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-500 text-white font-black text-3xl sm:text-5xl py-5 px-16 rounded-2xl shadow-2xl shadow-red-500/40 hover:shadow-red-500/60 hover:scale-105 active:scale-95 transition-all duration-200 uppercase tracking-widest border-2 border-red-400/30">
               EMPEZAR
             </button>
@@ -1660,7 +1884,7 @@ export default function Advergame() {
               <p class="text-xl sm:text-2xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
               <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
               <p class="text-base text-slate-500 mb-8">¡No te rindas! El poder del rayo te espera.</p>
-              <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
+              <button onClick={() => setAppState(APP_STATE.START_SCREEN)}
                 class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
                 {iconPlay} JUGAR DE NUEVO
               </button>
@@ -1700,7 +1924,7 @@ export default function Advergame() {
                 </button>
               </Show>
               <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onClick={() => setAppState(APP_STATE.MENU_LEVEL)}
+                <button onClick={() => setAppState(APP_STATE.START_SCREEN)}
                   class="bg-red-500 hover:bg-red-600 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
                   {iconPlay} JUGAR DE NUEVO
                 </button>
