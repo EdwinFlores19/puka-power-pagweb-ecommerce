@@ -288,6 +288,9 @@ class SoundEngine {
   }
 }
 
+const iconArrowLeft = '←';
+const iconPlay = '▶';
+
 interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; lastShot?: number; }
 interface GhostPos { x: number; y: number; alpha: number; }
 interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; animFrame: number; animTimer: number; }
@@ -524,6 +527,9 @@ export default function Advergame() {
       const k = s.keys;
       const cam = s.camera;
       const vp = s.viewport;
+      if (typeof window !== 'undefined') {
+        (window as any).pukaX = p.x;
+      }
       if (vp.width <= 0 || vp.height <= 0) {
         rafId = requestAnimationFrame(gameLoop);
         return;
@@ -736,14 +742,27 @@ export default function Advergame() {
       const nearbyForGaru = s.entities.filter((e) => e.type === ENTITY.PLATFORM && e.x < s.companion.x + 300 && e.x + e.width > s.companion.x - 300);
       for (const entity of nearbyForGaru) {
         if (isAABBCollision(s.companion, entity)) {
-          if (s.companion.vy < 0 && s.companion.y <= entity.y + entity.height && s.companion.y - s.companion.vy >= entity.y + entity.height - 15) {
-            s.companion.y = entity.y + entity.height; s.companion.vy = 0;
-          } else if (s.companion.vy > 0 && s.companion.y + s.companion.height - s.companion.vy <= entity.y + 15) {
-            s.companion.y = entity.y - s.companion.height; s.companion.vy = 0; s.companion.grounded = true;
+          const isHittingTop = s.companion.vy >= 0 && (s.companion.y + s.companion.height >= entity.y - 2) && (s.companion.y + s.companion.height - s.companion.vy <= entity.y + 15);
+          
+          if (isHittingTop) {
+            s.companion.y = entity.y - s.companion.height;
+            s.companion.vy = 0;
+            s.companion.grounded = true;
+          } else if (s.companion.vy < 0 && s.companion.y <= entity.y + entity.height && s.companion.y - s.companion.vy >= entity.y + entity.height - 15) {
+            s.companion.y = entity.y + entity.height;
+            s.companion.vy = 0;
           } else {
             s.companion.vx = 0;
-            if (s.companion.x < entity.x) s.companion.x = entity.x - s.companion.width;
-            else s.companion.x = entity.x + entity.width;
+            if (s.companion.x < entity.x) {
+              s.companion.x = entity.x - s.companion.width;
+              // Wall collision: Auto jump!
+              if (s.companion.grounded) {
+                s.companion.vy = JUMP_FORCE * 1.05;
+                s.companion.grounded = false;
+              }
+            } else {
+              s.companion.x = entity.x + entity.width;
+            }
           }
         }
       }
@@ -863,7 +882,7 @@ export default function Advergame() {
       s.projectiles = s.projectiles.filter((p) => p.active);
 
       // Broad-phase culling: only check nearby entities
-      const nearby = s.entities.filter((e) => e.x < cam.x + vp.width + 200 && e.x > cam.x - 200);
+      const nearby = s.entities.filter((e) => e.x < cam.x + vp.width + 200 && e.x + (e.width || 0) > cam.x - 200);
 
       for (const entity of nearby) {
         if (!entity.active && entity.type !== ENTITY.PLATFORM) continue;
@@ -872,16 +891,27 @@ export default function Advergame() {
 
         if (isSolid) {
           if (!isAABBCollision(p, entity)) continue;
-          if (p.vy < 0 && p.y <= entity.y + entity.height && p.y - p.vy >= entity.y + entity.height - 15) {
-            p.y = entity.y + entity.height; p.vy = 0;
-          } else if (p.vy > 0 && p.y + p.height - p.vy <= entity.y + 15) {
-            p.y = entity.y - p.height; p.vy = 0; p.grounded = true; p.lastSafeX = p.x; p.lastSafeY = p.y;
+          
+          const isHittingTop = p.vy >= 0 && (p.y + p.height >= entity.y - 2) && (p.y + p.height - p.vy <= entity.y + 15);
+          
+          if (isHittingTop) {
+            p.y = entity.y - p.height;
+            p.vy = 0;
+            p.grounded = true;
+            p.lastSafeX = p.x;
+            p.lastSafeY = p.y;
             if (p.hasPet) p.canDoubleJump = true;
             if (!wasGrounded) { p.squashX = 1.25; p.squashY = 0.75; }
+          } else if (p.vy < 0 && p.y <= entity.y + entity.height && p.y - p.vy >= entity.y + entity.height - 15) {
+            p.y = entity.y + entity.height;
+            p.vy = 0;
           } else {
             p.vx = 0;
-            if (p.x < entity.x) p.x = entity.x - p.width;
-            else p.x = entity.x + entity.width;
+            if (p.x < entity.x) {
+              p.x = entity.x - p.width;
+            } else {
+              p.x = entity.x + entity.width;
+            }
           }
           continue;
         }
