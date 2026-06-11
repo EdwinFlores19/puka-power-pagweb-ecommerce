@@ -1851,7 +1851,22 @@ export default function Advergame() {
         if (e.code === 'ArrowLeft') engineState.keys.left = true;
         if (e.code === 'ArrowRight') engineState.keys.right = true;
         if (e.code === 'ArrowUp' || e.code === 'Space') {
-          if (!engineState.keys.up) engineState.keys.upJustPressed = true;
+          // Robust, instant jump and double-jump trigger directly on keydown!
+          const p = engineState.player;
+          if (p.grounded) {
+            p.vy = JUMP_FORCE;
+            p.grounded = false;
+            p.canDoubleJump = true;
+            if (audioInst) audioInst.jump();
+            spawnParticle(p.x, p.y + p.height, '#ccc', 10);
+            p.squashX = 0.85; p.squashY = 1.2;
+          } else if (p.canDoubleJump) {
+            p.vy = JUMP_FORCE * 0.9;
+            p.canDoubleJump = false; // consume double jump!
+            if (audioInst) audioInst.jump();
+            spawnParticle(p.x, p.y + p.height, '#ff4b4b', 15);
+            p.squashX = 0.85; p.squashY = 1.2;
+          }
           engineState.keys.up = true;
         }
         if (e.code === 'ShiftLeft' || e.code === 'KeyC') {
