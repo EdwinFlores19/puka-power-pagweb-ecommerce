@@ -23,8 +23,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install --no-frozen-lockfile
-      - run: bunx biome ci ./src
+      - run: bun install
+      - run: bun run ci
       - run: bun run build
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3

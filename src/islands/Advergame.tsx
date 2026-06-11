@@ -599,13 +599,13 @@ export default function Advergame() {
               <span class="text-lg sm:text-xl font-black text-white">{ui.coins}</span>
             </div>
           </div>
-          <div class={"text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 " + (ui.timeLeft < 15 ? 'text-red-500' : 'text-white')}>
+            <div class={'text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 ' + (ui.timeLeft < 15 ? 'text-red-500' : 'text-white')}>
             {Math.floor(ui.timeLeft / 60)}:{(ui.timeLeft % 60).toString().padStart(2, '0')}
           </div>
         </div>
 
-        <div class={"absolute top-12 sm:top-14 left-2 sm:left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none " + (isPuka ? 'text-red-400 bg-red-500/10 border-red-500/30' : isRush ? 'text-blue-400 bg-blue-400/10 border-blue-400/30' : isTachy ? 'text-gray-400 bg-gray-600/30 border-gray-500/30' : 'text-green-400 bg-green-400/10 border-green-400/30')}>
-          <svg class={"w-3 h-3 " + (isPuka ? 'animate-pulse' : '')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class={'absolute top-12 sm:top-14 left-2 sm:left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none ' + (isPuka ? 'text-red-400 bg-red-500/10 border-red-500/30' : isRush ? 'text-blue-400 bg-blue-400/10 border-blue-400/30' : isTachy ? 'text-gray-400 bg-gray-600/30 border-gray-500/30' : 'text-green-400 bg-green-400/10 border-green-400/30')}>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isPuka || isRush || isTachy
               ? <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               : <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -616,7 +616,13 @@ export default function Advergame() {
 
         {ui.message && (
           <div class="absolute top-28 sm:top-32 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
-            <div class={"px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs " + (ui.messageType === 'success' ? 'bg-red-500/20 text-red-400 border-red-500/40' : ui.messageType === 'error' ? 'bg-gray-800/80 text-white border-gray-600/40' : ui.messageType === 'warning' ? 'bg-orange-500/20 text-orange-400 border-orange-500/40' : 'bg-blue-500/20 text-blue-400 border-blue-500/40')}>
+            <div class="px-4 py-2 rounded-full backdrop-blur-md border font-bold uppercase text-[10px] sm:text-xs"
+              classList={{
+                'bg-red-500/20 text-red-400 border-red-500/40': ui.messageType === 'success',
+                'bg-gray-800/80 text-white border-gray-600/40': ui.messageType === 'error',
+                'bg-orange-500/20 text-orange-400 border-orange-500/40': ui.messageType === 'warning',
+                'bg-blue-500/20 text-blue-400 border-blue-500/40': ui.messageType !== 'success' && ui.messageType !== 'error' && ui.messageType !== 'warning',
+              }}>
               {ui.message}
             </div>
           </div>
