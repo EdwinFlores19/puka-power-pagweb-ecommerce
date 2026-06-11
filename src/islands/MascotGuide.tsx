@@ -104,13 +104,13 @@ export default function MascotGuide() {
             handleClick();
           }
         }}
-        class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-2xl border-2 border-brand-accent/30 hover:border-brand-accent/60 transition-all duration-300 hover:scale-110 active:scale-95 bg-brand-secondary p-1 overflow-hidden group"
+        class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-2xl border-2 border-brand-accent/30 hover:border-brand-accent/60 transition-all duration-300 hover:scale-110 active:scale-95 bg-brand-secondary overflow-hidden group"
         aria-label="Asistente Puka Power"
       >
         <img
-          src="/sprites/gato-puka-power-sonriendo.png"
-          alt="Mascota Puka Power"
-          class="w-full h-full object-contain rounded-full drop-shadow-lg"
+          src="/sprites/3-puka-power.png"
+          alt="Puka Power - Tu guía de energía"
+          class="w-full h-full object-cover drop-shadow-lg"
           width="80"
           height="80"
           decoding="async"
