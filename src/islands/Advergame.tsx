@@ -599,12 +599,19 @@ export default function Advergame() {
               <span class="text-lg sm:text-xl font-black text-white">{ui.coins}</span>
             </div>
           </div>
-            <div class={'text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50 ' + (ui.timeLeft < 15 ? 'text-red-500' : 'text-white')}>
+            <div class="text-xl sm:text-2xl font-black bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-700/50"
+              classList={{ 'text-red-500': ui.timeLeft < 15, 'text-white': ui.timeLeft >= 15 }}>
             {Math.floor(ui.timeLeft / 60)}:{(ui.timeLeft % 60).toString().padStart(2, '0')}
           </div>
         </div>
 
-        <div class={'absolute top-12 sm:top-14 left-2 sm:left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none ' + (isPuka ? 'text-red-400 bg-red-500/10 border-red-500/30' : isRush ? 'text-blue-400 bg-blue-400/10 border-blue-400/30' : isTachy ? 'text-gray-400 bg-gray-600/30 border-gray-500/30' : 'text-green-400 bg-green-400/10 border-green-400/30')}>
+        <div class="absolute top-12 sm:top-14 left-2 sm:left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none"
+          classList={{
+            'text-red-400 bg-red-500/10 border-red-500/30': isPuka,
+            'text-blue-400 bg-blue-400/10 border-blue-400/30': isRush,
+            'text-gray-400 bg-gray-600/30 border-gray-500/30': isTachy,
+            'text-green-400 bg-green-400/10 border-green-400/30': !isPuka && !isRush && !isTachy,
+          }}>
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isPuka || isRush || isTachy
               ? <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>

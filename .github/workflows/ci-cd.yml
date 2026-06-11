@@ -56,10 +56,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install
+      - name: Check Vercel secrets
+        id: check_secrets
+        run: echo "has_secrets=${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}" >> $GITHUB_OUTPUT
+        shell: bash
       - name: Deploy to Vercel
+        if: steps.check_secrets.outputs.has_secrets == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: --prod
+      - name: Skip deploy notice
+        if: steps.check_secrets.outputs.has_secrets != 'true'
+        run: echo "Vercel secrets not configured — skipping deployment"
