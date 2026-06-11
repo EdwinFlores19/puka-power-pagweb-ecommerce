@@ -412,7 +412,7 @@ export default function Advergame() {
     let catPowerSpawned = false;
     const groundY = 500;
     const SEGMENTS = LEVEL_CONFIG[levelIndex as keyof typeof LEVEL_CONFIG]?.segments || 20;
-    const platWidth = levelIndex === 3 ? (w: number) => Math.max(40, w - 60) : (w: number) => w;
+    const platWidth = levelIndex === 3 ? (w: number) => Math.max(80, w - 30) : (w: number) => w;
     const addPlat = (x: number, w: number, y = groundY, h = 800) => s.entities.push({ type: ENTITY.PLATFORM, x, y, width: platWidth(w), height: h });
     addPlat(0, 800); curX = 800;
 
@@ -985,7 +985,7 @@ export default function Advergame() {
           }
           case ENTITY.NPC_CHING: {
             entity.active = false;
-            if (inventory().length < 2) {
+            if (inventory().length < 5) {
               setInventory(prev => [...prev, 'PUKA_POWER']);
             }
             spawnFloatingText(entity.x, entity.y - 40, '¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ⚡🌸');
@@ -1025,7 +1025,7 @@ export default function Advergame() {
           }
           case ENTITY.NPC_CAT_PUKA_POWER: {
             entity.active = false;
-            if (inventory().length < 2) {
+            if (inventory().length < 5) {
               setInventory(prev => [...prev, 'PUKA_POWER']);
             }
             spawnFloatingText(entity.x, entity.y - 40, '¡Miau! ¡Puka Power natural para ti! 🐱⚡🌸');
@@ -1299,9 +1299,8 @@ export default function Advergame() {
         ctx.fillStyle = '#7B1113';
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Blurred bamboo stalks
-      ctx.filter = 'blur(2px)';
-      ctx.fillStyle = '#14532d';
+      // Blurred bamboo stalks - Optimized to be 100% lag-free by using semitransparent forest green instead of heavy ctx.filter blur!
+      ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
       for (let i = -1; i < 6; i++) {
         const bx = i * 250;
         ctx.fillRect(bx + 30, vh - 400, 12, 400);
@@ -1309,7 +1308,6 @@ export default function Advergame() {
           ctx.fillRect(bx + 28, y, 16, 4);
         }
       }
-      ctx.filter = 'none';
     } else {
       // Steep rocky cliffs
       ctx.fillStyle = '#334155';
@@ -1553,8 +1551,21 @@ export default function Advergame() {
         drawSpeechBubble(ctx, "¡Toma esta bebida oscura! ¡Te hará volar! 😈⚡", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.TRAP_CHEMICAL && entity.active) {
         ctx.save();
-        const spriteSrc = (Math.floor(entity.x) % 2 === 0) ? SPRITE.RED_BULL : SPRITE.MONSTER;
+        const isRedBull = (Math.floor(entity.x) % 2 === 0);
+        const spriteSrc = isRedBull ? SPRITE.RED_BULL : SPRITE.MONSTER;
+        
+        // Draw the character holding/offering it next to the can
+        const hostSprite = isRedBull ? SPRITE.MALA_PUCCA : SPRITE.NINJA2;
+        drawSprite(ctx, hostSprite, 0, entity.x - 32, entity.y - 12, 32, 48);
+        
+        // Draw the can
         drawSprite(ctx, spriteSrc, 0, entity.x, entity.y, entity.width, entity.height);
+        
+        // Draw deceptive Speech Bubble
+        const deceptiveText = isRedBull 
+          ? "¡Toma un Red Bull, te dará alas de verdad! 😈🥤" 
+          : "¡Prueba un Monster helado! ¡Es energía ninja! 😈🥤";
+        drawSpeechBubble(ctx, deceptiveText, entity.x - 8, entity.y - 15);
         ctx.restore();
       } else if (entity.type === ENTITY.PROJECTILE_BULL && entity.active) {
         ctx.save();
@@ -1949,28 +1960,32 @@ export default function Advergame() {
         </div>
 
         <Show when={!showTutorial()}>
-          <div class="absolute top-12 sm:top-14 right-2 sm:right-3 z-30 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-900/30 backdrop-blur-sm pointer-events-auto"
+          <div class="absolute top-12 sm:top-14 right-2 sm:right-3 z-30 flex items-center gap-1 px-3 py-1 rounded-lg border border-purple-500/30 bg-purple-900/45 backdrop-blur-sm pointer-events-auto shadow-lg"
             classList={{ 'opacity-40': inv().length === 0 }}>
-            <span class="text-[10px] sm:text-xs font-bold text-purple-300 mr-1">INV</span>
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-md border flex items-center justify-center text-xs transition-all duration-200"
-                classList={{
-                  'border-yellow-400/60 bg-yellow-400/20 shadow-[0_0_8px_rgba(234,179,8,0.3)]': i < inv().length,
-                  'border-slate-600/30 bg-slate-800/30': i >= inv().length,
-                }}>
-                {i < inv().length ? (
-                  <img src="/sprites/Puka-Power.png" class="w-5 h-5 object-contain" />
-                ) : ''}
-              </div>
-            ))}
+            <span class="text-[10px] sm:text-xs font-black text-purple-300 mr-1.5 tracking-wide">INV</span>
+            
+            {/* Single dynamic slot with x1, x2, x3 counter */}
+            <div class="w-7 h-7 rounded-md border border-purple-500/30 bg-purple-950/40 flex items-center justify-center text-xs transition-all relative overflow-hidden">
+              {inv().length > 0 ? (
+                <>
+                  <img src="/sprites/Puka-Power.png" class="w-5.5 h-5.5 object-contain animate-pulse" />
+                  <span class="absolute bottom-0 right-0.5 text-[9px] font-black bg-purple-950/80 text-yellow-300 px-0.5 rounded-tl border-l border-t border-purple-500/30">
+                    x{inv().length}
+                  </span>
+                </>
+              ) : (
+                <span class="text-[9px] text-slate-500 font-bold">VACÍO</span>
+              )}
+            </div>
+
             <button
               onClick={() => consumeBoost()}
               disabled={inv().length === 0}
               classList={{
                 'opacity-30 cursor-not-allowed': inv().length === 0,
-                'hover:bg-purple-500/30 active:scale-90': inv().length > 0,
+                'hover:bg-purple-500/30 active:scale-90 hover:scale-105 hover:border-yellow-400/50 hover:text-yellow-300': inv().length > 0,
               }}
-              class="ml-1.5 w-6 h-6 sm:w-7 sm:h-7 rounded-md border border-yellow-400/40 bg-yellow-400/10 flex items-center justify-center text-xs transition-all duration-100">
+              class="ml-2 w-7 h-7 rounded-md border border-yellow-400/40 bg-yellow-400/10 flex items-center justify-center text-xs transition-all duration-100 font-bold text-yellow-400">
               ⚡
             </button>
           </div>
@@ -2083,12 +2098,12 @@ export default function Advergame() {
               class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
               {iconArrowLeft} Volver a la Tienda
             </a>
-            <div class="relative z-10">
-              <div class="text-8xl mb-6 grayscale opacity-60 animate-pulse">{'\u{1F480}'}</div>
-              <h1 class="text-6xl sm:text-7xl font-black uppercase mb-4 text-red-500 drop-shadow-[0_0_20px_rgba(220,38,38,0.3)]">Game Over</h1>
+            <div class="relative z-10 flex flex-col items-center">
+              <img src="/sprites/pucca_chocada_redbull_o_enojada.png" class="w-48 h-48 object-contain animate-pulse mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]" />
+              <h1 class="text-4xl sm:text-5xl font-black uppercase mb-4 text-red-500 drop-shadow-[0_0_20px_rgba(220,38,38,0.3)]">¡No lograste alcanzar a Garu... 😭!</h1>
               <p class="text-xl sm:text-2xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
               <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
-              <p class="text-base text-slate-500 mb-8">¡No te rindas! El poder del rayo te espera.</p>
+              <p class="text-base text-slate-500 mb-8">¡No te rindas! El verdadero poder del rayo te espera.</p>
               <button onClick={() => setAppState(APP_STATE.START_SCREEN)}
                 class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
                 {iconPlay} JUGAR DE NUEVO
