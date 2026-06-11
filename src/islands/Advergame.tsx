@@ -24,21 +24,25 @@ const ENTITY = {
 const PLAYER_STATE = { NORMAL: 'NORMAL', GENERIC_RUSH: 'GENERIC_RUSH', TACHYCARDIA: 'TACHYCARDIA', PUKA_OVERDRIVE: 'PUKA_OVERDRIVE' } as const;
 
 const THEMES = {
-  SCHOOL: { id: 'SCHOOL', name: 'Colegio', bg: '#87CEEB', platform: '#4CAF50', floor: '#2E7D32', enemies: ['📚', '🚌'], goal: '🏫' },
-  OFFICE: { id: 'OFFICE', name: 'Oficina', bg: '#2c3e50', platform: '#95a5a6', floor: '#546e7a', enemies: ['💼', '⏰'], goal: '🏢' },
-  SHOPPING: { id: 'SHOPPING', name: 'Mall', bg: '#f8bbd0', platform: '#ce93d8', floor: '#ab47bc', enemies: ['🛍️', '💳'], goal: '🏬' },
-  BEACH: { id: 'BEACH', name: 'Playa', bg: '#00BCD4', platform: '#ffe082', floor: '#ffca28', enemies: ['🦀', '🦈'], goal: '🏖️' },
+  GOH_RONG: {
+    id: 'GOH_RONG', name: 'El Restaurante Goh-Rong', difficulty: 'Nivel 1 — Fácil',
+    bg: '#1A080A', platformTop: '#7B1113', platformBottom: '#3A0003', accent: '#FFD700',
+    goalEmoji: '🏮', enemies: ['🥟', '🥠'],
+  },
+  BAMBOO_FOREST: {
+    id: 'BAMBOO_FOREST', name: 'El Bosque de Bambú Místico', difficulty: 'Nivel 2 — Intermedio',
+    bg: '#0B1A12', platformTop: '#1E4620', platformBottom: '#0A1D0D', accent: '#A3E635',
+    goalEmoji: '🎋', enemies: ['🐼', '🐍'],
+  },
+  TURTLE_MOUNTAIN: {
+    id: 'TURTLE_MOUNTAIN', name: 'La Montaña de la Tortuga Sagrada', difficulty: 'Nivel 3 — Experto Ninja',
+    bg: '#0F172A', platformTop: '#E2E8F0', platformBottom: '#334155', accent: '#38BDF8',
+    goalEmoji: '🏯', enemies: ['🐺', '🦉'],
+  },
 } as const;
 
-const PARALLAX_COLORS: Record<string, { far: string; mid: string }> = {
-  SCHOOL: { far: '#b3d9ff', mid: '#6b8e6b' },
-  OFFICE: { far: '#4a5568', mid: '#2d3748' },
-  SHOPPING: { far: '#f3cde0', mid: '#c8a2c8' },
-  BEACH: { far: '#81e6d9', mid: '#ecc94b' },
-};
-
 type GenderId = 'BOY' | 'GIRL' | 'MAN' | 'WOMAN';
-type ThemeId = 'SCHOOL' | 'OFFICE' | 'SHOPPING' | 'BEACH';
+type ThemeId = 'GOH_RONG' | 'BAMBOO_FOREST' | 'TURTLE_MOUNTAIN';
 
 const GENDERS: Record<GenderId, { id: GenderId; name: string; idle: string; run: string }> = {
   BOY: { id: 'BOY', name: 'Niño', idle: '🧍', run: '🏃' },
@@ -92,6 +96,7 @@ interface GhostPos { x: number; y: number; alpha: number; }
 interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; }
 interface Keys { left: boolean; right: boolean; up: boolean; upJustPressed: boolean; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; alpha: number; size: number; }
+interface EnvParticle { x: number; y: number; vx: number; vy: number; size: number; rotation: number; rotationSpeed: number; alpha: number; }
 
 export default function Advergame() {
   const [appState, setAppState] = createSignal<number>(APP_STATE.MENU_GENDER);
@@ -104,7 +109,7 @@ export default function Advergame() {
 
   let engineState: {
     keys: Keys; camera: { x: number; y: number };
-    player: Player; entities: Entity[]; particles: Particle[];
+    player: Player; entities: Entity[]; particles: Particle[]; envParticles: EnvParticle[];
     score: number; lives: number; startTime: number;
     viewport: { width: number; height: number };
     shakeTimer: number; shakeIntensity: number; hitstopFrames: number;
@@ -127,7 +132,7 @@ export default function Advergame() {
         jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1,
         ghosts: [], sugarCrashTimer: 0,
       },
-      entities: [], particles: [], score: 0, lives: 3, startTime: 0,
+      entities: [], particles: [], envParticles: [], score: 0, lives: 3, startTime: 0,
       viewport: { width: 800, height: 600 },
       shakeTimer: 0, shakeIntensity: 0, hitstopFrames: 0,
     };
@@ -187,6 +192,16 @@ export default function Advergame() {
     curX += 150; addPlat(curX, 1000);
     s.entities.push({ type: ENTITY.GOAL, x: curX + 400, y: groundY - 150, width: 150, height: 150 });
     s.startTime = Date.now();
+    s.envParticles = [];
+    for (let i = 0; i < 40; i++) {
+      if (theme.id === 'GOH_RONG') {
+        s.envParticles.push({ x: Math.random() * (curX + 1000), y: 480 + Math.random() * 120, vx: (Math.random() - 0.5) * 0.3, vy: -0.3 - Math.random() * 0.4, size: 2 + Math.random() * 5, rotation: 0, rotationSpeed: 0, alpha: 0.05 + Math.random() * 0.04 });
+      } else if (theme.id === 'BAMBOO_FOREST') {
+        s.envParticles.push({ x: Math.random() * (curX + 1000), y: Math.random() * 600, vx: -0.4 - Math.random() * 0.6, vy: 0.2 + Math.random() * 0.3, size: 3 + Math.random() * 4, rotation: Math.random() * Math.PI * 2, rotationSpeed: 0.02 + Math.random() * 0.03, alpha: 0.25 + Math.random() * 0.25 });
+      } else {
+        s.envParticles.push({ x: Math.random() * (curX + 1000), y: Math.random() * 600, vx: -1.2 - Math.random() * 0.8, vy: 0.1 + Math.random() * 0.2, size: 1 + Math.random() * 3, rotation: 0, rotationSpeed: 0, alpha: 0.4 + Math.random() * 0.3 });
+      }
+    }
   }
 
   function spawnParticle(x: number, y: number, color: string, amount = 5, isPuka = false) {
@@ -407,7 +422,7 @@ export default function Advergame() {
             if (p.vy > 0 && p.y + p.height - p.vy <= entity.y + 20) {
               entity.active = false; p.vy = JUMP_FORCE * 0.8;
               if (audioInst) audioInst.stomp();
-              spawnParticle(entity.x, entity.y, theme.floor, 15); s.score += 2;
+              spawnParticle(entity.x, entity.y, theme.platformBottom, 15); s.score += 2;
             } else {
               if (audioInst) audioInst.hurt();
               triggerShake(10, 150);
@@ -468,21 +483,68 @@ export default function Advergame() {
         part.alpha = Math.max(0, part.life / part.maxLife);
         if (part.life <= 0) s.particles.splice(idx, 1);
       });
+
+      s.envParticles.forEach((ep) => {
+        ep.x += ep.vx;
+        ep.y += ep.vy;
+        ep.rotation += ep.rotationSpeed;
+        if (ep.y > 620 || ep.y < -20 || ep.x < cam.x - 200 || ep.x > cam.x + vp.width + 400) {
+          if (theme.id === 'GOH_RONG') { ep.x = cam.x + Math.random() * vp.width; ep.y = 480 + Math.random() * 120; }
+          else if (theme.id === 'BAMBOO_FOREST') { ep.x = cam.x + vp.width + 50 + Math.random() * 100; ep.y = Math.random() * 500; }
+          else { ep.x = cam.x + vp.width + 50 + Math.random() * 100; ep.y = Math.random() * 600; }
+        }
+      });
     }
 
     if (canvasEl) render(canvasEl.getContext('2d')!, s, theme);
     rafId = requestAnimationFrame(gameLoop);
   }
 
-  function drawParallaxLayer(ctx: CanvasRenderingContext2D, vw: number, vh: number, color: string, scrollFactor: number, isMid: boolean) {
-    const offset = -(engineState.camera.x * scrollFactor) % (vw * 2);
-    ctx.fillStyle = color + (isMid ? '30' : '15');
-    for (let x = offset - vw; x < vw + vw; x += vw * 0.8) {
-      const h = isMid ? 80 + Math.sin(x * 0.01) * 30 : 40 + Math.sin(x * 0.02) * 15;
-      ctx.beginPath();
-      ctx.arc(x, vh - 120 - h, isMid ? 120 : 60, 0, Math.PI * 2);
-      ctx.fill();
+  function drawParallaxMid(ctx: CanvasRenderingContext2D, s: typeof engineState, vw: number, vh: number, theme: typeof THEMES[keyof typeof THEMES]) {
+    const camX = s.camera.x;
+    ctx.save();
+    ctx.translate(-camX * 0.15, 0);
+    ctx.globalAlpha = 0.3;
+    if (theme.id === 'GOH_RONG') {
+      ctx.fillStyle = '#7B111330';
+      for (let i = 0; i < 12; i++) {
+        const bx = i * 300 - (camX * 0.15 % 300);
+        ctx.fillRect(bx, vh * 0.4, 40, vh * 0.5);
+        ctx.fillRect(bx + 80, vh * 0.35, 30, vh * 0.55);
+        ctx.beginPath();
+        ctx.arc(bx + 20, vh * 0.35, 15, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFD70030';
+        ctx.fill();
+        ctx.fillStyle = '#7B111330';
+      }
+    } else if (theme.id === 'BAMBOO_FOREST') {
+      ctx.fillStyle = '#1E462025';
+      for (let i = 0; i < 10; i++) {
+        const bx = i * 360 - (camX * 0.15 % 360);
+        ctx.fillRect(bx + 30, vh * 0.2, 18, vh * 0.7);
+        ctx.fillRect(bx + 30, vh * 0.35, 18, 5);
+        ctx.fillRect(bx + 30, vh * 0.55, 18, 5);
+        ctx.fillRect(bx + 160, vh * 0.3, 14, vh * 0.6);
+        ctx.fillRect(bx + 160, vh * 0.45, 14, 4);
+      }
+    } else {
+      ctx.fillStyle = '#33415525';
+      for (let i = 0; i < 8; i++) {
+        const bx = i * 450 - (camX * 0.15 % 450);
+        ctx.beginPath();
+        ctx.moveTo(bx, vh * 0.8);
+        ctx.lineTo(bx + 80, vh * 0.05);
+        ctx.lineTo(bx + 160, vh * 0.55);
+        ctx.lineTo(bx + 240, vh * 0.15);
+        ctx.lineTo(bx + 320, vh * 0.65);
+        ctx.lineTo(bx + 400, vh * 0.3);
+        ctx.lineTo(bx + 480, vh * 0.85);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
+    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   function render(ctx: CanvasRenderingContext2D, s: typeof engineState, theme: typeof THEMES[keyof typeof THEMES]) {
@@ -490,7 +552,6 @@ export default function Advergame() {
     if (viewport.width <= 0 || viewport.height <= 0) return;
     const genderData = GENDERS[selection().gender!];
     const now = Date.now();
-    const pc = PARALLAX_COLORS[theme.id] || { far: '#ccc', mid: '#999' };
 
     ctx.save();
 
@@ -502,21 +563,16 @@ export default function Advergame() {
 
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, viewport.width, viewport.height);
-    drawParallaxLayer(ctx, viewport.width, viewport.height, pc.far, 0.1, false);
-    drawParallaxLayer(ctx, viewport.width, viewport.height, pc.mid, 0.4, true);
+    const grad = ctx.createLinearGradient(0, viewport.height * 0.7, 0, viewport.height);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(1, '#00000040');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, viewport.width, viewport.height);
+
+    drawParallaxMid(ctx, s, viewport.width, viewport.height, theme);
 
     ctx.save();
     ctx.translate(-camera.x, 0);
-
-    const clamp = (v: number) => Math.max(0, Math.min(v, viewport.width));
-
-    ctx.fillStyle = theme.floor + '40';
-    for (let i = 0; i < 30; i++) {
-      const px = clamp((i * 400) + (camera.x * 0.7));
-      if (px > -200 && px < viewport.width + 200) {
-        ctx.beginPath(); ctx.arc(px, clamp(viewport.height * 0.65), 100, 0, Math.PI * 2); ctx.fill();
-      }
-    }
 
     ctx.textBaseline = 'top';
     s.entities.forEach((entity) => {
@@ -525,24 +581,26 @@ export default function Advergame() {
       if (entity.x < camera.x - cullMargin || entity.x > camera.x + viewport.width + cullMargin) return;
 
       if (entity.type === ENTITY.PLATFORM) {
-        const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + 20);
-        g.addColorStop(0, theme.platform);
-        g.addColorStop(1, theme.floor);
-        ctx.fillStyle = g;
-        ctx.fillRect(entity.x, entity.y, entity.width, 20);
-        const rh = entity.height === 20 ? 0 : entity.height - 20;
-        const g2 = ctx.createLinearGradient(entity.x, entity.y + 20, entity.x, entity.y + 20 + rh);
-        g2.addColorStop(0, theme.floor);
-        g2.addColorStop(1, theme.floor + '80');
-        ctx.fillStyle = g2;
-        if (rh > 0) ctx.fillRect(entity.x, entity.y + 20, entity.width, rh);
-      } else if (entity.type === ENTITY.STATIC_BLOCK) {
         const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + entity.height);
-        g.addColorStop(0, theme.platform);
-        g.addColorStop(1, theme.floor);
+        g.addColorStop(0, theme.platformTop);
+        g.addColorStop(0.3, theme.platformTop);
+        g.addColorStop(1, theme.platformBottom);
         ctx.fillStyle = g;
         ctx.fillRect(entity.x, entity.y, entity.width, entity.height);
-        ctx.strokeStyle = theme.floor; ctx.lineWidth = 3;
+        ctx.strokeStyle = theme.accent;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(entity.x, entity.y + 1.5);
+        ctx.lineTo(entity.x + entity.width, entity.y + 1.5);
+        ctx.stroke();
+      } else if (entity.type === ENTITY.STATIC_BLOCK) {
+        const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + entity.height);
+        g.addColorStop(0, theme.platformTop);
+        g.addColorStop(1, theme.platformBottom);
+        ctx.fillStyle = g;
+        ctx.fillRect(entity.x, entity.y, entity.width, entity.height);
+        ctx.strokeStyle = theme.accent;
+        ctx.lineWidth = 3;
         ctx.strokeRect(entity.x, entity.y, entity.width, entity.height);
       } else if (entity.type === ENTITY.SURPRISE_BLOCK) {
         const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + entity.height);
@@ -633,7 +691,7 @@ export default function Advergame() {
       } else if (entity.type === ENTITY.SUPER_FRUIT && entity.active) {
         ctx.textAlign = 'left'; ctx.font = '40px Arial'; ctx.fillText('🍒', entity.x, entity.y);
       } else if (entity.type === ENTITY.GOAL) {
-        ctx.textAlign = 'left'; ctx.font = '100px Arial'; ctx.fillText(theme.goal, entity.x, entity.y);
+        ctx.textAlign = 'left'; ctx.font = '100px Arial'; ctx.fillText(theme.goalEmoji, entity.x, entity.y);
       }
     });
 
@@ -645,6 +703,34 @@ export default function Advergame() {
     });
     ctx.globalAlpha = 1;
     ctx.restore();
+
+    s.envParticles.forEach((ep) => {
+      ctx.globalAlpha = ep.alpha;
+      ctx.save();
+      ctx.translate(ep.x, ep.y);
+      ctx.rotate(ep.rotation);
+      if (theme.id === 'GOH_RONG') {
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.beginPath();
+        ctx.arc(0, 0, ep.size, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (theme.id === 'BAMBOO_FOREST') {
+        ctx.fillStyle = '#A3E635';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, ep.size * 0.5, ep.size, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = 'rgba(255,255,255,0.4)';
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, ep.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
 
     ctx.save();
     const isRunning = Math.abs(player.vx) > 0.5;
@@ -914,12 +1000,12 @@ export default function Advergame() {
                   style={{ 'background-color': t.bg }}
                   class="relative overflow-hidden p-6 sm:p-8 rounded-2xl border-4 border-transparent hover:border-white hover:scale-105 hover:shadow-2xl transition-all duration-300 text-left group shadow-xl">
                   <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
-                  <div class="text-6xl sm:text-7xl absolute right-3 sm:right-4 bottom-3 sm:bottom-4 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">{t.goal}</div>
+                  <div class="text-6xl sm:text-7xl absolute right-3 sm:right-4 bottom-3 sm:bottom-4 opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">{t.goalEmoji}</div>
                   <div class="relative z-10">
                     <h3 class="font-black text-2xl sm:text-3xl text-black/80 uppercase tracking-wide">{t.name}</h3>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="inline-block w-2 h-2 rounded-full bg-black/40" />
-                      <p class="font-bold text-black/60 text-sm sm:text-base tracking-wide">Dificultad Normal</p>
+                      <p class="font-bold text-black/60 text-sm sm:text-base tracking-wide">{t.difficulty}</p>
                     </div>
                     <div class="mt-3 flex gap-1.5">
                       {Array.from({ length: 3 }).map(() => (
