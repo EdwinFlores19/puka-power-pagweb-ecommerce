@@ -553,6 +553,9 @@ export default function Advergame() {
       const vp = s.viewport;
       if (typeof window !== 'undefined') {
         (window as any).pukaX = p.x;
+        (window as any).teleportPuka = (x: number) => { p.x = x; s.camera.x = x - 100; };
+        (window as any).getLevelLength = () => s.totalLevelLength;
+        (window as any).setScore = (sc: number) => { s.score = sc; };
       }
       if (vp.width <= 0 || vp.height <= 0) {
         rafId = requestAnimationFrame(gameLoop);
@@ -821,9 +824,9 @@ export default function Advergame() {
       // Respawn Garu in front of Puka if he falls off a cliff - Epic Ninja Recovery
       if (s.companion.y > 1500 && !s.companion.isNinjaRecovering) {
         s.companion.isNinjaRecovering = true;
-        s.companion.x = p.x + 350;
-        s.companion.y = vp.height + 100;
-        s.companion.vy = -16;
+        s.companion.x = p.x + 300;
+        s.companion.y = 650;
+        s.companion.vy = -18;
         s.companion.vx = BASE_SPEED;
         s.companion.grounded = false;
       }
@@ -833,7 +836,8 @@ export default function Advergame() {
           spawnParticle(s.companion.x, s.companion.y + 30, '#ffffff', 4);
           spawnParticle(s.companion.x + 20, s.companion.y + 30, '#60a5fa', 2);
         }
-        if (s.companion.y <= 430 || s.companion.vy >= -2) {
+        // Recover only when he has successfully cleared the platform height (y <= 440) and is moving down or reaching apex (vy >= -1)
+        if (s.companion.y <= 440 && s.companion.vy >= -1) {
           s.companion.isNinjaRecovering = false;
         }
       }
