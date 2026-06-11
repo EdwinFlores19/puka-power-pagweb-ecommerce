@@ -29,6 +29,7 @@ const SPRITE = {
   GARU_IDLE: '/sprites/garu_de_pie_enojado.png',
   GARU_SCARED: '/sprites/garu_asustado_inclinado_derecha.png',
   NINJA: '/sprites/enemigo_ninja_morado_espada.png',
+  NINJA2: '/sprites/enemigo2_pucca.png',
   CHING: '/sprites/personaje_cocinero_rojo_con_cubos_variante.png',
   ABYO: '/sprites/npc_abyo_luchador.png',
   CAT: '/sprites/gato_negro_cuerpo_completo.png',
@@ -60,14 +61,15 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.GARU_RUN]: { w: 40, h: 60 },
   [SPRITE.GARU_IDLE]: { w: 40, h: 60 },
   [SPRITE.GARU_SCARED]: { w: 40, h: 60 },
-  [SPRITE.NINJA]: { w: 40, h: 40 },
+  [SPRITE.NINJA]: { w: 40, h: 60 },
+  [SPRITE.NINJA2]: { w: 40, h: 60 },
   [SPRITE.CHING]: { w: 48, h: 72 },
   [SPRITE.ABYO]: { w: 44, h: 66 },
   [SPRITE.CAT]: { w: 40, h: 40 },
   [SPRITE.PORTADA]: { w: 800, h: 600 },
   [SPRITE.PUKA_POWER]: { w: 30, h: 45 },
-  [SPRITE.RED_BULL]: { w: 24, h: 36 },
-  [SPRITE.MONSTER]: { w: 24, h: 36 },
+  [SPRITE.RED_BULL]: { w: 24, h: 48 },
+  [SPRITE.MONSTER]: { w: 24, h: 48 },
   [SPRITE.MALA_PUCCA]: { w: 40, h: 60 },
   [SPRITE.CAT_PUKA_POWER]: { w: 45, h: 45 },
   [SPRITE.GARU_ATTACK]: { w: 40, h: 60 },
@@ -419,10 +421,6 @@ export default function Advergame() {
       if (p === 0) {
         curX += 180; addPlat(curX, 500); addPlat(curX + 100, 200, groundY - 150, 20);
         for (let c = 0; c < 3; c++) s.entities.push({ type: ENTITY.COIN, x: curX + 100 + c * 50, y: groundY - 200 - c * 40, width: 30, height: 30, active: true, coinScale: 1 });
-        if (!chingSpawned && i > 3) {
-          chingSpawned = true;
-          s.entities.push({ type: ENTITY.NPC_CHING, x: curX + 200, y: groundY - 120, width: 48, height: 72, active: true });
-        }
         curX += 500;
       } else if (p === 1) {
         const stepW = levelIndex === 3 ? 30 : 40;
@@ -441,34 +439,34 @@ export default function Advergame() {
         s.entities.push({ type: ENTITY.COIN, x: curX + 300, y: groundY - 200, width: 30, height: 30, active: true, coinScale: 1 });
         const ee = theme.enemies[Math.floor(Math.random() * theme.enemies.length)];
         const ninjaVx = levelIndex === 2 ? -3 : -2;
-        s.entities.push({ type: ENTITY.ENEMY_NINJA, x: curX + 400, y: groundY - 40, width: 40, height: 40, vx: ninjaVx, startX: curX + 300, range: 300, emoji: ee, active: true, lastShot: 0 });
-        if (!malaPuccaSpawned && i > 8) {
-          malaPuccaSpawned = true;
-          s.entities.push({ type: ENTITY.NPC_MALA_PUCCA, x: curX + 150, y: groundY - 60, width: 40, height: 60, active: true });
-        }
+        const ninjaSprite = (Math.random() > 0.5) ? SPRITE.NINJA : SPRITE.NINJA2;
+        s.entities.push({ type: ENTITY.ENEMY_NINJA, x: curX + 400, y: groundY - 60, width: 40, height: 60, vx: ninjaVx, startX: curX + 300, range: 300, emoji: ee, active: true, lastShot: 0, sprite: ninjaSprite });
         curX += 800;
       } else if (p === 3) {
         curX += 180; addPlat(curX, 800);
         s.entities.push({ type: ENTITY.TRAP_CHEMICAL, x: curX + 200, y: groundY - 36, width: 24, height: 36, active: true });
-        if (!abyoSpawned && i > 4) {
-          abyoSpawned = true;
-          s.entities.push({ type: ENTITY.NPC_ABYO, x: curX + 500, y: groundY - 72, width: 44, height: 66, active: true, vx: -1.5, startX: curX + 350, range: 300 });
-        }
         curX += 800;
       } else {
         curX += 150; addPlat(curX, 600);
         s.entities.push({ type: ENTITY.COIN, x: curX + 200, y: groundY - 100, width: 30, height: 30, active: true, coinScale: 1 });
         s.entities.push({ type: ENTITY.COIN, x: curX + 280, y: groundY - 160, width: 30, height: 30, active: true, coinScale: 1 });
-        if (!tiosSpawned && i > 6) {
-          tiosSpawned = true;
-          s.entities.push({ type: ENTITY.NPC_TIOS, x: curX + 350, y: groundY - 72, width: 48, height: 72, active: true });
-        } else if (!catPowerSpawned && i > 10) {
-          catPowerSpawned = true;
-          s.entities.push({ type: ENTITY.NPC_CAT_PUKA_POWER, x: curX + 350, y: groundY - 45, width: 45, height: 45, active: true });
-        } else if (tiosSpawned && i % 4 === 0) {
+        if (i % 4 === 0) {
           s.entities.push({ type: ENTITY.AMMO_BOX, x: curX + 300, y: groundY - 60, width: 30, height: 30, active: true });
         }
         curX += 600;
+      }
+
+      // Spawning NPCs at precise, evenly distributed segment indices for perfect spacing!
+      if (i === Math.floor(SEGMENTS * 0.15)) {
+        s.entities.push({ type: ENTITY.NPC_CHING, x: curX - 300, y: groundY - 72, width: 48, height: 72, active: true });
+      } else if (i === Math.floor(SEGMENTS * 0.35)) {
+        s.entities.push({ type: ENTITY.NPC_ABYO, x: curX - 300, y: groundY - 66, width: 44, height: 66, active: true, vx: -1.5, startX: curX - 450, range: 300 });
+      } else if (i === Math.floor(SEGMENTS * 0.55)) {
+        s.entities.push({ type: ENTITY.NPC_MALA_PUCCA, x: curX - 300, y: groundY - 60, width: 40, height: 60, active: true });
+      } else if (i === Math.floor(SEGMENTS * 0.75)) {
+        s.entities.push({ type: ENTITY.NPC_CAT_PUKA_POWER, x: curX - 300, y: groundY - 45, width: 45, height: 45, active: true });
+      } else if (i === Math.floor(SEGMENTS * 0.90)) {
+        s.entities.push({ type: ENTITY.NPC_TIOS, x: curX - 300, y: groundY - 72, width: 48, height: 72, active: true });
       }
     }
     curX += 150; addPlat(curX, 1000);
@@ -1084,9 +1082,7 @@ export default function Advergame() {
             }
             p.isDead = true;
             if (audioInst) audioInst.victory();
-            trackGameEvent('puka_campaign_victory', { finalCoins: s.score });
-            if (!couponDone()) { applyGameCoupon(); setCouponDone(true); }
-            setAppState(APP_STATE.VICTORY);
+            setAppState(APP_STATE.LEVEL_COMPLETED);
             return;
           }
         }
@@ -1269,21 +1265,21 @@ export default function Advergame() {
     ctx.translate(s2 % vw, 0);
     ctx.globalAlpha = 0.55;
     if (themeId === 'GOH_RONG') {
-      // Traditional houses (pagodas) - Raised higher for absolute visibility
+      // Traditional houses (pagodas) - Raised even higher for absolute visibility and beauty
       ctx.fillStyle = '#7B1113';
       for (let i = -1; i < 4; i++) {
         const bx = i * 400;
-        ctx.fillRect(bx + 50, vh - 400, 150, 400);
+        ctx.fillRect(bx + 50, vh - 500, 150, 500);
         ctx.beginPath();
-        ctx.moveTo(bx + 20, vh - 400);
-        ctx.quadraticCurveTo(bx + 125, vh - 450, bx + 230, vh - 400);
-        ctx.lineTo(bx + 200, vh - 385);
-        ctx.lineTo(bx + 50, vh - 385);
+        ctx.moveTo(bx + 20, vh - 500);
+        ctx.quadraticCurveTo(bx + 125, vh - 550, bx + 230, vh - 500);
+        ctx.lineTo(bx + 200, vh - 485);
+        ctx.lineTo(bx + 50, vh - 485);
         ctx.closePath();
         ctx.fill();
         
         ctx.beginPath();
-        ctx.arc(bx + 125, vh - 330, 15, 0, Math.PI * 2);
+        ctx.arc(bx + 125, vh - 430, 15, 0, Math.PI * 2);
         ctx.fillStyle = '#FFD700';
         ctx.fill();
         ctx.fillStyle = '#7B1113';
@@ -1561,7 +1557,19 @@ export default function Advergame() {
         ctx.font = 'bold 12px Arial'; ctx.fillStyle = '#60a5fa'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('AMMO', entity.x, entity.y - 8);
       } else if (entity.type === ENTITY.GOAL) {
-        ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '100px Arial'; ctx.fillText(theme.goalEmoji, entity.x, entity.y);
+        ctx.save();
+        ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 30;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '110px Arial';
+        ctx.fillText(theme.goalEmoji, entity.x + entity.width / 2, entity.y + entity.height / 2);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = '#ffd700';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('🏮 META 🏮', entity.x + entity.width / 2, entity.y - 10);
       }
     });
 
@@ -1887,6 +1895,29 @@ export default function Advergame() {
           </div>
         </div>
 
+        <div class="hidden md:flex absolute bottom-4 left-4 z-30 flex-col gap-1 bg-slate-900/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-slate-700/50 text-white text-xs font-semibold">
+          <div class="flex items-center gap-1.5">
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">←</span>
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">→</span>
+            <span>Moverse</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">↑</span>
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">Espacio</span>
+            <span>Saltar</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">F</span>
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">X</span>
+            <span>Lanzar Shuriken 🗡️</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">Shift</span>
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">C</span>
+            <span>Puka Overdrive ⚡</span>
+          </div>
+        </div>
+
         <div class="absolute top-12 sm:top-14 left-2 sm:left-3 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] sm:text-xs tracking-wide transition-colors pointer-events-none"
           classList={{
             'text-red-400 bg-red-500/10 border-red-500/30': isPuka(),
@@ -2108,14 +2139,30 @@ export default function Advergame() {
             </a>
             <div class="relative z-10 flex flex-col items-center max-w-md w-full">
               <img src="/sprites/pucca_besando_garu_sticker.png" class="w-64 h-64 object-contain animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)] mb-4" />
-              <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡NIVEL COMPLETADO!</h1>
-              <p class="text-lg text-slate-300 mb-6 leading-relaxed">
-                ¡Pucca ha logrado atrapar a Garu y darle un tierno beso de victoria! 💋🌸
-              </p>
-              <button onClick={() => advanceToNextLevel()}
-                class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">
-                Siguiente Nivel {iconPlay}
-              </button>
+              <Show when={currentLevelIndex() === 3}>
+                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡CAMPAÑA COMPLETADA!</h1>
+                <p class="text-lg text-slate-300 mb-6 leading-relaxed">
+                  ¡Felicidades! ¡Pucca ha atrapado finalmente a Garu y completado toda la campaña de amor y velocidad de Sooga! 💋🌸
+                </p>
+                <button onClick={() => {
+                  trackGameEvent('puka_campaign_victory', { finalCoins: uiState().coins });
+                  if (!couponDone()) { applyGameCoupon(); setCouponDone(true); }
+                  setAppState(APP_STATE.VICTORY);
+                }}
+                  class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">
+                  Reclamar Recompensas {iconPlay}
+                </button>
+              </Show>
+              <Show when={currentLevelIndex() < 3}>
+                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡NIVEL COMPLETADO!</h1>
+                <p class="text-lg text-slate-300 mb-6 leading-relaxed">
+                  ¡Pucca ha logrado atrappar a Garu y darle un tierno beso de victoria! 💋🌸
+                </p>
+                <button onClick={() => advanceToNextLevel()}
+                  class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">
+                  Siguiente Nivel {iconPlay}
+                </button>
+              </Show>
             </div>
           </div>
         </Match>
@@ -2143,6 +2190,10 @@ export default function Advergame() {
               <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
                 <span class="text-xl flex-shrink-0">{'\u{1FA99}'}</span>
                 <span><strong class="text-white">Recolecta monedas</strong> y busca a los personajes de Sooga</span>
+              </li>
+              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                <span class="text-xl flex-shrink-0">🗡️</span>
+                <span><strong class="text-white">Atacar: Presiona F o X en PC</strong> (o botón azul) para lanzar Shurikens</span>
               </li>
               <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
                 <span class="text-xl flex-shrink-0">{'\u{1F3C1}'}</span>
