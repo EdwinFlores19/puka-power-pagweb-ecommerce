@@ -470,7 +470,7 @@ export default function Advergame() {
       }
     }
     curX += 150; addPlat(curX, 1000);
-    s.entities.push({ type: ENTITY.GOAL, x: curX + 400, y: groundY - 150, width: 150, height: 150 });
+    s.entities.push({ type: ENTITY.GOAL, x: curX + 400, y: groundY - 150, width: 150, height: 150, active: true });
     s.totalLevelLength = curX + 1000;
     s.startTime = Date.now();
     s.envParticles = [];
@@ -1103,7 +1103,7 @@ export default function Advergame() {
         if (!proj.active) continue;
         const nearEntities = s.entities.filter((e) => e.x < cam.x + vp.width + 200 && e.x > cam.x - 200);
         for (const entity of nearEntities) {
-          if (!entity.active) continue;
+        if (entity.active === false) continue;
           if (!isAABBCollision(proj, entity)) continue;
           if (entity.type === ENTITY.PLATFORM) {
             proj.active = false;
