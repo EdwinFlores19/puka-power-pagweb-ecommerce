@@ -42,7 +42,6 @@ const SPRITE = {
   MALA_PUCCA: '/sprites/mala_pucca.png',
   CAT_PUKA_POWER: '/sprites/Gato-Tomando-Puka-Power.png',
   GARU_ATTACK: '/sprites/garu_con_pose_de_ataque.png',
-  SHURIKEN: '/sprites/shuriken.png',
 } as const;
 
 const SPRITE_FRAMES: Record<string, number> = {
@@ -150,8 +149,8 @@ function drawSprite(
 
 const LEVEL_CONFIG = {
   1: { segments: 20, minCoins: 3, name: 'El Restaurante Goh-Rong', themeId: 'GOH_RONG' as ThemeId, chemSpeedMult: 1.0 },
-  2: { segments: 30, minCoins: 5, name: 'El Bosque de Bambú Místico', themeId: 'BAMBOO_FOREST' as ThemeId, chemSpeedMult: 1.4 },
-  3: { segments: 40, minCoins: 0, name: 'La Montaña de la Tortuga Sagrada', themeId: 'TURTLE_MOUNTAIN' as ThemeId, chemSpeedMult: 1.0 },
+  2: { segments: 30, minCoins: 5, name: 'El Bosque de Bamb· Mφstico', themeId: 'BAMBOO_FOREST' as ThemeId, chemSpeedMult: 1.4 },
+  3: { segments: 40, minCoins: 0, name: 'La Monta±a de la Tortuga Sagrada', themeId: 'TURTLE_MOUNTAIN' as ThemeId, chemSpeedMult: 1.0 },
 };
 
 const APP_STATE = { START_SCREEN: 0, CHARACTER_SELECTION: 1, PLAYING: 2, GAME_OVER: 3, VICTORY: 4, LEVEL_COMPLETED: 5 } as const;
@@ -173,19 +172,19 @@ const PLAYER_STATE = {
 
 const THEMES = {
   GOH_RONG: {
-    id: 'GOH_RONG', name: 'El Restaurante Goh-Rong', difficulty: 'Nivel 1 – Fácil',
+    id: 'GOH_RONG', name: 'El Restaurante Goh-Rong', difficulty: 'Nivel 1 ù Fßcil',
     bg: '#1A080A', platformTop: '#7B1113', platformBottom: '#3A0003', accent: '#FFD700',
-    goalEmoji: '🏁', enemies: ['🥷', '💀'],
+    goalEmoji: '??', enemies: ['??', '??'],
   },
   BAMBOO_FOREST: {
-    id: 'BAMBOO_FOREST', name: 'El Bosque de Bambú Místico', difficulty: 'Nivel 2 – Intermedio',
+    id: 'BAMBOO_FOREST', name: 'El Bosque de Bamb· Mφstico', difficulty: 'Nivel 2 ù Intermedio',
     bg: '#0B1A12', platformTop: '#1E4620', platformBottom: '#0A1D0D', accent: '#A3E635',
-    goalEmoji: '🏁', enemies: ['🥷', '💀'],
+    goalEmoji: '??', enemies: ['??', '??'],
   },
   TURTLE_MOUNTAIN: {
-    id: 'TURTLE_MOUNTAIN', name: 'La Montaña de la Tortuga Sagrada', difficulty: 'Nivel 3 – Experto Ninja',
+    id: 'TURTLE_MOUNTAIN', name: 'La Monta±a de la Tortuga Sagrada', difficulty: 'Nivel 3 ù Experto Ninja',
     bg: '#0F172A', platformTop: '#E2E8F0', platformBottom: '#334155', accent: '#38BDF8',
-    goalEmoji: '🏁', enemies: ['🥷', '💀'],
+    goalEmoji: '??', enemies: ['??', '??'],
   },
 } as const;
 
@@ -309,8 +308,8 @@ class SoundEngine {
   }
 }
 
-const iconArrowLeft = '←';
-const iconPlay = '▶';
+const iconArrowLeft = '?';
+const iconPlay = '?';
 
 interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; lastShot?: number; sprite?: string; angle?: number; }
 interface GhostPos { x: number; y: number; alpha: number; }
@@ -596,7 +595,7 @@ export default function Advergame() {
           p.width = 40; p.height = 60; p.idleTimer = 0;
           p.state = PLAYER_STATE.NORMAL; p.stateTimer = 0;
           if (timeLeft <= 0) s.startTime = Date.now();
-          setUiState((prev) => ({ ...prev, lives: s.lives, message: '¡VIDA PERDIDA!', messageType: 'error', playerState: PLAYER_STATE.NORMAL }));
+          setUiState((prev) => ({ ...prev, lives: s.lives, message: 'íVIDA PERDIDA!', messageType: 'error', playerState: PLAYER_STATE.NORMAL }));
           if (audioInst) audioInst.hurt();
           triggerShake(12, 200);
           triggerHitstop(3);
@@ -656,7 +655,7 @@ export default function Advergame() {
           if (Math.random() > 0.8) spawnParticle(p.x, p.y + 40, '#3b82f6', 1);
           if (p.stateTimer <= 0) {
             p.state = PLAYER_STATE.TACHYCARDIA; p.stateTimer = 4000;
-            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.TACHYCARDIA, message: '¡TAQUICARDIA! 😭😭', messageType: 'error' }));
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.TACHYCARDIA, message: 'íTAQUICARDIA! ??', messageType: 'error' }));
             if (audioInst) audioInst.hurt();
             triggerShake(6, 200);
           }
@@ -672,7 +671,7 @@ export default function Advergame() {
           if (p.stateTimer <= 0) {
             p.state = PLAYER_STATE.NORMAL;
             p.sugarCrashTimer = 6000;
-            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: '¡RECUPERADA! Fatiga de azúcar 💥💥💥💥', messageType: 'warning' }));
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: 'íRECUPERADA! Fatiga de az·car ????', messageType: 'warning' }));
           }
           break;
         case PLAYER_STATE.PUKA_OVERDRIVE:
@@ -681,7 +680,7 @@ export default function Advergame() {
           if (Math.random() > 0.7) spawnParticle(p.x - 5, p.y + 20, '#ff4b4b', 1, true);
           if (p.stateTimer <= 0) {
             p.state = PLAYER_STATE.NORMAL;
-            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: 'ENERGÍA ESTABILIZADA', messageType: 'info' }));
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.NORMAL, message: 'ENERG═A ESTABILIZADA', messageType: 'info' }));
           }
           break;
       }
@@ -738,7 +737,7 @@ export default function Advergame() {
       p.ghosts.forEach((g) => g.alpha -= 0.03);
       p.ghosts = p.ghosts.filter((g) => g.alpha > 0);
 
-      // Animation tick → player
+      // Animation tick ù player
       {
         const moving = Math.abs(p.vx) > 0.5;
         const runFrames = SPRITE_FRAMES[SPRITE.PUKA_RUN] || 1;
@@ -858,7 +857,7 @@ export default function Advergame() {
         }
       }
 
-      // Animation tick → Garu
+      // Animation tick ù Garu
       {
         const garuMoving = Math.abs(s.companion.vx) > 0.5 && s.companion.grounded;
         const garuRunFrames = SPRITE_FRAMES[SPRITE.GARU_RUN] || 1;
@@ -874,7 +873,7 @@ export default function Advergame() {
         }
       }
 
-      // PUKA_OVERDRIVE victory check → catch Garu
+      // PUKA_OVERDRIVE victory check ù catch Garu
       if (p.state === PLAYER_STATE.PUKA_OVERDRIVE && p.x >= s.companion.x) {
         p.isDead = true;
         if (audioInst) audioInst.victory();
@@ -883,7 +882,7 @@ export default function Advergame() {
         return;
       }
 
-      // Chemical projectile movement (thrown TRAP_CHEMICAL) → collides with platforms
+      // Chemical projectile movement (thrown TRAP_CHEMICAL) ù collides with platforms
       s.entities.forEach((chem) => {
         if (chem.type === ENTITY.TRAP_CHEMICAL && chem.vx !== undefined && chem.active) {
           chem.x += chem.vx;
@@ -901,7 +900,7 @@ export default function Advergame() {
         }
       });
 
-      // Projectile movement (PROJECTILE_BULL) → collides with platforms
+      // Projectile movement (PROJECTILE_BULL) ù collides with platforms
       s.entities.forEach((proj) => {
         if (proj.type === ENTITY.PROJECTILE_BULL && proj.active) {
           proj.angle = (proj.angle || 0) + (proj.vx! > 0 ? 0.25 : -0.25);
@@ -1020,7 +1019,7 @@ export default function Advergame() {
             if (inventory().length < 5) {
               setInventory(prev => [...prev, 'PUKA_POWER']);
             }
-            spawnFloatingText(entity.x, entity.y - 40, '¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ???');
+            spawnFloatingText(entity.x, entity.y - 40, 'íHola Pucca! íToma un Puka Power para ir mßs rßpido! ???');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#ffd700', 25);
             triggerShake(4, 150);
@@ -1040,7 +1039,7 @@ export default function Advergame() {
                 e.active = false;
               }
             });
-            spawnFloatingText(entity.x, entity.y - 40, '¡KIAAA! ¡Siente la energía de Sooga, Pucca! 🔥🔥🔥🔥');
+            spawnFloatingText(entity.x, entity.y - 40, 'íKIAAA! íSiente la energφa de Sooga, Pucca! ????');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#ef4444', 30);
             triggerShake(8, 200);
@@ -1050,7 +1049,7 @@ export default function Advergame() {
             entity.active = false;
             s.timerFrozen = true;
             s.timerFreezeEnd = Date.now() + 5000;
-            spawnFloatingText(entity.x, entity.y - 40, '¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜😊😊😊');
+            spawnFloatingText(entity.x, entity.y - 40, 'íFideos de la felicidad listos! íBuen viaje, Pucca! ????');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#22c55e', 25);
             break;
@@ -1060,7 +1059,7 @@ export default function Advergame() {
             if (inventory().length < 5) {
               setInventory(prev => [...prev, 'PUKA_POWER']);
             }
-            spawnFloatingText(entity.x, entity.y - 40, '¡Miau! ¡Puka Power natural para ti! 🐱😊😊😊😊');
+            spawnFloatingText(entity.x, entity.y - 40, 'íMiau! íPuka Power natural para ti! ?????');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#ffd700', 25);
             triggerShake(4, 150);
@@ -1070,7 +1069,7 @@ export default function Advergame() {
             entity.active = false;
             p.state = PLAYER_STATE.CHEMICAL_RUSH;
             p.stateTimer = 2000;
-            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.CHEMICAL_RUSH, message: '¡RUSH INDUSTRIAL! ⚡⚡⚡', messageType: 'warning' }));
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.CHEMICAL_RUSH, message: 'íRUSH INDUSTRIAL! ???', messageType: 'warning' }));
             if (audioInst) { audioInst.powerup(); audioInst.rushEnergy(); }
             spawnParticle(entity.x, entity.y, '#8b5cf6', 25);
             triggerShake(6, 150);
@@ -1079,7 +1078,7 @@ export default function Advergame() {
           case ENTITY.TRAP_CHEMICAL: {
             if (p.state === PLAYER_STATE.PUKA_OVERDRIVE) break;
             p.state = PLAYER_STATE.CHEMICAL_RUSH; p.stateTimer = 2000;
-            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.CHEMICAL_RUSH, message: '¡TRAMPA QUÍMICA! RUSH TÓXICO', messageType: 'warning' }));
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.CHEMICAL_RUSH, message: 'íTRAMPA QU═MICA! RUSH T╙XICO', messageType: 'warning' }));
             if (audioInst) { audioInst.hurt(); audioInst.rushEnergy(); }
             triggerShake(8, 250);
             spawnParticle(entity.x, entity.y, '#3b82f6', 30);
@@ -1091,14 +1090,14 @@ export default function Advergame() {
             if (p.state === PLAYER_STATE.PUKA_OVERDRIVE) break;
             if (p.hasPet) {
               p.hasPet = false; p.canDoubleJump = false; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
-              setUiState((prev) => ({ ...prev, message: '¡MASCOTA PERDIDA!', messageType: 'warning' }));
+              setUiState((prev) => ({ ...prev, message: 'íMASCOTA PERDIDA!', messageType: 'warning' }));
             } else if (p.isGiant) {
               p.isGiant = false; p.width = 40; p.height = 60; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
-              setUiState((prev) => ({ ...prev, message: '¡PODER PERDIDO!', messageType: 'warning' }));
+              setUiState((prev) => ({ ...prev, message: 'íPODER PERDIDO!', messageType: 'warning' }));
             } else {
               p.vx = p.facingLeft ? 10 : -10; p.vy = -5;
               s.score = Math.max(0, s.score - 1);
-              setUiState((prev) => ({ ...prev, message: '¡SHURIKEN! -1 💥💥', messageType: 'error' }));
+              setUiState((prev) => ({ ...prev, message: 'íSHURIKEN! -1 ??', messageType: 'error' }));
             }
             if (audioInst) audioInst.hurt();
             triggerShake(8, 120);
@@ -1108,7 +1107,7 @@ export default function Advergame() {
           case ENTITY.AMMO_BOX: {
             entity.active = false;
             setAmmo((prev) => Math.min(20, prev + 5));
-            spawnFloatingText(entity.x, entity.y - 40, '+5 MUNICIÓN 💥💥💥');
+            spawnFloatingText(entity.x, entity.y - 40, '+5 MUNICI╙N ???');
             if (audioInst) audioInst.coin();
             spawnParticle(entity.x, entity.y, '#60a5fa', 10);
             break;
@@ -1117,7 +1116,7 @@ export default function Advergame() {
             const curLevel = currentLevelIndex();
             const cfg = LEVEL_CONFIG[curLevel as keyof typeof LEVEL_CONFIG];
             if (cfg && s.score < cfg.minCoins) {
-              setUiState((prev) => ({ ...prev, message: `¡Necesitas ${cfg.minCoins} monedas! ??`, messageType: 'warning' }));
+              setUiState((prev) => ({ ...prev, message: `íNecesitas ${cfg.minCoins} monedas! ??`, messageType: 'warning' }));
               break;
             }
             if (curLevel < 3) {
@@ -1213,22 +1212,22 @@ export default function Advergame() {
       if (p.hasPet) {
         p.hasPet = false; p.canDoubleJump = false; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
         entity.active = false;
-        setUiState((prev) => ({ ...prev, message: '¡MASCOTA PERDIDA!', messageType: 'warning' }));
+        setUiState((prev) => ({ ...prev, message: 'íMASCOTA PERDIDA!', messageType: 'warning' }));
       } else if (p.isGiant) {
         p.isGiant = false; p.width = 40; p.height = 60; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
         entity.active = false;
-        setUiState((prev) => ({ ...prev, message: '¡PODER PERDIDO!', messageType: 'warning' }));
+        setUiState((prev) => ({ ...prev, message: 'íPODER PERDIDO!', messageType: 'warning' }));
       } else {
         p.vx = p.facingLeft ? 10 : -10; p.vy = -5;
         s.score = Math.max(0, s.score - 1);
-        setUiState((prev) => ({ ...prev, message: '¡GOLPE! -1 💥💥', messageType: 'error' }));
+        setUiState((prev) => ({ ...prev, message: 'íGOLPE! -1 ??', messageType: 'error' }));
       }
     }
 
     if (canvasEl) render(canvasEl.getContext('2d')!, s, theme);
     rafId = requestAnimationFrame(gameLoop);
     } catch (error) {
-      console.error('Fallo crítico en gameLoop:', error);
+      console.error('Fallo crφtico en gameLoop:', error);
       cancelAnimationFrame(rafId);
     }
   }
@@ -1255,7 +1254,7 @@ export default function Advergame() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, vw, vh);
 
-    // Responsive Y helper → keeps background elements visible on small viewports
+    // Responsive Y helper ù keeps background elements visible on small viewports
     const bgY = (offset: number) => Math.max(vh - offset, vh * 0.12);
 
     // Layer 1: Far background (slowest movement, speed factor 0.05)
@@ -1324,7 +1323,7 @@ export default function Advergame() {
     ctx.translate(((s2 % vw) + vw) % vw, 0);
     ctx.globalAlpha = 0.55;
     if (themeId === 'GOH_RONG') {
-      // Traditional houses (pagodas) → visible at top on all viewports
+      // Traditional houses (pagodas) ù visible at top on all viewports
       ctx.fillStyle = '#7B1113';
       for (let i = -1; i < 4; i++) {
         const bx = i * 400;
@@ -1549,7 +1548,7 @@ export default function Advergame() {
         // Floating Puka Power can above head!
         drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ???", entity.x + entity.width / 2, entity.y - 48);
+        drawSpeechBubble(ctx, "íHola Pucca! íToma un Puka Power para ir mßs rßpido! ???", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_CAT_PUKA_POWER && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 20;
@@ -1562,7 +1561,7 @@ export default function Advergame() {
         // Floating Puka Power above head
         drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Miau! ¡Toma fideos y Puka Power natural! ?????", entity.x + entity.width / 2, entity.y - 48);
+        drawSpeechBubble(ctx, "íMiau! íToma fideos y Puka Power natural! ?????", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_ABYO && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 15;
@@ -1573,7 +1572,7 @@ export default function Advergame() {
         ctx.fillText('ABYO', entity.x, entity.y - 8);
         
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡KIAAA! ¡Siente la energía de Sooga, Pucca! 🔥🔥🔥🔥", entity.x + entity.width / 2, entity.y - 8);
+        drawSpeechBubble(ctx, "íKIAAA! íSiente la energφa de Sooga, Pucca! ????", entity.x + entity.width / 2, entity.y - 8);
       } else if (entity.type === ENTITY.NPC_TIOS && entity.active) {
         ctx.save();
         ctx.shadowColor = '#22c55e'; ctx.shadowBlur = 20;
@@ -1581,10 +1580,10 @@ export default function Advergame() {
         ctx.shadowBlur = 0;
         ctx.restore();
         ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#22c55e'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-        ctx.fillText('TÍOS', entity.x, entity.y - 8);
+        ctx.fillText('T═OS', entity.x, entity.y - 8);
         
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜😊😊😊", entity.x + 20, entity.y - 8);
+        drawSpeechBubble(ctx, "íFideos de la felicidad listos! íBuen viaje, Pucca! ????", entity.x + 20, entity.y - 8);
       } else if (entity.type === ENTITY.NPC_MALA_PUCCA && entity.active) {
         ctx.save();
         ctx.shadowColor = '#8b5cf6'; ctx.shadowBlur = 15;
@@ -1598,7 +1597,7 @@ export default function Advergame() {
         const spriteSrc = (Math.floor(entity.x) % 2 === 0) ? SPRITE.RED_BULL : SPRITE.MONSTER;
         drawSprite(ctx, spriteSrc, 0, entity.x + entity.width/2 - 12, entity.y - 45, 24, 36);
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Toma esta bebida oscura! ¡Te hará volar! 😈⚡⚡", entity.x + entity.width / 2, entity.y - 48);
+        drawSpeechBubble(ctx, "íToma esta bebida oscura! íTe harß volar! ???", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.TRAP_CHEMICAL && entity.active) {
         ctx.save();
         const isRedBull = (Math.floor(entity.x) % 2 === 0);
@@ -1610,8 +1609,8 @@ export default function Advergame() {
           const hostSprite = isRedBull ? SPRITE.MALA_PUCCA : SPRITE.NINJA2;
           drawSprite(ctx, hostSprite, 0, entity.x - 32, entity.y - 12, 32, 48);
           const deceptiveText = isRedBull 
-            ? "¡Toma un Red Bull, te dará alas de verdad! 😈😊😊😊" 
-            : "¡Prueba un Monster helado! ¡Es energía ninja! 😈😊😊😊";
+            ? "íToma un Red Bull, te darß alas de verdad! ????" 
+            : "íPrueba un Monster helado! íEs energφa ninja! ????";
           drawSpeechBubble(ctx, deceptiveText, entity.x - 8, entity.y - 15);
         }
         
@@ -1784,7 +1783,7 @@ export default function Advergame() {
       // Vertical bob for jumping
       const jb = Math.sin(now / 120) * 3;
       if (player.vy < -2) {
-        // Rising → show upward sprite
+        // Rising ù show upward sprite
       }
     } else if (moving) {
       currentSrc = SPRITE.PUKA_RUN;
@@ -1873,7 +1872,7 @@ export default function Advergame() {
     p.state = PLAYER_STATE.PUKA_OVERDRIVE;
     p.stateTimer = 5000;
     if (audioInst) { audioInst.powerup(); audioInst.rushEnergy(); }
-    setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.PUKA_OVERDRIVE, message: '¡PUKA OVERDRIVE! ⚡⚡⚡', messageType: 'success' }));
+    setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.PUKA_OVERDRIVE, message: 'íPUKA OVERDRIVE! ???', messageType: 'success' }));
     triggerShake(6, 200);
   }
 
@@ -2148,7 +2147,7 @@ export default function Advergame() {
                   </span>
                 </>
               ) : (
-                <span class="text-[9px] text-slate-500 font-bold">VACÍO</span>
+                <span class="text-[9px] text-slate-500 font-bold">VAC═O</span>
               )}
             </div>
 
@@ -2273,10 +2272,10 @@ export default function Advergame() {
             </a>
             <div class="relative z-10 flex flex-col items-center">
               <img src="/sprites/pucca_chocada_redbull_o_enojada.png" class="w-48 h-48 object-contain animate-pulse mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]" />
-              <h1 class="text-4xl sm:text-5xl font-black uppercase mb-4 text-red-500 drop-shadow-[0_0_20px_rgba(220,38,38,0.3)]">¡No lograste alcanzar a Garu... 😭!</h1>
+              <h1 class="text-4xl sm:text-5xl font-black uppercase mb-4 text-red-500 drop-shadow-[0_0_20px_rgba(220,38,38,0.3)]">íNo lograste alcanzar a Garu... ??!</h1>
               <p class="text-xl sm:text-2xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
               <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
-              <p class="text-base text-slate-500 mb-8">¡No te rindas! El verdadero poder del rayo te espera.</p>
+              <p class="text-base text-slate-500 mb-8">íNo te rindas! El verdadero poder del rayo te espera.</p>
               <button onClick={() => setAppState(APP_STATE.START_SCREEN)}
                 class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
                 {iconPlay} JUGAR DE NUEVO
@@ -2297,17 +2296,17 @@ export default function Advergame() {
             </a>
             <div class="relative z-10">
               <div class="text-8xl sm:text-9xl mb-6 animate-bounce drop-shadow-[0_0_30px_rgba(34,197,94,0.3)]">{'\u{1F3C6}'}</div>
-              <h1 class="text-5xl sm:text-6xl font-black uppercase mb-2 text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">{'\u{00A1}'}Campaña completada!</h1>
+              <h1 class="text-5xl sm:text-6xl font-black uppercase mb-2 text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">{'\u{00A1}'}Campa±a completada!</h1>
               <p class="text-lg sm:text-xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
               <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
               <div class="my-8 p-5 sm:p-6 rounded-2xl bg-white/5 border border-pink-500/30 backdrop-blur-sm flex flex-col items-center gap-3 shadow-[0_0_40px_rgba(255,100,150,0.15)]">
-                <span class="text-[10px] sm:text-xs text-pink-300 uppercase tracking-[0.25em] font-semibold">{'\u{2728}'} En colaboración con {'\u{2728}'}</span>
+                <span class="text-[10px] sm:text-xs text-pink-300 uppercase tracking-[0.25em] font-semibold">{'\u{2728}'} En colaboraci≤n con {'\u{2728}'}</span>
                 <img src="/sprites/Pucca-Logo.png" alt="Pucca Logo" class="w-40 sm:w-52 h-auto object-contain drop-shadow-[0_0_40px_rgba(255,100,150,0.5)] hover:scale-105 transition-transform duration-700" />
-                <span class="text-xs sm:text-sm text-slate-400">?? Puka Power × Pucca ??</span>
+                <span class="text-xs sm:text-sm text-slate-400">?? Puka Power ╫ Pucca ??</span>
               </div>
               <Show when={couponDone()}>
                 <div class="bg-green-500/20   border-2 border-green-500/50 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.15)]">
-                  {'\u{1F389}'} Descuento de 15% activado – canjeado en tu carrito
+                  {'\u{1F389}'} Descuento de 15% activado ù canjeado en tu carrito
                 </div>
               </Show>
               <Show when={!couponDone()}>
@@ -2347,9 +2346,9 @@ export default function Advergame() {
             <div class="relative z-10 flex flex-col items-center max-w-md w-full">
               <img src="/sprites/pucca_besando_garu_sticker.png" class="w-64 h-64 object-contain animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)] mb-4" />
               <Show when={currentLevelIndex() === 3}>
-                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡CAMPAÑA COMPLETADA!</h1>
+                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">íCAMPA╤A COMPLETADA!</h1>
                 <p class="text-lg text-slate-300 mb-6 leading-relaxed">
-                  ¡Felicidades! ¡Pucca ha atrapado finalmente a Garu y completado toda la campaña de amor y velocidad de Sooga! 💋🌸🌸🌸
+                  íFelicidades! íPucca ha atrapado finalmente a Garu y completado toda la campa±a de amor y velocidad de Sooga! ????
                 </p>
                 <button onClick={() => {
                   trackGameEvent('puka_campaign_victory', { finalCoins: uiState().coins });
@@ -2361,9 +2360,9 @@ export default function Advergame() {
                 </button>
               </Show>
               <Show when={currentLevelIndex() < 3}>
-                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡NIVEL COMPLETADO!</h1>
+                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">íNIVEL COMPLETADO!</h1>
                 <p class="text-lg text-slate-300 mb-6 leading-relaxed">
-                  ¡Pucca ha logrado atrappar a Garu y darle un tierno beso de victoria! 💋🌸🌸🌸
+                  íPucca ha logrado atrappar a Garu y darle un tierno beso de victoria! ????
                 </p>
                 <button onClick={() => advanceToNextLevel()}
                   class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">
@@ -2397,10 +2396,10 @@ export default function Advergame() {
                       <span><strong class="text-white">Desliza</strong> para moverte y saltar</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido</span>
+                      <span><strong class="text-white">Toma Puka Power</strong> para ir mßs rßpido</span>
                       <div class="flex items-center gap-2">
                         <img src="/sprites/Puka-Power.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-[0_0_6px_rgba(255,200,0,0.4)]" />
-                        <span class="text-lg">⚡</span>
+                        <span class="text-lg">?</span>
                       </div>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
@@ -2417,8 +2416,8 @@ export default function Advergame() {
                     </li>
                     {currentLevelIndex() === 3 && (
                       <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
-                        <span class="text-lg">🚀</span>
-                        <span><strong class="text-purple-300">¡DOBLE SALTO!</strong></span>
+                        <span class="text-lg">??</span>
+                        <span><strong class="text-purple-300">íDOBLE SALTO!</strong></span>
                       </li>
                     )}
                   </ul>
@@ -2429,10 +2428,10 @@ export default function Advergame() {
                       <span><strong class="text-white">Flechas</strong> para moverte y saltar</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido</span>
+                      <span><strong class="text-white">Toma Puka Power</strong> para ir mßs rßpido</span>
                       <div class="flex items-center gap-2">
                         <img src="/sprites/Puka-Power.png" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-[0_0_6px_rgba(255,200,0,0.4)]" />
-                        <span class="text-lg">⚡</span>
+                        <span class="text-lg">?</span>
                       </div>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
@@ -2449,8 +2448,8 @@ export default function Advergame() {
                     </li>
                     <Show when={currentLevelIndex() === 3}>
                       <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
-                        <span class="text-xl"></span>
-                        <span><strong class="text-purple-300">¡DOBLE SALTO!</strong></span>
+                        <span class="text-xl">??</span>
+                        <span><strong class="text-purple-300">íDOBLE SALTO!</strong></span>
                       </li>
                     </Show>
                   </ul>
@@ -2460,7 +2459,7 @@ export default function Advergame() {
                   class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black rounded-xl tracking-wider uppercase transition-all hover:scale-105 shadow-lg shadow-red-500/20"
                   classList={{ 'py-4 px-8 text-lg': !isMobile, 'py-5 px-6 text-base': isMobile }}
                 >
-                  {'\u{1F680}'} ¡Comenzar!
+                  {'\u{1F680}'} íComenzar!
                 </button>
               </div>
             </div>
