@@ -2347,7 +2347,7 @@ export default function Advergame() {
               <div class="my-8 p-5 sm:p-6 rounded-2xl bg-white/5 border border-pink-500/30 backdrop-blur-sm flex flex-col items-center gap-3 shadow-[0_0_40px_rgba(255,100,150,0.15)]">
                 <span class="text-[10px] sm:text-xs text-pink-300 uppercase tracking-[0.25em] font-semibold">{'\u{2728}'} En colaboración con {'\u{2728}'}</span>
                 <img src="/sprites/Pucca-Logo.png" alt="Pucca Logo" class="w-40 sm:w-52 h-auto object-contain drop-shadow-[0_0_40px_rgba(255,100,150,0.5)] hover:scale-105 transition-transform duration-700" />
-                <span class="text-xs sm:text-sm text-slate-400">?? Puka Power × Pucca ??</span>
+                <span class="text-xs sm:text-sm text-slate-400">{'\u{1F48B}'} Puka Power × Pucca {'\u{1F48B}'}</span>
               </div>
               <Show when={couponDone()}>
                 <div class="bg-green-500/20   border-2 border-green-500/50 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.15)]">
