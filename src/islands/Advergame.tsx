@@ -1839,21 +1839,42 @@ export default function Advergame() {
     // PUKA_OVERDRIVE lightning bolts
     if (player.state === PLAYER_STATE.PUKA_OVERDRIVE && !player.isDead) {
       const pt = now / 150;
-      ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 15;
       ctx.fillStyle = '#ffd700';
-      ctx.fillText('⚡', cx + Math.cos(pt) * (player.width * 0.9), cy + Math.sin(pt) * (player.height * 0.7));
-      ctx.fillText('⚡', cx + Math.cos(pt + Math.PI) * (player.width * 0.9), cy + Math.sin(pt + Math.PI) * (player.height * 0.7));
+      const drawBolt = (x: number, y: number, size: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x - size * 0.25, y - size * 0.7);
+        ctx.lineTo(x + size * 0.15, y - size * 0.1);
+        ctx.lineTo(x - size * 0.05, y - size * 0.1);
+        ctx.lineTo(x + size * 0.25, y + size * 0.7);
+        ctx.lineTo(x - size * 0.15, y + size * 0.05);
+        ctx.lineTo(x + size * 0.05, y + size * 0.05);
+        ctx.closePath();
+        ctx.fill();
+      };
+      drawBolt(cx + Math.cos(pt) * (player.width * 0.9), cy + Math.sin(pt) * (player.height * 0.7), 22);
+      drawBolt(cx + Math.cos(pt + Math.PI) * (player.width * 0.9), cy + Math.sin(pt + Math.PI) * (player.height * 0.7), 22);
       ctx.shadowBlur = 0;
     }
 
     // Idle sleep Zzz
     if (player.idleTimer > 3000 && !player.isDead) {
-      ctx.font = '25px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
       ctx.fillStyle = '#fff';
-      ctx.fillText('Z', cx, cy - player.height / 2 - 20 + Math.sin(now / 200) * 5);
+      const zy = cy - player.height / 2 - 20 + Math.sin(now / 200) * 5;
+      const zx = cx;
+      const zs = 12;
+      const zw = zs * 0.8;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(zx - zw, zy - zs);
+      ctx.lineTo(zx + zw, zy - zs);
+      ctx.lineTo(zx - zw, zy + zs);
+      ctx.lineTo(zx + zw, zy + zs);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     }
 
     if (DEBUG_MODE) {
