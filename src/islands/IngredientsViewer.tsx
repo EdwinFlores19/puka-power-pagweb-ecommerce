@@ -46,16 +46,11 @@ export default function IngredientsViewer() {
 
   return (
     <section
-      class="mt-20 scroll-mt-24 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:pl-52 lg:pl-60"
+      class="py-16 sm:py-20 scroll-mt-24 bg-brand-primary/[0.02] border-y border-brand-primary/5"
       id="ingredientes"
     >
-      <div class="absolute inset-0 -mx-4 sm:-mx-6 lg:-mx-8 bg-brand-primary/[0.03] rounded-3xl pointer-events-none" />
-
-      <div class="relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:pl-52 lg:pl-60">
         <div class="text-center mb-12">
-          <span class="inline-block text-brand-accent text-xs font-extrabold uppercase tracking-[0.2em] mb-3">
-            {'\uD83C\uDF3F'} La Tr\u00EDada Sagrada
-          </span>
           <h3 class="font-serif text-3xl sm:text-4xl font-extrabold text-brand-primary leading-tight">
             Nuestros 3 Ingredientes{' '}
             <span class="text-brand-accent">Sagrados</span>
