@@ -325,7 +325,15 @@ export default function Advergame() {
   const [ammo, setAmmo] = createSignal(10);
   const [assetsReady, setAssetsReady] = createSignal(false);
 
-  const getCameraOffset = () => (typeof window !== 'undefined' && window.innerWidth > 768 ? 400 : 150);
+  const getCameraOffset = () => {
+    if (typeof window === 'undefined') return 150;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    if (w > 768 && w > h) return 400;
+    if (w > h) return 250;
+    return Math.min(w * 0.35, 200);
+  };
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
   let engineState: {
     keys: Keys; camera: { x: number; y: number };
@@ -1133,6 +1141,9 @@ export default function Advergame() {
       cam.x += (targetCamX - cam.x) * 0.1;
       if (cam.x < 0) cam.x = 0;
 
+      const targetCamY = p.y - viewport.height * 0.6;
+      cam.y += (targetCamY - cam.y) * 0.05;
+
       if (s.shakeTimer > 0) s.shakeTimer -= 16.6;
 
       s.floatingTexts.forEach((ft, idx) => {
@@ -1422,7 +1433,7 @@ export default function Advergame() {
     drawParallaxBackground(ctx, theme.id, camera.x, viewport.width, viewport.height);
 
     ctx.save();
-    ctx.translate(-camera.x, 0);
+    ctx.translate(-camera.x, -camera.y);
 
     // Floating texts
     ctx.textBaseline = 'middle';
@@ -1456,6 +1467,7 @@ export default function Advergame() {
       const isPlatform = entity.type === ENTITY.PLATFORM;
       const cullMargin = isPlatform ? 1000 : 200;
       if (entity.x < camera.x - cullMargin || entity.x > camera.x + viewport.width + cullMargin) return;
+      if (entity.y < camera.y - cullMargin || entity.y > camera.y + viewport.height + cullMargin) return;
 
       if (entity.type === ENTITY.PLATFORM) {
         const g = ctx.createLinearGradient(entity.x, entity.y, entity.x, entity.y + entity.height);
@@ -2111,14 +2123,14 @@ export default function Advergame() {
           </div>
         )}
 
-        <div class="relative w-full h-dvh bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat overflow-hidden">
+        <div class="relative w-full h-dvh bg-[#0a0d1a] overflow-hidden">
           <div ref={containerEl} class="absolute inset-0 mx-auto max-w-[1920px]">
             <canvas ref={canvasEl} class="relative z-10 w-full h-full block" style={{ 'image-rendering': 'pixelated' }} />
           </div>
         </div>
 
         <Show when={!showTutorial()}>
-          <div class="absolute bottom-3 sm:bottom-6 left-0 right-0 px-3 sm:px-6 flex justify-between items-end z-30 md:hidden">
+          <div class="absolute bottom-3 sm:bottom-6 left-0 right-0 px-3 sm:px-6 flex justify-between items-end z-30" classList={{ 'md:hidden': !isTouchDevice }}>
             <div class="flex gap-3 sm:gap-4">
               <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
               <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
