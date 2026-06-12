@@ -1,13 +1,13 @@
-import { createSignal } from 'solid-js';
+import { createSignal, onCleanup } from 'solid-js';
 
 const ingredients = [
   {
     id: 1,
     number: 1,
-    name: 'Cáscara de Café',
+    name: 'C\u00E1scara de Caf\u00E9',
     emoji: '\u2615',
-    title: 'Cafeína Limpia de un Subproducto Noble',
-    text: 'La cáscara de café contiene antioxidantes excepcionales llamados polifenoles. Proporciona una asimilaci\u00F3n paulatina de cafe\u00EDna natural que reduce la fatiga sin impactar violentamente el sistema nervioso central. Ideal para flujos de trabajo prolongados.',
+    title: 'Cafe\u00EDna Limpia de un Subproducto Noble',
+    text: 'La c\u00E1scara de caf\u00E9 contiene antioxidantes excepcionales llamados polifenoles. Proporciona una asimilaci\u00F3n paulatina de cafe\u00EDna natural que reduce la fatiga sin impactar violentamente el sistema nervioso central. Ideal para flujos de trabajo prolongados.',
   },
   {
     id: 2,
@@ -28,10 +28,20 @@ const ingredients = [
 ];
 
 export default function IngredientsViewer() {
-  const [expanded, setExpanded] = createSignal<number | null>(null);
+  const [hovered, setHovered] = createSignal<number | null>(null);
+  let leaveTimer: ReturnType<typeof setTimeout> | null = null;
 
-  const toggle = (id: number) => {
-    setExpanded((prev) => (prev === id ? null : id));
+  onCleanup(() => {
+    if (leaveTimer) clearTimeout(leaveTimer);
+  });
+
+  const handleMouseEnter = (id: number) => {
+    if (leaveTimer) clearTimeout(leaveTimer);
+    setHovered(id);
+  };
+
+  const handleMouseLeave = () => {
+    leaveTimer = setTimeout(() => setHovered(null), 150);
   };
 
   return (
@@ -55,31 +65,33 @@ export default function IngredientsViewer() {
 
         <div class="max-w-3xl mx-auto space-y-5">
           {ingredients.map((ing, idx) => {
-            const open = expanded() === ing.id;
+            const open = hovered() === ing.id;
             return (
-              <div class="relative flex items-start gap-4 sm:gap-5">
+              <div
+                class="relative flex items-start gap-4 sm:gap-5"
+                onMouseEnter={() => handleMouseEnter(ing.id)}
+                onMouseLeave={handleMouseLeave}
+              >
                 {idx < ingredients.length - 1 && (
                   <div class="absolute left-[23px] sm:left-[27px] top-14 bottom-0 w-0.5 bg-brand-accent/15" />
                 )}
 
                 <div
-                  class="relative z-10 w-11 h-11 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center font-black text-base sm:text-lg shrink-0 transition-all duration-300"
+                  class="relative z-10 w-11 h-11 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center font-black text-base sm:text-lg shrink-0 transition-all duration-500 ease-out"
                   classList={{
                     'bg-brand-accent text-brand-light shadow-lg shadow-brand-accent/30 scale-110':
                       open,
-                    'bg-brand-primary/10 text-brand-primary': !open,
+                    'bg-brand-primary/10 text-brand-primary scale-100': !open,
                   }}
                 >
                   {ing.number}
                 </div>
 
-                <button
-                  onClick={() => toggle(ing.id)}
-                  class="flex-1 bg-brand-light rounded-2xl border text-left transition-all duration-300 cursor-pointer overflow-hidden"
+                <div
+                  class="flex-1 bg-brand-light rounded-2xl border text-left cursor-default transition-all duration-500 ease-out overflow-hidden"
                   classList={{
                     'border-brand-accent shadow-lg shadow-brand-accent/10': open,
-                    'border-brand-primary/10 hover:border-brand-accent/50 hover:shadow-md':
-                      !open,
+                    'border-brand-primary/10': !open,
                   }}
                 >
                   <div class="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
@@ -88,17 +100,19 @@ export default function IngredientsViewer() {
                       <h4 class="font-serif text-base sm:text-lg font-bold text-brand-primary">
                         {ing.name}
                       </h4>
-                      <p class="text-xs text-brand-dark/40 font-medium mt-0.5">
-                        {open
-                          ? '\u25B2 Ocultar detalles'
-                          : '\u25BC Ver m\u00E1s'}
-                      </p>
                     </div>
+                    <svg
+                      class="ml-auto w-4 h-4 text-brand-dark/20 shrink-0 transition-transform duration-500 ease-out"
+                      classList={{ 'rotate-180': open }}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
 
                   <div
-                    class="transition-all duration-500 overflow-hidden"
-                    classList={{ 'max-h-0': !open, 'max-h-96': open }}
+                    class="transition-all duration-500 ease-in-out overflow-hidden"
+                    classList={{ 'max-h-0 opacity-0': !open, 'max-h-96 opacity-100': open }}
                   >
                     <div class="px-4 sm:px-5 pb-5 pt-0 border-t border-brand-accent/10">
                       <div class="mt-3 p-4 sm:p-5 bg-gradient-to-br from-brand-primary/[0.04] to-brand-accent/[0.04] rounded-xl border border-brand-primary/5">
@@ -111,7 +125,7 @@ export default function IngredientsViewer() {
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
               </div>
             );
           })}

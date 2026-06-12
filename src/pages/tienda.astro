@@ -19,12 +19,12 @@ Astro.response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate
       <div class="flex items-center space-x-6">
         <a
           href="/"
-          class="hidden sm:flex items-center text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-colors group"
+          class="hidden sm:flex items-center text-xs font-bold uppercase tracking-wider text-brand-dark/70 hover:text-brand-primary transition-all duration-300 group"
         >
-          <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 mr-2 transition-transform duration-300 ease-out group-hover:-translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
           </svg>
-          Volver al inicio
+          <span class="transition-all duration-300 group-hover:opacity-80">Volver al inicio</span>
         </a>
         <a href="/tienda" class="flex items-center space-x-2">
           <span class="font-serif text-2xl sm:text-3xl font-extrabold tracking-wider text-brand-primary">PUKA POWER</span>

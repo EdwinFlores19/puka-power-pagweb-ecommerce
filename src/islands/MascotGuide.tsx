@@ -55,6 +55,10 @@ function scrollToSection(id: string) {
   const el = document.getElementById(id);
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.classList.remove('animate-section-glow');
+    void el.offsetWidth;
+    el.classList.add('animate-section-glow');
+    setTimeout(() => el.classList.remove('animate-section-glow'), 1200);
   }
 }
 
@@ -130,7 +134,7 @@ export default function MascotGuide() {
         <Show when={showBubble()}>
           <div
             onClick={handleBubbleClick}
-            class="relative flex-1 bg-brand-light text-brand-dark p-5 sm:p-6 rounded-2xl shadow-2xl border border-brand-primary/10 cursor-pointer transition-all duration-300 hover:shadow-xl select-none"
+            class="relative flex-1 bg-brand-light text-brand-dark p-5 sm:p-6 rounded-2xl shadow-2xl border border-brand-primary/10 cursor-pointer transition-all duration-300 hover:shadow-xl select-none animate-bubble-in"
           >
             <div class="absolute -left-2.5 top-5 w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-r-[10px] border-r-brand-light" />
 

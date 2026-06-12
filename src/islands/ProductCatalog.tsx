@@ -10,7 +10,7 @@ export default function ProductCatalog() {
 
       {products.map((product) => (
         <div
-          class="bg-brand-light rounded-3xl border border-brand-primary/5 shadow-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 hover:shadow-xl transition-all duration-300 relative"
+          class="group bg-brand-light rounded-3xl border border-brand-primary/5 shadow-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 hover:shadow-xl transition-all duration-500 ease-out relative"
           classList={{
             'border-2 border-brand-accent shadow-xl p-6': !!product.badge,
             'p-6': !product.badge,
@@ -23,7 +23,7 @@ export default function ProductCatalog() {
           )}
 
           <div class="flex flex-col sm:flex-row items-center gap-6 w-full" classList={{ 'pt-2 sm:pt-0': !!product.badge }}>
-            <div class="w-32 h-32 bg-gradient-to-b from-brand-primary/10 to-brand-primary/25 rounded-2xl flex items-center justify-center shrink-0 border border-brand-primary/10 relative overflow-hidden select-none"
+            <div class="w-32 h-32 bg-gradient-to-b from-brand-primary/10 to-brand-primary/25 rounded-2xl flex items-center justify-center shrink-0 border border-brand-primary/10 relative overflow-hidden select-none transition-all duration-500 ease-out group-hover:scale-105 group-hover:shadow-xl"
               classList={{
                 'from-brand-accent/10 to-brand-accent/20 border-brand-accent/10': product.id === 2,
                 'from-brand-accentGold/10 to-brand-accentGold/20 border-brand-accentGold/10': product.id === 3,

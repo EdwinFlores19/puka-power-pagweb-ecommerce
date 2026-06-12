@@ -17,7 +17,7 @@ const badges = [
 
 <div class="grid grid-cols-3 gap-3">
   {badges.map((badge) => (
-    <div class="flex items-center justify-center space-x-2 bg-brand-light/5 py-3 px-3 rounded-xl border border-brand-light/10">
+    <div class="flex items-center justify-center space-x-2 bg-brand-light/5 py-3 px-3 rounded-xl border border-brand-light/10 transition-all duration-400 ease-out hover:bg-brand-light/10 hover:scale-105 hover:border-brand-accent/30">
       {badge.icon === 'shield' && (
         <svg class="w-5 h-5 text-brand-accentGold shrink-0" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>

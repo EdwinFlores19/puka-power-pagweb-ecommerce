@@ -119,7 +119,7 @@ export default function CartSidebar() {
             </div>
           }>
             {cart().map((item) => (
-              <div class="flex items-center justify-between gap-4 p-3.5 bg-brand-secondary rounded-2xl border border-brand-primary/5 transition-all duration-300">
+              <div class="flex items-center justify-between gap-4 p-3.5 bg-brand-secondary rounded-2xl border border-brand-primary/5 transition-all duration-500 ease-out hover:shadow-md hover:border-brand-accent/20 hover:bg-brand-secondary/80 animate-fade-in-up">
                 <div class="space-y-1 flex-grow min-w-0">
                   <h4 class="font-bold text-sm text-brand-primary leading-tight truncate">{item.name}</h4>
                   <p class="text-[10px] text-brand-dark/60 font-light truncate max-w-[160px]">{item.description}</p>
