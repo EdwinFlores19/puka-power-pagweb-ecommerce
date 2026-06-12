@@ -2368,20 +2368,24 @@ export default function Advergame() {
                 {isMobile ? (
                   <ul class="text-center space-y-2.5 text-xs sm:text-sm text-slate-300">
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-lg">{'\u{1F449}'}</span>
-                      <span><strong class="text-white">Desliza izq/der</strong> para moverte</span>
-                    </li>
-                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
                       <span class="text-lg">{'\u{1F446}'}</span>
-                      <span><strong class="text-white">Desliza arriba</strong> para saltar</span>
+                      <span><strong class="text-white">Desliza</strong> para moverte y saltar</span>
                     </li>
-                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-lg">{'\u{1F44D}'}</span>
-                      <span><strong class="text-white">Doble toque</strong> para shurikens</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-2">
+                      <div class="flex items-center gap-2">
+                        <img src="/sprites/Puka-Power.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-[0_0_6px_rgba(255,200,0,0.4)]" />
+                        <span class="text-lg">⚡</span>
+                        <img src="/sprites/red-bull.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-[0_0_6px_rgba(255,50,50,0.4)]" />
+                      </div>
+                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido y evita los Red Bulls</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
                       <span class="text-lg">{'\u{1F977}'}</span>
-                      <span><strong class="text-white">¡Cuidado!</strong> 🥷 Ninjas y trampas</span>
+                      <span><strong class="text-white">Cuidado</strong> ninjas y trampas</span>
+                    </li>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-lg">🗡️</span>
+                      <span><strong class="text-white">Shurikens</strong></span>
                     </li>
                     {currentLevelIndex() === 3 && (
                       <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
@@ -2393,20 +2397,24 @@ export default function Advergame() {
                 ) : (
                   <ul class="text-center space-y-3 text-sm text-slate-300">
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-xl">{'\u{2190}'}{'\u{2192}'}</span>
-                      <span><strong class="text-white">Flechas</strong> para moverte</span>
+                      <span class="text-xl">{'\u{2190}'}{'\u{2192}'} {'\u{2191}'} <span class="text-xs font-bold text-slate-500">ESPACIO</span></span>
+                      <span><strong class="text-white">Flechas</strong> para moverte y saltar</span>
+                    </li>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-2">
+                      <div class="flex items-center gap-2">
+                        <img src="/sprites/Puka-Power.png" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-[0_0_6px_rgba(255,200,0,0.4)]" />
+                        <span class="text-lg">⚡</span>
+                        <img src="/sprites/red-bull.png" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-[0_0_6px_rgba(255,50,50,0.4)]" />
+                      </div>
+                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido y evita los Red Bulls</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-xl">{'\u{2191}'} <span class="text-xs font-bold text-slate-500">ESPACIO</span></span>
-                      <span><strong class="text-white">Salta</strong></span>
+                      <span class="text-xl">{'\u{1F977}'}</span>
+                      <span><strong class="text-white">Cuidado</strong> ninjas y trampas</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
                       <span class="text-xl">🗡️ <span class="text-xs font-bold text-slate-500">F / X</span></span>
                       <span><strong class="text-white">Shurikens</strong></span>
-                    </li>
-                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-xl">{'\u{1F977}'}</span>
-                      <span><strong class="text-white">Cuidado</strong> 🥷 ninjas y trampas</span>
                     </li>
                     <Show when={currentLevelIndex() === 3}>
                       <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
