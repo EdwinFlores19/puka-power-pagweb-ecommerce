@@ -83,6 +83,7 @@ export default function MascotGuide() {
   const handleBubbleClick = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('[data-action]') || target.closest('[data-close]')) return;
+    currentMessage().action?.();
     advanceMessage();
   };
 

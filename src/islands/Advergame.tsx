@@ -24,7 +24,7 @@ const SPRITE = {
   PUKA_IDLE: '/sprites/pucca_idle_cuerpo_completo.png',
   PUKA_JUMP: '/sprites/puka_saltando_hacia_arriba.png',
   PUKA_ATTACK: '/sprites/pucca_guerrera_gato_espada.png',
-  PUKA_VICTORY: '/sprites/pucca_abrazando_garu_mareado.png',
+  PUKA_VICTORY: '/sprites/pucca_abrazando_garu_mareado_victoria.png',
   GARU_RUN: '/sprites/garu_animacion_carrera_sprite_sheet.png',
   GARU_IDLE: '/sprites/garu_de_pie_enojado.png',
   GARU_SCARED: '/sprites/garu_asustado_inclinado_derecha.png',
