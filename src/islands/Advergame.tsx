@@ -1884,10 +1884,85 @@ export default function Advergame() {
       window.addEventListener('keydown', hKD);
       window.addEventListener('keyup', hKU);
 
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let lastTapTime = 0;
+      let swipeActiveX: 'left' | 'right' | null = null;
+      let swipeActiveY: 'up' | null = null;
+
+      const handleTouchStart = (e: TouchEvent) => {
+        if (appState() !== APP_STATE.PLAYING) return;
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        swipeActiveX = null;
+        swipeActiveY = null;
+
+        const now = Date.now();
+        if (now - lastTapTime < 350) {
+          engineState.keys.attack = true;
+          lastTapTime = 0;
+        } else {
+          lastTapTime = now;
+        }
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        if (appState() !== APP_STATE.PLAYING) return;
+        const t = e.touches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = t.clientY - touchStartY;
+
+        if (Math.abs(dx) > 20 && !swipeActiveX) {
+          if (dx < 0) { engineState.keys.left = true; engineState.keys.right = false; swipeActiveX = 'left'; }
+          else { engineState.keys.right = true; engineState.keys.left = false; swipeActiveX = 'right'; }
+          touchStartX = t.clientX;
+        }
+
+        if (dy < -30 && !swipeActiveY) {
+          const p = engineState.player;
+          if (p.grounded) {
+            p.vy = JUMP_FORCE; p.grounded = false; p.canDoubleJump = true;
+            if (audioInst) audioInst.jump();
+            spawnParticle(p.x, p.y + p.height, '#ccc', 10);
+            p.squashX = 0.85; p.squashY = 1.2;
+          } else if (p.canDoubleJump) {
+            p.vy = JUMP_FORCE * 0.9; p.canDoubleJump = false;
+            if (audioInst) audioInst.jump();
+            spawnParticle(p.x, p.y + p.height, '#ff4b4b', 15);
+            p.squashX = 0.85; p.squashY = 1.2;
+          }
+          engineState.keys.up = true;
+          swipeActiveY = 'up';
+          touchStartY = t.clientY;
+        }
+      };
+
+      const handleTouchEnd = (e: TouchEvent) => {
+        if (appState() !== APP_STATE.PLAYING) return;
+        if (!swipeActiveX) {
+          engineState.keys.left = false;
+          engineState.keys.right = false;
+        }
+        if (!swipeActiveY) {
+          engineState.keys.up = false;
+        }
+        setTimeout(() => { engineState.keys.attack = false; }, 100);
+        swipeActiveX = null;
+        swipeActiveY = null;
+      };
+
+      containerEl.addEventListener('touchstart', handleTouchStart, { passive: true });
+      containerEl.addEventListener('touchmove', handleTouchMove, { passive: true });
+      containerEl.addEventListener('touchend', handleTouchEnd, { passive: true });
+
       onCleanup(() => {
         window.removeEventListener('keydown', hKD);
         window.removeEventListener('keyup', hKU);
         document.removeEventListener('visibilitychange', onVisibility);
+        containerEl.removeEventListener('touchstart', handleTouchStart);
+        containerEl.removeEventListener('touchmove', handleTouchMove);
+        containerEl.removeEventListener('touchend', handleTouchEnd);
         cancelAnimationFrame(rafId);
         ro.disconnect();
       });
@@ -2036,8 +2111,7 @@ export default function Advergame() {
           </div>
         )}
 
-        <div class="relative w-full h-[85vh] lg:h-[90vh] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat overflow-hidden">
-          <div class="absolute inset-0 bg-black/50   pointer-events-none z-0"></div>
+        <div class="relative w-full h-dvh bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat overflow-hidden">
           <div ref={containerEl} class="absolute inset-0 mx-auto max-w-[1920px]">
             <canvas ref={canvasEl} class="relative z-10 w-full h-full block" style={{ 'image-rendering': 'pixelated' }} />
           </div>
@@ -2216,47 +2290,86 @@ export default function Advergame() {
       </Switch>
 
       <Show when={appState() === APP_STATE.PLAYING && showTutorial()}>
-        <div class="fixed inset-0 z-50 bg-black/80   flex items-center justify-center p-6">
-          <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 max-w-sm w-full p-8 text-center text-white shadow-2xl shadow-red-500/5 space-y-6 relative overflow-hidden">
-            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500" />
-            <div class="text-5xl">{'\u{1F3AE}'}</div>
-            <h2 class="text-2xl font-black uppercase tracking-wider drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{'\u{00A1}'}A jugar!</h2>
-            <ul class="text-left space-y-3 text-sm text-slate-300">
-              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                <span class="text-xl flex-shrink-0">{'\u{2190}'}{'\u{2192}'}</span>
-                <span><strong class="text-white">Flechas izquierda/derecha</strong> o botones táctiles para moverte</span>
-              </li>
-              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                <span class="text-xl flex-shrink-0">{'\u{2191}'}</span>
-                <span><strong class="text-white">Flecha arriba / Espacio</strong> o botón rojo para saltar</span>
-              </li>
-              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                <span class="text-xl flex-shrink-0">{'\u{1FA99}'}</span>
-                <span><strong class="text-white">Recolecta monedas</strong> y busca a los personajes de Sooga</span>
-              </li>
-              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                <span class="text-xl flex-shrink-0">🗡️</span>
-                <span><strong class="text-white">Atacar: Presiona F o X en PC</strong> (o botón azul) para lanzar Shurikens</span>
-              </li>
-              <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                <span class="text-xl flex-shrink-0">{'\u{1F3C1}'}</span>
-                <span><strong class="text-white">¡Cuidado! Ninjas, trampas y rivales</strong> en tu camino a la meta</span>
-              </li>
-              <Show when={currentLevelIndex() === 3}>
-                <li class="flex items-start gap-3 p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse">
-                  <span class="text-xl flex-shrink-0">🚀</span>
-                  <span><strong class="text-purple-300">¡DOBLE SALTO ACTIVADO!</strong> Presiona salto dos veces en el aire para superar los abismos imposibles de este nivel.</span>
-                </li>
-              </Show>
-            </ul>
-            <button
-              onClick={() => { setShowTutorial(false); engineState.startTime = Date.now(); }}
-              class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black py-4 px-8 rounded-xl text-lg tracking-wider uppercase transition-all hover:scale-105 shadow-lg shadow-red-500/20"
-            >
-              {'\u{1F680}'} ¡Comenzar!
-            </button>
-          </div>
-        </div>
+        {(() => {
+          const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+          return (
+            <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 sm:p-6">
+              <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 w-full text-center text-white shadow-2xl shadow-red-500/5 relative overflow-hidden"
+                classList={{ 'max-w-sm p-8 space-y-6': !isMobile, 'max-w-xs p-6 space-y-5': isMobile }}>
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500" />
+                <div class="text-4xl sm:text-5xl">{'\u{1F3AE}'}</div>
+                <h2 class="text-xl sm:text-2xl font-black uppercase tracking-wider">{'\u{00A1}'}A jugar!</h2>
+
+                {isMobile ? (
+                  <ul class="text-left space-y-2.5 text-xs sm:text-sm text-slate-300">
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-lg flex-shrink-0">{'\u{1F449}'}</span>
+                      <span><strong class="text-white">Desliza izquierda/derecha</strong> en la pantalla para moverte</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-lg flex-shrink-0">{'\u{1F446}'}</span>
+                      <span><strong class="text-white">Desliza arriba</strong> para saltar (doble salto disponible)</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-lg flex-shrink-0">{'\u{1F44D}'}</span>
+                      <span><strong class="text-white">Toca rápido 2 veces</strong> para atacar con shurikens</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-lg flex-shrink-0">{'\u{1FA99}'}</span>
+                      <span><strong class="text-white">Recolecta monedas</strong> y busca personajes de Sooga</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-lg flex-shrink-0">{'\u{1F3C1}'}</span>
+                      <span><strong class="text-white">¡Cuidado! Ninjas, trampas y rivales</strong> en tu camino</span>
+                    </li>
+                    {currentLevelIndex() === 3 && (
+                      <li class="flex items-start gap-3 p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse">
+                        <span class="text-lg flex-shrink-0">🚀</span>
+                        <span><strong class="text-purple-300">¡DOBLE SALTO!</strong> Salta dos veces en el aire</span>
+                      </li>
+                    )}
+                  </ul>
+                ) : (
+                  <ul class="text-left space-y-3 text-sm text-slate-300">
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-xl flex-shrink-0">{'\u{2190}'}{'\u{2192}'}</span>
+                      <span><strong class="text-white">Flechas izquierda/derecha</strong> para moverte</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-xl flex-shrink-0">{'\u{2191}'} <span class="text-xs font-bold text-slate-500 ml-1">ESPACIO</span></span>
+                      <span><strong class="text-white">Flecha arriba / Espacio</strong> para saltar</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-xl flex-shrink-0">{'\u{1FA99}'}</span>
+                      <span><strong class="text-white">Recolecta monedas</strong> y busca a los personajes de Sooga</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-xl flex-shrink-0">🗡️ <span class="text-xs font-bold text-slate-500 ml-1">F / X</span></span>
+                      <span><strong class="text-white">Presiona F o X</strong> para lanzar Shurikens</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
+                      <span class="text-xl flex-shrink-0">{'\u{1F3C1}'}</span>
+                      <span><strong class="text-white">¡Cuidado! Ninjas, trampas y rivales</strong> en tu camino a la meta</span>
+                    </li>
+                    <Show when={currentLevelIndex() === 3}>
+                      <li class="flex items-start gap-3 p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse">
+                        <span class="text-xl flex-shrink-0">🚀</span>
+                        <span><strong class="text-purple-300">¡DOBLE SALTO ACTIVADO!</strong> Presiona salto dos veces en el aire</span>
+                      </li>
+                    </Show>
+                  </ul>
+                )}
+                <button
+                  onClick={() => { setShowTutorial(false); engineState.startTime = Date.now(); }}
+                  class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black rounded-xl tracking-wider uppercase transition-all hover:scale-105 shadow-lg shadow-red-500/20"
+                  classList={{ 'py-4 px-8 text-lg': !isMobile, 'py-5 px-6 text-base': isMobile }}
+                >
+                  {'\u{1F680}'} ¡Comenzar!
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </Show>
     </>
   );
