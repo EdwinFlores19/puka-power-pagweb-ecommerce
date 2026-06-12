@@ -25,6 +25,7 @@ const SPRITE = {
   PUKA_JUMP: '/sprites/puka_saltando_hacia_arriba.png',
   PUKA_ATTACK: '/sprites/pucca_guerrera_gato_espada.png',
   PUKA_VICTORY: '/sprites/pucca_abrazando_garu_mareado_victoria.png',
+  PUKA_LAUGH: '/sprites/pucca_risa_inclinada.png',
   GARU_RUN: '/sprites/garu_animacion_carrera_sprite_sheet.png',
   GARU_IDLE: '/sprites/garu_de_pie_enojado.png',
   GARU_SCARED: '/sprites/garu_asustado_inclinado_derecha.png',
@@ -58,6 +59,7 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.PUKA_JUMP]: { w: 40, h: 60 },
   [SPRITE.PUKA_ATTACK]: { w: 40, h: 60 },
   [SPRITE.PUKA_VICTORY]: { w: 40, h: 60 },
+  [SPRITE.PUKA_LAUGH]: { w: 40, h: 60 },
   [SPRITE.GARU_RUN]: { w: 40, h: 60 },
   [SPRITE.GARU_IDLE]: { w: 40, h: 60 },
   [SPRITE.GARU_SCARED]: { w: 40, h: 60 },
@@ -308,7 +310,7 @@ const iconPlay = '▶';
 
 interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; lastShot?: number; }
 interface GhostPos { x: number; y: number; alpha: number; }
-interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; animFrame: number; animTimer: number; }
+interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; attackAnimTimer: number; animFrame: number; animTimer: number; }
 interface Keys { left: boolean; right: boolean; up: boolean; upJustPressed: boolean; attack: boolean; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; alpha: number; size: number; }
 interface EnvParticle { x: number; y: number; vx: number; vy: number; size: number; rotation: number; rotationSpeed: number; alpha: number; }
@@ -368,7 +370,7 @@ export default function Advergame() {
         facingLeft: false, isDead: false, isGiant: false, hasPet: false,
         canDoubleJump: false, idleTimer: 0, lastSafeX: 100, lastSafeY: 100,
         jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1,
-        ghosts: [], sugarCrashTimer: 0, attackCooldown: 0, animFrame: 0, animTimer: 0,
+        ghosts: [], sugarCrashTimer: 0, attackCooldown: 0, attackAnimTimer: 0, animFrame: 0, animTimer: 0,
       },
       entities: [], particles: [], envParticles: [], score: 0, lives: 3, startTime: 0,
       viewport: { width: 800, height: 600 },
@@ -621,10 +623,12 @@ export default function Advergame() {
       let currentSpeedMult = p.sugarCrashTimer > 0 ? 0.5 : 1;
 
       if (p.attackCooldown > 0) p.attackCooldown -= 16.6;
+      if (p.attackAnimTimer > 0) p.attackAnimTimer -= 16.6;
       if (k.attack && ammo() > 0 && p.attackCooldown <= 0 && p.state !== PLAYER_STATE.TACHYCARDIA) {
         k.attack = false;
         setAmmo((prev) => Math.max(0, prev - 1));
         p.attackCooldown = 250;
+        p.attackAnimTimer = 1000;
         const projType = Math.random() > 0.5 ? ENTITY.PROJECTILE_KUNAI : ENTITY.PROJECTILE_SHURIKEN;
         s.projectiles.push({
           id: s.nextProjectileId++,
@@ -1756,7 +1760,10 @@ export default function Advergame() {
     let currentFrame = 0;
     const moving = Math.abs(player.vx) > 0.5;
 
-    if (player.isDead) {
+    if (player.attackAnimTimer > 0) {
+      currentSrc = SPRITE.PUKA_LAUGH;
+      currentFrame = 0;
+    } else if (player.isDead) {
       currentSrc = SPRITE.PUKA_IDLE;
       currentFrame = 0;
     } else if (player.state === PLAYER_STATE.TACHYCARDIA) {
