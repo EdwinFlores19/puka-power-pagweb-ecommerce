@@ -1143,7 +1143,7 @@ export default function Advergame() {
 
       // Vertical camera: only on mobile (<=768px wide), keep PC fixed
       if (vp.width <= 768) {
-        const targetCamY = p.y - vp.height * 0.55;
+        const targetCamY = p.y - vp.height * 0.65;
         cam.y += (targetCamY - cam.y) * 0.05;
       } else {
         cam.y += (0 - cam.y) * 0.1;
@@ -2153,8 +2153,8 @@ export default function Advergame() {
                 class="w-14 h-14 sm:w-18 sm:h-18 bg-blue-500/20   rounded-2xl border-2 border-blue-500/40 text-blue-300 text-xl sm:text-2xl font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
                 🗡️
               </button>
-              <button onTouchStart={(e) => { e.preventDefault(); consumeBoost(); }} onMouseDown={() => { consumeBoost(); }} disabled={inv.length === 0}
-                classList={{ 'opacity-40': inv.length === 0 }}
+              <button onTouchStart={(e) => { e.preventDefault(); consumeBoost(); }} onTouchEnd={(e) => e.preventDefault()} onMouseDown={() => { consumeBoost(); }} disabled={inv().length === 0}
+                classList={{ 'opacity-40': inv().length === 0 }}
                 class="w-14 h-14 sm:w-18 sm:h-18 bg-yellow-500/20   rounded-2xl border-2 border-yellow-500/40 text-yellow-300 text-xl sm:text-2xl font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
                 ⚡
               </button>
@@ -2320,7 +2320,7 @@ export default function Advergame() {
           return (
             <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 sm:p-6">
               <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 w-full text-center text-white shadow-2xl shadow-red-500/5 relative overflow-hidden"
-                classList={{ 'max-w-sm p-8 space-y-6': !isMobile, 'max-w-xs p-6 space-y-5': isMobile }}>
+                classList={{ 'max-w-md p-8 space-y-6': !isMobile, 'max-w-sm p-6 space-y-5': isMobile }}>
                 <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500" />
                 <div class="text-4xl sm:text-5xl">{'\u{1F3AE}'}</div>
                 <h2 class="text-xl sm:text-2xl font-black uppercase tracking-wider">{'\u{00A1}'}A jugar!</h2>
