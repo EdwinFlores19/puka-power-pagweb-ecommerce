@@ -103,19 +103,19 @@ export default function MascotGuide() {
   const progressPct = () => ((currentIndex() + 1) / messages.length) * 100;
 
   return (
-    <div class="fixed top-20 left-4 sm:left-8 z-40 flex flex-col items-start gap-2 max-w-sm sm:max-w-md">
+    <div class="fixed top-24 left-4 sm:left-8 z-40 flex flex-col items-start gap-2 max-w-sm sm:max-w-lg">
       <div class="flex items-start gap-4">
         <button
           onClick={handleAvatarClick}
-          class="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl shadow-2xl border-2 border-brand-accent/30 hover:border-brand-accent/60 transition-all duration-300 hover:scale-110 active:scale-95 bg-brand-secondary overflow-hidden"
+          class="relative shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-2xl shadow-2xl border-2 border-brand-accent/30 hover:border-brand-accent/60 transition-all duration-300 hover:scale-110 active:scale-95 bg-brand-secondary overflow-hidden"
           aria-label="Asistente Puka Power"
         >
           <img
             src={avatarSrc()}
             alt={avatarLabel()}
             class="w-full h-full object-cover"
-            width="96"
-            height="96"
+            width="128"
+            height="128"
             decoding="async"
           />
           <Show when={!showBubble()}>
