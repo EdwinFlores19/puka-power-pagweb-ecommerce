@@ -2371,17 +2371,16 @@ export default function Advergame() {
                       <span class="text-lg">{'\u{1F446}'}</span>
                       <span><strong class="text-white">Desliza</strong> para moverte y saltar</span>
                     </li>
-                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-2">
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido</span>
                       <div class="flex items-center gap-2">
                         <img src="/sprites/Puka-Power.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-[0_0_6px_rgba(255,200,0,0.4)]" />
                         <span class="text-lg">⚡</span>
-                        <img src="/sprites/red-bull.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-[0_0_6px_rgba(255,50,50,0.4)]" />
                       </div>
-                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido y evita los Red Bulls</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-lg">{'\u{1F977}'}</span>
-                      <span><strong class="text-white">Cuidado</strong> ninjas y trampas</span>
+                      <span class="text-lg">{'\u{1F480}'}</span>
+                      <span><strong class="text-white">Cuidado</strong> ninjas, trampas y Red Bulls</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
                       <span class="text-lg">🗡️</span>
@@ -2400,17 +2399,16 @@ export default function Advergame() {
                       <span class="text-xl">{'\u{2190}'}{'\u{2192}'} {'\u{2191}'} <span class="text-xs font-bold text-slate-500">ESPACIO</span></span>
                       <span><strong class="text-white">Flechas</strong> para moverte y saltar</span>
                     </li>
-                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-2">
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido</span>
                       <div class="flex items-center gap-2">
                         <img src="/sprites/Puka-Power.png" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-[0_0_6px_rgba(255,200,0,0.4)]" />
                         <span class="text-lg">⚡</span>
-                        <img src="/sprites/red-bull.png" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-[0_0_6px_rgba(255,50,50,0.4)]" />
                       </div>
-                      <span><strong class="text-white">Toma Puka Power</strong> para ir más rápido y evita los Red Bulls</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-xl">{'\u{1F977}'}</span>
-                      <span><strong class="text-white">Cuidado</strong> ninjas y trampas</span>
+                      <span class="text-xl">{'\u{1F480}'}</span>
+                      <span><strong class="text-white">Cuidado</strong> ninjas, trampas y Red Bulls</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
                       <span class="text-xl">🗡️ <span class="text-xs font-bold text-slate-500">F / X</span></span>
