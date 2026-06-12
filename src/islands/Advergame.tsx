@@ -642,8 +642,8 @@ export default function Advergame() {
           y: p.y + 15,
           vx: p.facingLeft ? -14 : 14,
           vy: 0,
-          width: 24,
-          height: 24,
+          width: 32,
+          height: 32,
           angle: 0,
           active: true,
           facingLeft: p.facingLeft,
@@ -956,7 +956,7 @@ export default function Advergame() {
         if (!proj.active) return;
         proj.x += proj.vx;
         proj.y += proj.vy;
-        if (proj.type === ENTITY.PROJECTILE_SHURIKEN) proj.angle += proj.vx > 0 ? 0.25 : -0.25;
+        if (proj.type === ENTITY.PROJECTILE_SHURIKEN || proj.type === ENTITY.PROJECTILE_KUNAI) proj.angle += proj.vx > 0 ? 0.3 : -0.3;
         if (proj.x < cam.x - 100 || proj.x > cam.x + vp.width + 100) proj.active = false;
       });
       s.projectiles = s.projectiles.filter((p) => p.active);
@@ -1429,12 +1429,12 @@ export default function Advergame() {
 
   function drawSpeechBubble(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
     ctx.save();
-    ctx.font = 'bold 11px Arial';
+    ctx.font = 'bold 16px Arial';
     const textWidth = ctx.measureText(text).width;
-    const bubbleWidth = textWidth + 16;
-    const bubbleHeight = 24;
+    const bubbleWidth = textWidth + 20;
+    const bubbleHeight = 30;
     const bx = x - bubbleWidth / 2;
-    const by = y - bubbleHeight - 12;
+    const by = y - bubbleHeight - 14;
 
     // Draw bubble background
     ctx.fillStyle = '#ffffff';
@@ -1448,9 +1448,9 @@ export default function Advergame() {
     // Draw triangle pointing down
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.moveTo(x - 6, by + bubbleHeight);
-    ctx.lineTo(x, by + bubbleHeight + 8);
-    ctx.lineTo(x + 6, by + bubbleHeight);
+    ctx.moveTo(x - 8, by + bubbleHeight);
+    ctx.lineTo(x, by + bubbleHeight + 10);
+    ctx.lineTo(x + 8, by + bubbleHeight);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
@@ -1468,12 +1468,23 @@ export default function Advergame() {
     if (viewport.width <= 0 || viewport.height <= 0) return;
     const now = Date.now();
 
+    // Scale up everything on small viewports so characters and text are readable
+    const isSmallViewport = viewport.width < 900;
+    const worldScale = isSmallViewport ? 1.5 : 1;
+
     ctx.save();
 
     if (s.shakeTimer > 0) {
       const sx = (Math.random() - 0.5) * s.shakeIntensity;
       const sy = (Math.random() - 0.5) * s.shakeIntensity;
       ctx.translate(sx, sy);
+    }
+
+    // Apply scale around viewport center for the whole game world
+    if (worldScale !== 1) {
+      ctx.translate(viewport.width / 2, viewport.height / 2);
+      ctx.scale(worldScale, worldScale);
+      ctx.translate(-viewport.width / 2, -viewport.height / 2);
     }
 
     drawParallaxBackground(ctx, theme.id, camera.x, viewport.width, viewport.height);
@@ -1486,7 +1497,7 @@ export default function Advergame() {
     s.floatingTexts.forEach((ft) => {
       ctx.save();
       ctx.globalAlpha = ft.alpha;
-      ctx.font = 'bold 16px Arial';
+      ctx.font = 'bold 22px Arial';
       ctx.textAlign = 'center';
       ctx.fillStyle = '#fff';
       ctx.shadowColor = 'rgba(0,0,0,0.8)';
@@ -1498,7 +1509,7 @@ export default function Advergame() {
     s.floatingScores.forEach((fs) => {
       ctx.save();
       ctx.globalAlpha = fs.life / fs.maxLife;
-      ctx.font = 'bold 22px Arial';
+      ctx.font = 'bold 30px Arial';
       ctx.textAlign = 'center';
       ctx.fillStyle = '#ffd700';
       ctx.shadowColor = 'rgba(0,0,0,0.9)';
@@ -1550,7 +1561,7 @@ export default function Advergame() {
         drawSprite(ctx, SPRITE.CHING, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('CHING', entity.x, entity.y - 8);
         
         // Floating Puka Power can above head!
@@ -1563,7 +1574,7 @@ export default function Advergame() {
         drawSprite(ctx, SPRITE.CAT_PUKA_POWER, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('MIO', entity.x, entity.y - 8);
         
         // Floating Puka Power above head
@@ -1576,7 +1587,7 @@ export default function Advergame() {
         drawSprite(ctx, SPRITE.ABYO, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('ABYO', entity.x, entity.y - 8);
         
         // Speech Bubble
@@ -1587,7 +1598,7 @@ export default function Advergame() {
         drawSprite(ctx, SPRITE.CAT, 0, entity.x, entity.y, 40, 40);
         ctx.shadowBlur = 0;
         ctx.restore();
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#22c55e'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#22c55e'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('TÍOS', entity.x, entity.y - 8);
         
         // Speech Bubble
@@ -1598,7 +1609,7 @@ export default function Advergame() {
         drawSprite(ctx, SPRITE.MALA_PUCCA, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
-        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#8b5cf6'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#8b5cf6'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('MALA PUCCA', entity.x, entity.y - 8);
         
         // Float a Monster or Red Bull above her head
@@ -1641,22 +1652,22 @@ export default function Advergame() {
         drawSprite(ctx, SPRITE.PUKA_ATTACK, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
-        ctx.font = 'bold 12px Arial'; ctx.fillStyle = '#60a5fa'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#60a5fa'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('AMMO', entity.x, entity.y - 8);
       } else if (entity.type === ENTITY.GOAL) {
         ctx.save();
         ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 30;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = '110px Arial';
+        ctx.font = '140px Arial';
         ctx.fillText(theme.goalEmoji, entity.x + entity.width / 2, entity.y + entity.height / 2);
         ctx.shadowBlur = 0;
         ctx.restore();
-        
-        ctx.font = 'bold 16px Arial';
+
+        ctx.font = 'bold 24px Arial';
         ctx.fillStyle = '#ffd700';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText('?? META ??', entity.x + entity.width / 2, entity.y - 10);
+        ctx.fillText('🏁 META 🏁', entity.x + entity.width / 2, entity.y - 10);
       }
     });
 
@@ -1706,22 +1717,21 @@ export default function Advergame() {
     });
     ctx.globalAlpha = 1;
 
-    // Render projectiles (Kunai / Shuriken)
+    // Render projectiles (Kunai / Shuriken) - both use the shuriken image, spinning
     s.projectiles.forEach((proj) => {
       if (!proj.active) return;
       ctx.save();
       ctx.translate(proj.x + proj.width / 2, proj.y + proj.height / 2);
-      if (proj.type === ENTITY.PROJECTILE_SHURIKEN) {
-        ctx.rotate(proj.angle);
-        const shurikenImg = imageCache.get(SPRITE.SHURIKEN);
-        if (shurikenImg) {
-          ctx.drawImage(shurikenImg, -proj.width / 2, -proj.height / 2, proj.width, proj.height);
-        }
+      ctx.rotate(proj.angle);
+      const shurikenImg = imageCache.get(SPRITE.SHURIKEN);
+      if (shurikenImg) {
+        ctx.drawImage(shurikenImg, -proj.width / 2, -proj.height / 2, proj.width, proj.height);
       } else {
-        ctx.font = '22px Arial';
+        ctx.font = 'bold 28px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('???', 0, 0);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText('✦', 0, 0);
       }
       ctx.restore();
     });
@@ -1749,7 +1759,7 @@ export default function Advergame() {
       }
     }
     ctx.restore();
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.fillStyle = '#a855f7';
     ctx.textAlign = 'center';
     ctx.fillText('GARU', s.companion.x + s.companion.width / 2, s.companion.y - 12);
@@ -1857,23 +1867,29 @@ export default function Advergame() {
       ctx.shadowBlur = 0;
     }
 
-    // Idle sleep Zzz
+    // Idle sleep Zzz - three Z's of growing size, classic sleep animation
     if (player.idleTimer > 3000 && !player.isDead) {
-      ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
-      ctx.fillStyle = '#fff';
-      const zy = cy - player.height / 2 - 20 + Math.sin(now / 200) * 5;
-      const zx = cx;
-      const zs = 12;
-      const zw = zs * 0.8;
+      ctx.shadowColor = '#c4b5fd'; ctx.shadowBlur = 10;
+      ctx.strokeStyle = '#c4b5fd';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
-      ctx.strokeStyle = '#fff';
-      ctx.beginPath();
-      ctx.moveTo(zx - zw, zy - zs);
-      ctx.lineTo(zx + zw, zy - zs);
-      ctx.lineTo(zx - zw, zy + zs);
-      ctx.lineTo(zx + zw, zy + zs);
-      ctx.stroke();
+      ctx.lineJoin = 'round';
+      const baseY = cy - player.height / 2 - 24;
+      const bobOffset = Math.sin(now / 250) * 4;
+      const zSizes = [14, 18, 22];
+      const zSpacing = 16;
+      for (let i = 0; i < 3; i++) {
+        const zx = cx + 18 + i * zSpacing;
+        const zy = baseY - i * 14 + bobOffset;
+        const zs = zSizes[i];
+        const zw = zs * 0.65;
+        ctx.beginPath();
+        ctx.moveTo(zx - zw, zy - zs);
+        ctx.lineTo(zx + zw, zy - zs);
+        ctx.lineTo(zx - zw, zy + zs);
+        ctx.lineTo(zx + zw, zy + zs);
+        ctx.stroke();
+      }
       ctx.shadowBlur = 0;
     }
 
@@ -2097,26 +2113,26 @@ export default function Advergame() {
           <div class="flex items-center gap-2">
             <div class="flex gap-0.5">
               {Array.from({ length: Math.max(0, ui().lives) }).map(() => (
-                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-500 fill-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" viewBox="0 0 24 24">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8 text-red-500 fill-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" viewBox="0 0 24 24">
                   <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                 </svg>
               ))}
             </div>
-            <div class="flex items-center gap-1.5 bg-slate-900/80   px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg">
-              <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center gap-2 bg-slate-900/80   px-3 py-1.5 rounded-lg border border-slate-700/50 shadow-lg">
+              <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              <span class="text-lg sm:text-xl font-black text-white">{ui().coins}</span>
+              <span class="text-2xl sm:text-3xl font-black text-white">{ui().coins}</span>
             </div>
-            <div class="flex items-center gap-1.5 bg-slate-900/80   px-2.5 py-1 rounded-lg border border-slate-700/50 shadow-lg"
+            <div class="flex items-center gap-2 bg-slate-900/80   px-3 py-1.5 rounded-lg border border-slate-700/50 shadow-lg"
               classList={{ 'animate-pulse border-red-500/50': ammo() === 0 }}>
-              <span class="text-sm sm:text-base flex items-center"><img src="/sprites/shuriken.png" class="w-4 h-4 object-contain" /></span>
-              <span class="text-lg sm:text-xl font-black"
+              <span class="text-base sm:text-lg flex items-center"><img src="/sprites/shuriken.png" class="w-5 h-5 sm:w-6 sm:h-6 object-contain" /></span>
+              <span class="text-2xl sm:text-3xl font-black"
                 classList={{ 'text-red-500': ammo() === 0, 'text-blue-300': ammo() > 0 }}>{ammo()}</span>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <div class="text-xl sm:text-2xl font-black bg-slate-900/80   px-2.5 py-1 rounded-lg border border-slate-700/50"
+            <div class="text-2xl sm:text-3xl font-black bg-slate-900/80   px-3 py-1.5 rounded-lg border border-slate-700/50"
               classList={{ 'text-red-500': ui().timeLeft < 15, 'text-white': ui().timeLeft >= 15 }}>
               {Math.floor(ui().timeLeft / 60)}:{(ui().timeLeft % 60).toString().padStart(2, '0')}
             </div>
@@ -2233,20 +2249,20 @@ export default function Advergame() {
         <Show when={!showTutorial()}>
           <div class="absolute bottom-3 sm:bottom-6 left-0 right-0 px-3 sm:px-6 flex justify-between items-end z-30" classList={{ 'md:hidden': !isTouchDevice }}>
             <div class="flex gap-3 sm:gap-4">
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-16 h-16 sm:w-20 sm:h-20 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-2xl sm:text-3xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-3xl sm:text-4xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-3xl sm:text-4xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
             </div>
             <div class="flex gap-3 sm:gap-4 items-end">
               <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.attack = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.attack = false; }} onMouseDown={() => { engineState.keys.attack = true; }} onMouseUp={() => { engineState.keys.attack = false; }}
-                class="w-14 h-14 sm:w-18 sm:h-18 bg-blue-500/20   rounded-2xl border-2 border-blue-500/40 text-blue-300 text-xl sm:text-2xl font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
-                ???
+                class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500/20   rounded-2xl border-2 border-blue-500/40 text-blue-300 text-2xl sm:text-3xl font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
+                <img src="/sprites/shuriken.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
               </button>
               <button onTouchStart={(e) => { e.preventDefault(); consumeBoost(); }} onTouchEnd={(e) => e.preventDefault()} onMouseDown={() => { consumeBoost(); }} disabled={inv().length === 0}
                 classList={{ 'opacity-40': inv().length === 0 }}
-                class="w-14 h-14 sm:w-18 sm:h-18 bg-yellow-500/20   rounded-2xl border-2 border-yellow-500/40 text-yellow-300 text-xl sm:text-2xl font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
-                ?
+                class="w-16 h-16 sm:w-20 sm:h-20 bg-yellow-500/20   rounded-2xl border-2 border-yellow-500/40 text-yellow-300 text-2xl sm:text-3xl font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
+                <img src="/sprites/Puka-Power.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
               </button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-red-500/30   rounded-2xl border-2 border-red-500/50 text-white text-3xl sm:text-4xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-24 h-24 sm:w-28 sm:h-28 bg-red-500/30   rounded-2xl border-2 border-red-500/50 text-white text-4xl sm:text-5xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
             </div>
           </div>
         </Show>
