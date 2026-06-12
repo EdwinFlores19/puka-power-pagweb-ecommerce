@@ -1,4 +1,4 @@
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, onMount } from 'solid-js';
 
 interface Message {
   text: string;
@@ -62,9 +62,21 @@ function scrollToSection(id: string) {
   }
 }
 
-export default function MascotGuide() {
-  const [currentIndex, setCurrentIndex] = createSignal(0);
-  const [showBubble, setShowBubble] = createSignal(true);
+interface Props {
+  autoShowDelay?: number;
+  startIndex?: number;
+}
+
+export default function MascotGuide(props: Props) {
+  const [currentIndex, setCurrentIndex] = createSignal(props.startIndex ?? 0);
+  const [showBubble, setShowBubble] = createSignal((props.autoShowDelay ?? 0) === 0);
+
+  onMount(() => {
+    const delay = props.autoShowDelay ?? 0;
+    if (delay > 0) {
+      setTimeout(() => setShowBubble(true), delay);
+    }
+  });
 
   const currentMessage = () => messages[currentIndex()];
   const hasAction = () => !!currentMessage().action;

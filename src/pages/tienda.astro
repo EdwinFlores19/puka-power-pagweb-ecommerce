@@ -3,6 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Footer from '@/components/Footer.astro';
 import ProductCatalog from '@/islands/ProductCatalog';
 import CartSidebar from '@/islands/CartSidebar';
+import MascotGuide from '@/islands/MascotGuide';
 
 export const prerender = false;
 
@@ -83,5 +84,6 @@ Astro.response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate
     </div>
   </main>
 
+  <MascotGuide client:load autoShowDelay={5000} startIndex={5} />
   <Footer />
 </BaseLayout>
