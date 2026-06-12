@@ -2340,6 +2340,36 @@ export default function Advergame() {
               {iconArrowLeft} Volver a la Tienda
             </a>
             <div class="relative z-10">
+              {/* Special congratulations from the cat TÍOS — only on full campaign victory */}
+              <div class="mb-8 max-w-lg mx-auto flex items-center gap-4 bg-gradient-to-r from-green-500/15 via-emerald-500/10 to-green-500/15 border-2 border-green-500/40 rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(34,197,94,0.25)] animate-bubble-in">
+                <div class="relative shrink-0">
+                  <div class="absolute inset-0 bg-green-400/30 blur-xl rounded-full animate-pulse" />
+                  <img
+                    src="/sprites/gato_negro_cuerpo_completo.png"
+                    class="relative w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-[0_0_18px_rgba(34,197,94,0.8)]"
+                    alt="Gato Tíos celebrando"
+                    width="96"
+                    height="96"
+                    decoding="async"
+                  />
+                  <div class="absolute -top-1 -right-1 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-base shadow-lg ring-2 ring-green-500/60 animate-bounce">
+                    {'\u{1F431}'}
+                  </div>
+                </div>
+                <div class="flex-1 text-left min-w-0">
+                  <p class="text-[10px] sm:text-xs font-black uppercase text-green-300 mb-1 tracking-[0.2em] flex items-center gap-1.5">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-400 animate-ping" />
+                    {'\u{00A1}'}El Gato Tíos te felicita!
+                  </p>
+                  <p class="text-sm sm:text-base text-slate-100 leading-relaxed font-semibold">
+                    ¡MIAU! {'\u{1F431}'} ¡Atrapaste a Garu y completaste los 3 niveles! Eres una verdadera <span class="text-green-300">Ninja del amor</span>. ¡Purr-fecto! {'\u{1F48B}'}
+                  </p>
+                  <p class="text-[10px] sm:text-xs text-slate-400 mt-1.5 italic">
+                    Pasa por la tienda, me debes un fideo {'\u{1F35C}'}
+                  </p>
+                </div>
+              </div>
+
               <div class="text-8xl sm:text-9xl mb-6 animate-bounce drop-shadow-[0_0_30px_rgba(34,197,94,0.3)]">{'\u{1F3C6}'}</div>
               <h1 class="text-5xl sm:text-6xl font-black uppercase mb-2 text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">{'\u{00A1}'}Campaña completada!</h1>
               <p class="text-lg sm:text-xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
@@ -2398,6 +2428,11 @@ export default function Advergame() {
                 <button onClick={() => {
                   trackGameEvent('puka_campaign_victory', { finalCoins: uiState().coins });
                   if (!couponDone()) { applyGameCoupon(); setCouponDone(true); }
+                  // Mark the campaign as won so MascotGuide in /tienda shows the
+                  // special "winner" greeting from the cat TÍOS
+                  if (typeof window !== 'undefined') {
+                    try { localStorage.setItem('puka_campaign_won', 'true'); } catch (_) { /* noop */ }
+                  }
                   setAppState(APP_STATE.VICTORY);
                 }}
                   class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">

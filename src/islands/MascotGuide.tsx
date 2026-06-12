@@ -8,7 +8,7 @@ interface Message {
   isProductRelated?: boolean;
 }
 
-const messages: Message[] = [
+const baseMessages: Message[] = [
   {
     icon: '\u{1F31F}',
     text: '\u{00A1}Hola! Soy el gatito guardi\u{00E1}n de Puka Power \u{1F431}\u{2728}. Bienvenido a la energia ancestral peruana. \u{00BF}Te gu\u{00ED}o por el sitio?',
@@ -51,6 +51,18 @@ const messages: Message[] = [
   },
 ];
 
+// Special "winner" message that appears at the top when the user has
+// completed the 3-level campaign. Greeted by the cat Tíos to celebrate.
+const winnerMessage: Message = {
+  icon: '\u{1F3C6}',
+  text: '\u{00A1}MIAU! \u{1F431} \u{00A1}Felicidades, campe\u{00F3}n! Completaste los 3 niveles y atrapaste a Garu. Eres una verdadera Ninja del amor. Tu 15% de descuento ya est\u{00E1} activado en tu carrito. \u{1F48B}\u{1F3C6}',
+  action: () => { window.location.href = '/tienda#productos'; },
+  actionLabel: 'Ver mi descuento',
+  isProductRelated: true,
+};
+
+const WINNER_STORAGE_KEY = 'puka_campaign_won';
+
 function scrollToSection(id: string) {
   const el = document.getElementById(id);
   if (el) {
@@ -68,17 +80,37 @@ interface Props {
 }
 
 export default function MascotGuide(props: Props) {
+  const [isWinner, setIsWinner] = createSignal(false);
   const [currentIndex, setCurrentIndex] = createSignal(props.startIndex ?? 0);
   const [showBubble, setShowBubble] = createSignal((props.autoShowDelay ?? 0) === 0);
 
+  // Build the active messages list: when the user has won the campaign,
+  // the winner greeting is prepended so it's the first thing they see.
+  const allMessages = (): Message[] => {
+    if (isWinner()) {
+      return [winnerMessage, ...baseMessages];
+    }
+    return baseMessages;
+  };
+
   onMount(() => {
+    // Detect whether the user has won the campaign via cross-page flag
+    if (typeof window !== 'undefined') {
+      try {
+        if (localStorage.getItem(WINNER_STORAGE_KEY) === 'true') {
+          setIsWinner(true);
+          setCurrentIndex(0);
+        }
+      } catch (_) { /* localStorage unavailable; ignore */ }
+    }
+
     const delay = props.autoShowDelay ?? 0;
     if (delay > 0) {
       setTimeout(() => setShowBubble(true), delay);
     }
   });
 
-  const currentMessage = () => messages[currentIndex()];
+  const currentMessage = () => allMessages()[currentIndex()];
   const hasAction = () => !!currentMessage().action;
 
   const avatarSrc = () =>
@@ -92,7 +124,7 @@ export default function MascotGuide(props: Props) {
       : 'Gatito Puka Power sonriendo';
 
   const advanceMessage = () => {
-    setCurrentIndex((prev) => (prev + 1) % messages.length);
+    setCurrentIndex((prev) => (prev + 1) % allMessages().length);
     setShowBubble(true);
   };
 
@@ -116,7 +148,7 @@ export default function MascotGuide(props: Props) {
     }
   };
 
-  const progressPct = () => ((currentIndex() + 1) / messages.length) * 100;
+  const progressPct = () => ((currentIndex() + 1) / allMessages().length) * 100;
 
   return (
     <div class="fixed top-24 left-4 sm:left-8 z-40 flex flex-col items-start gap-2 max-w-sm sm:max-w-lg">
@@ -151,9 +183,15 @@ export default function MascotGuide(props: Props) {
             <div class="absolute -left-2.5 top-5 w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-r-[10px] border-r-brand-light" />
 
             <div class="text-[11px] sm:text-xs text-brand-accent font-extrabold uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-green-400 animate-ping" />
-              <span>Asistente Puka</span>
-              <span class="ml-auto text-[11px] text-brand-dark/40 font-bold">{currentIndex() + 1}/{messages.length}</span>
+              <Show when={isWinner() && currentIndex() === 0}>
+                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-ping" />
+                <span>¡Ganaste! {isWinner() && currentIndex() === 0 ? '\u{1F3C6}' : ''}</span>
+              </Show>
+              <Show when={!(isWinner() && currentIndex() === 0)}>
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-ping" />
+                <span>Asistente Puka</span>
+              </Show>
+              <span class="ml-auto text-[11px] text-brand-dark/40 font-bold">{currentIndex() + 1}/{allMessages().length}</span>
             </div>
 
             <p class="text-sm sm:text-base leading-relaxed font-semibold text-brand-dark/90">
