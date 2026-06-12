@@ -1,5 +1,5 @@
 ﻿import { createSignal, Switch, Match, Show, onMount, onCleanup } from 'solid-js';
-import { applyGameCoupon } from '@/store/cartStore';
+import { markGameWon } from '@/store/cartStore';
 
 function dl(...args: unknown[]) {
   if (typeof window !== 'undefined' && Array.isArray((window as Record<string, unknown>).dataLayer)) {
@@ -2386,8 +2386,8 @@ export default function Advergame() {
               </Show>
               <Show when={!couponDone()}>
                 <button
-                  onClick={() => {
-                    applyGameCoupon();
+                  onClick={async () => {
+                    await markGameWon();
                     setCouponDone(true);
                     window.location.href = '/tienda';
                   }}
@@ -2425,9 +2425,14 @@ export default function Advergame() {
                 <p class="text-lg text-slate-300 mb-6 leading-relaxed">
                   ¡Felicidades! ¡Pucca ha atrapado finalmente a Garu y completado toda la campaña de amor y velocidad de Sooga! 💋🌸🌸🌸
                 </p>
-                <button onClick={() => {
+                <button onClick={async () => {
                   trackGameEvent('puka_campaign_victory', { finalCoins: uiState().coins });
-                  if (!couponDone()) { applyGameCoupon(); setCouponDone(true); }
+                  if (!couponDone()) {
+                    // Server-side: sets HttpOnly signed cookie via /api/mark-won,
+                    // then refreshes local coupon UI from /api/checkout-cookie-state.
+                    await markGameWon();
+                    setCouponDone(true);
+                  }
                   // Mark the campaign as won so MascotGuide in /tienda shows the
                   // special "winner" greeting from the cat TÍOS
                   if (typeof window !== 'undefined') {

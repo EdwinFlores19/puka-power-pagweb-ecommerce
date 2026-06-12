@@ -4,7 +4,19 @@ import { CATALOG, VALID_COUPON } from '@/lib/constants';
 
 const isClient = typeof window !== 'undefined';
 const CART_KEY = 'puka_cart';
-const COUPON_KEY = 'puka_coupon';
+
+/**
+ * Coupon state is no longer trusted from localStorage on its own.
+ * The 15% discount is granted ONLY when the server has set a signed
+ * "puka_won_session" cookie via POST /api/mark-won. The client side
+ * reflects that server-side truth (called /api/checkout-cookie-state).
+ *
+ * The local puka_coupon key is now READ-ONLY and is rewritten only by
+ * refreshCouponFromServer() — never manually settable.
+ */
+function loadCoupon(): CouponState {
+  return { applied: false, code: '', discountPercent: 0, error: '' };
+}
 
 function loadCart(): CartItem[] {
   if (!isClient) return [];
@@ -20,21 +32,6 @@ function loadCart(): CartItem[] {
   return [];
 }
 
-function loadCoupon(): CouponState {
-  if (!isClient) {
-    return { applied: false, code: '', discountPercent: 0, error: '' };
-  }
-  try {
-    const stored = localStorage.getItem(COUPON_KEY);
-    if (stored) {
-      return JSON.parse(stored) as CouponState;
-    }
-  } catch {
-    return { applied: false, code: '', discountPercent: 0, error: '' };
-  }
-  return { applied: false, code: '', discountPercent: 0, error: '' };
-}
-
 export const $cart = atom<CartItem[]>(loadCart());
 
 export const $coupon = atom<CouponState>(loadCoupon());
@@ -43,9 +40,8 @@ if (isClient) {
   $cart.listen((value) => {
     localStorage.setItem(CART_KEY, JSON.stringify(value));
   });
-  $coupon.listen((value) => {
-    localStorage.setItem(COUPON_KEY, JSON.stringify(value));
-  });
+  // NOTE: $coupon is intentionally NOT auto-persisted to localStorage anymore.
+  // Its state is dictated by the server's won-session cookie.
 }
 
 export const $subtotal = computed($cart, (cart) =>
@@ -117,40 +113,74 @@ export function clearCart() {
 }
 
 export function applyCoupon(code: string) {
+  // Manual entry is now disabled — only the won-coupon path can apply the discount.
+  // Kept for backward compat (some tests may call it). Always no-op.
   const normalized = code.trim().toUpperCase();
-  if (normalized === VALID_COUPON.code) {
-    $coupon.set({
-      applied: true,
-      code: normalized,
-      discountPercent: VALID_COUPON.discountPercent,
-      error: '',
-    });
-  } else {
-    $coupon.set({
-      applied: false,
-      code: normalized,
-      discountPercent: 0,
-      error: `Código inválido. Intenta con "${VALID_COUPON.code}"`,
-    });
-  }
+  $coupon.set({
+    applied: false,
+    code: normalized,
+    discountPercent: 0,
+    error: 'El cupón solo se aplica al ganar la campaña',
+  });
 }
 
 export function clearCoupon() {
   $coupon.set({ applied: false, code: '', discountPercent: 0, error: '' });
-  if (isClient) {
-    localStorage.removeItem(COUPON_KEY);
+}
+
+/**
+ * Refreshes $coupon from the server. Called by the client when the
+ * game is won (after POST /api/mark-won) or when /tienda loads (in
+ * case the user has a valid won-cookie from a previous session).
+ *
+ * The endpoint tells us "yes, this browser has a valid won cookie"
+ * and we reflect that locally so the UI can show the discount badge.
+ */
+export async function refreshCouponFromServer(): Promise<boolean> {
+  if (!isClient) return false;
+  try {
+    const res = await fetch('/api/checkout-cookie-state', {
+      method: 'GET',
+      credentials: 'same-origin',
+    });
+    if (!res.ok) {
+      $coupon.set({ applied: false, code: '', discountPercent: 0, error: '' });
+      return false;
+    }
+    const data = await res.json();
+    if (data && data.won === true) {
+      $coupon.set({
+        applied: true,
+        code: VALID_COUPON.code,
+        discountPercent: VALID_COUPON.discountPercent,
+        error: '',
+      });
+      return true;
+    } else {
+      $coupon.set({ applied: false, code: '', discountPercent: 0, error: '' });
+      return false;
+    }
+  } catch {
+    $coupon.set({ applied: false, code: '', discountPercent: 0, error: '' });
+    return false;
   }
 }
 
-export function applyGameCoupon() {
-  const state = {
-    applied: true,
-    code: VALID_COUPON.code,
-    discountPercent: VALID_COUPON.discountPercent,
-    error: '',
-  };
-  $coupon.set(state);
-  if (isClient) {
-    localStorage.setItem(COUPON_KEY, JSON.stringify(state));
+/**
+ * Called by the Advergame ONLY after the user wins the campaign.
+ * Posts to /api/mark-won (which sets the signed HttpOnly cookie),
+ * then refreshes the local coupon state from the server.
+ */
+export async function markGameWon(): Promise<boolean> {
+  if (!isClient) return false;
+  try {
+    const res = await fetch('/api/mark-won', {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+    if (!res.ok) return false;
+    return await refreshCouponFromServer();
+  } catch {
+    return false;
   }
 }
