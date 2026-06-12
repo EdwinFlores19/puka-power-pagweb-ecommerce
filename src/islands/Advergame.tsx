@@ -2373,12 +2373,8 @@ export default function Advergame() {
                       <span><strong class="text-white">Doble toque</strong> para shurikens</span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-lg">{'\u{1F3C1}'}</span>
-                      <span><strong class="text-white">¡Cuidado!</strong> Ninjas y trampas</span>
-                    </li>
-                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-lg">{'\u{1FA99}'}</span>
-                      <span><strong class="text-white">Monedas</strong> y personajes Sooga</span>
+                      <span class="text-lg">{'\u{1F977}'}</span>
+                      <span><strong class="text-white">¡Cuidado!</strong> 🥷 Ninjas y trampas</span>
                     </li>
                     {currentLevelIndex() === 3 && (
                       <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
@@ -2402,12 +2398,8 @@ export default function Advergame() {
                       <span><strong class="text-white">Shurikens</strong></span>
                     </li>
                     <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-xl">{'\u{1F3C1}'}</span>
-                      <span><strong class="text-white">Cuidado</strong> ninjas y trampas</span>
-                    </li>
-                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
-                      <span class="text-xl">{'\u{1FA99}'}</span>
-                      <span><strong class="text-white">Monedas</strong> y personajes</span>
+                      <span class="text-xl">{'\u{1F977}'}</span>
+                      <span><strong class="text-white">Cuidado</strong> 🥷 ninjas y trampas</span>
                     </li>
                     <Show when={currentLevelIndex() === 3}>
                       <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
