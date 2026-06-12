@@ -875,20 +875,36 @@ export default function Advergame() {
         return;
       }
 
-      // Chemical projectile movement (thrown TRAP_CHEMICAL)
+      // Chemical projectile movement (thrown TRAP_CHEMICAL) — collides with platforms
       s.entities.forEach((chem) => {
         if (chem.type === ENTITY.TRAP_CHEMICAL && chem.vx !== undefined && chem.active) {
           chem.x += chem.vx;
           chem.vy = (chem.vy || 0) + 0.3;
           chem.y += chem.vy;
+          for (const plat of s.entities) {
+            if (plat.type === ENTITY.PLATFORM && plat.active !== false &&
+                chem.x < plat.x + plat.width && chem.x + chem.width > plat.x &&
+                chem.y < plat.y + plat.height && chem.y + chem.height > plat.y) {
+              chem.active = false;
+              break;
+            }
+          }
           if (chem.x < cam.x - 200 || chem.x > cam.x + vp.width + 200 || chem.y > 1500) chem.active = false;
         }
       });
 
-      // Projectile movement
+      // Projectile movement (PROJECTILE_BULL) — collides with platforms
       s.entities.forEach((proj) => {
         if (proj.type === ENTITY.PROJECTILE_BULL && proj.active) {
           proj.x += proj.vx!;
+          for (const plat of s.entities) {
+            if (plat.type === ENTITY.PLATFORM && plat.active !== false &&
+                proj.x < plat.x + plat.width && proj.x + proj.width > plat.x &&
+                proj.y < plat.y + plat.height && proj.y + proj.height > plat.y) {
+              proj.active = false;
+              break;
+            }
+          }
           if (proj.x < cam.x - 200 || proj.x > cam.x + vp.width + 200) proj.active = false;
         }
       });
@@ -2336,60 +2352,60 @@ export default function Advergame() {
                 <h2 class="text-xl sm:text-2xl font-black uppercase tracking-wider">{'\u{00A1}'}A jugar!</h2>
 
                 {isMobile ? (
-                  <ul class="text-left space-y-2.5 text-xs sm:text-sm text-slate-300">
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-lg flex-shrink-0">{'\u{1F449}'}</span>
-                      <span><strong class="text-white">Desliza izquierda/derecha</strong> en la pantalla para moverte</span>
+                  <ul class="text-center space-y-2.5 text-xs sm:text-sm text-slate-300">
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-lg">{'\u{1F449}'}</span>
+                      <span><strong class="text-white">Desliza izq/der</strong> para moverte</span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-lg flex-shrink-0">{'\u{1F446}'}</span>
-                      <span><strong class="text-white">Desliza arriba</strong> para saltar (doble salto disponible)</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-lg">{'\u{1F446}'}</span>
+                      <span><strong class="text-white">Desliza arriba</strong> para saltar</span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-lg flex-shrink-0">{'\u{1F44D}'}</span>
-                      <span><strong class="text-white">Toca rápido 2 veces</strong> para atacar con shurikens</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-lg">{'\u{1F44D}'}</span>
+                      <span><strong class="text-white">Doble toque</strong> para shurikens</span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-lg flex-shrink-0">{'\u{1FA99}'}</span>
-                      <span><strong class="text-white">Recolecta monedas</strong> y busca personajes de Sooga</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-lg">{'\u{1F3C1}'}</span>
+                      <span><strong class="text-white">¡Cuidado!</strong> Ninjas y trampas</span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-lg flex-shrink-0">{'\u{1F3C1}'}</span>
-                      <span><strong class="text-white">¡Cuidado! Ninjas, trampas y rivales</strong> en tu camino</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-lg">{'\u{1FA99}'}</span>
+                      <span><strong class="text-white">Monedas</strong> y personajes Sooga</span>
                     </li>
                     {currentLevelIndex() === 3 && (
-                      <li class="flex items-start gap-3 p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse">
-                        <span class="text-lg flex-shrink-0">🚀</span>
-                        <span><strong class="text-purple-300">¡DOBLE SALTO!</strong> Salta dos veces en el aire</span>
+                      <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
+                        <span class="text-lg">🚀</span>
+                        <span><strong class="text-purple-300">¡DOBLE SALTO!</strong></span>
                       </li>
                     )}
                   </ul>
                 ) : (
-                  <ul class="text-left space-y-3 text-sm text-slate-300">
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-xl flex-shrink-0">{'\u{2190}'}{'\u{2192}'}</span>
-                      <span><strong class="text-white">Flechas izquierda/derecha</strong> para moverte</span>
+                  <ul class="text-center space-y-3 text-sm text-slate-300">
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-xl">{'\u{2190}'}{'\u{2192}'}</span>
+                      <span><strong class="text-white">Flechas</strong> para moverte</span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-xl flex-shrink-0">{'\u{2191}'} <span class="text-xs font-bold text-slate-500 ml-1">ESPACIO</span></span>
-                      <span><strong class="text-white">Flecha arriba / Espacio</strong> para saltar</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-xl">{'\u{2191}'} <span class="text-xs font-bold text-slate-500">ESPACIO</span></span>
+                      <span><strong class="text-white">Salta</strong></span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-xl flex-shrink-0">{'\u{1FA99}'}</span>
-                      <span><strong class="text-white">Recolecta monedas</strong> y busca a los personajes de Sooga</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-xl">🗡️ <span class="text-xs font-bold text-slate-500">F / X</span></span>
+                      <span><strong class="text-white">Shurikens</strong></span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-xl flex-shrink-0">🗡️ <span class="text-xs font-bold text-slate-500 ml-1">F / X</span></span>
-                      <span><strong class="text-white">Presiona F o X</strong> para lanzar Shurikens</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-xl">{'\u{1F3C1}'}</span>
+                      <span><strong class="text-white">Cuidado</strong> ninjas y trampas</span>
                     </li>
-                    <li class="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                      <span class="text-xl flex-shrink-0">{'\u{1F3C1}'}</span>
-                      <span><strong class="text-white">¡Cuidado! Ninjas, trampas y rivales</strong> en tu camino a la meta</span>
+                    <li class="p-2 rounded-lg bg-white/5 flex flex-col items-center gap-1">
+                      <span class="text-xl">{'\u{1FA99}'}</span>
+                      <span><strong class="text-white">Monedas</strong> y personajes</span>
                     </li>
                     <Show when={currentLevelIndex() === 3}>
-                      <li class="flex items-start gap-3 p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse">
-                        <span class="text-xl flex-shrink-0">🚀</span>
-                        <span><strong class="text-purple-300">¡DOBLE SALTO ACTIVADO!</strong> Presiona salto dos veces en el aire</span>
+                      <li class="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30 animate-pulse flex flex-col items-center gap-1">
+                        <span class="text-xl">🚀</span>
+                        <span><strong class="text-purple-300">¡DOBLE SALTO!</strong></span>
                       </li>
                     </Show>
                   </ul>
