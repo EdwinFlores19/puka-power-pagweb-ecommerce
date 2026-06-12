@@ -327,11 +327,11 @@ export default function Advergame() {
 
   const getCameraOffset = () => {
     if (typeof window === 'undefined') return 150;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    if (w > 768 && w > h) return 400;
-    if (w > h) return 250;
-    return Math.max(w * 0.4, 200);
+    const vw = engineState.viewport?.width || window.innerWidth;
+    const vh = engineState.viewport?.height || window.innerHeight;
+    if (vw > 768 && vw > vh) return 400;
+    if (vw > vh) return 250;
+    return Math.max(vw * 0.4, 200);
   };
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
@@ -1692,8 +1692,10 @@ export default function Advergame() {
       ctx.shadowBlur = 20;
       drawSprite(ctx, SPRITE.GARU_SCARED, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
       ctx.shadowBlur = 0;
+    } else if (!s.companion.grounded) {
+      drawSprite(ctx, SPRITE.GARU_ATTACK, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
     } else {
-      const garuMoving = Math.abs(s.companion.vx) > 0.5 && s.companion.grounded;
+      const garuMoving = Math.abs(s.companion.vx) > 0.5;
       if (garuMoving) {
         drawSprite(ctx, SPRITE.GARU_RUN, s.companion.animFrame, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
       } else {
@@ -1842,9 +1844,12 @@ export default function Advergame() {
           const w = Math.round(entry.contentRect.width);
           const h = Math.round(entry.contentRect.height);
           if (w <= 0 || h <= 0) return;
-          canvasEl!.width = w;
-          canvasEl!.height = h;
-          engineState.viewport = { width: w, height: h };
+          const MAX_W = 1920;
+          const rw = Math.min(w, MAX_W);
+          const rh = Math.round(h * (rw / w));
+          canvasEl!.width = rw;
+          canvasEl!.height = rh;
+          engineState.viewport = { width: rw, height: rh };
         }
       });
       ro.observe(containerEl);
@@ -1853,9 +1858,12 @@ export default function Advergame() {
         cancelAnimationFrame(rafId);
         const w = containerEl!.clientWidth || window.innerWidth;
         const h = containerEl!.clientHeight || window.innerHeight;
-        canvasEl!.width = w;
-        canvasEl!.height = h;
-        engineState.viewport = { width: w, height: h };
+        const MAX_W = 1920;
+        const rw = Math.min(w, MAX_W);
+        const rh = Math.round(h * (rw / w));
+        canvasEl!.width = rw;
+        canvasEl!.height = rh;
+        engineState.viewport = { width: rw, height: rh };
         rafId = requestAnimationFrame(gameLoop);
       });
 
