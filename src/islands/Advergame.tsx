@@ -1842,8 +1842,8 @@ export default function Advergame() {
       ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 15;
       ctx.fillStyle = '#ffd700';
-      ctx.fillText('?', cx + Math.cos(pt) * (player.width * 0.9), cy + Math.sin(pt) * (player.height * 0.7));
-      ctx.fillText('?', cx + Math.cos(pt + Math.PI) * (player.width * 0.9), cy + Math.sin(pt + Math.PI) * (player.height * 0.7));
+      ctx.fillText('⚡', cx + Math.cos(pt) * (player.width * 0.9), cy + Math.sin(pt) * (player.height * 0.7));
+      ctx.fillText('⚡', cx + Math.cos(pt + Math.PI) * (player.width * 0.9), cy + Math.sin(pt + Math.PI) * (player.height * 0.7));
       ctx.shadowBlur = 0;
     }
 
@@ -1853,7 +1853,7 @@ export default function Advergame() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#fff';
-      ctx.fillText('??', cx, cy - player.height / 2 - 20 + Math.sin(now / 200) * 5);
+      ctx.fillText('Z', cx, cy - player.height / 2 - 20 + Math.sin(now / 200) * 5);
     }
 
     if (DEBUG_MODE) {
