@@ -31,6 +31,7 @@ const SPRITE = {
   GARU_SCARED: '/sprites/garu_asustado_inclinado_derecha.png',
   NINJA: '/sprites/enemigo_ninja_morado_espada.png',
   NINJA2: '/sprites/enemigo2_pucca.png',
+  NINJA_MALO_2: '/sprites/ninja-malo-2.png',
   CHING: '/sprites/personaje_cocinero_rojo_con_cubos_variante.png',
   ABYO: '/sprites/npc_abyo_luchador.png',
   CAT: '/sprites/gato_negro_cuerpo_completo.png',
@@ -65,6 +66,7 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.GARU_SCARED]: { w: 40, h: 60 },
   [SPRITE.NINJA]: { w: 40, h: 60 },
   [SPRITE.NINJA2]: { w: 40, h: 60 },
+  [SPRITE.NINJA_MALO_2]: { w: 40, h: 60 },
   [SPRITE.CHING]: { w: 48, h: 72 },
   [SPRITE.ABYO]: { w: 44, h: 66 },
   [SPRITE.CAT]: { w: 40, h: 40 },
@@ -308,7 +310,7 @@ class SoundEngine {
 const iconArrowLeft = '←';
 const iconPlay = '▶';
 
-interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; lastShot?: number; }
+interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; lastShot?: number; sprite?: string; }
 interface GhostPos { x: number; y: number; alpha: number; }
 interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; attackAnimTimer: number; animFrame: number; animTimer: number; }
 interface Keys { left: boolean; right: boolean; up: boolean; upJustPressed: boolean; attack: boolean; }
@@ -449,7 +451,7 @@ export default function Advergame() {
         s.entities.push({ type: ENTITY.COIN, x: curX + 300, y: groundY - 200, width: 30, height: 30, active: true, coinScale: 1 });
         const ee = theme.enemies[Math.floor(Math.random() * theme.enemies.length)];
         const ninjaVx = levelIndex === 2 ? -3 : -2;
-        const ninjaSprite = (Math.random() > 0.5) ? SPRITE.NINJA : SPRITE.NINJA2;
+        const ninjaSprite = (Math.random() > 0.5) ? SPRITE.NINJA : SPRITE.NINJA_MALO_2;
         s.entities.push({ type: ENTITY.ENEMY_NINJA, x: curX + 400, y: groundY - 60, width: 40, height: 60, vx: ninjaVx, startX: curX + 300, range: 300, emoji: ee, active: true, lastShot: 0, sprite: ninjaSprite });
         curX += 800;
       } else if (p === 3) {
@@ -1531,7 +1533,7 @@ export default function Advergame() {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
       } else if (entity.type === ENTITY.ENEMY_NINJA && entity.active) {
-        drawSprite(ctx, SPRITE.NINJA, 0, entity.x, entity.y, entity.width, entity.height, (entity.vx ?? 0) > 0);
+        drawSprite(ctx, entity.sprite || SPRITE.NINJA, 0, entity.x, entity.y, entity.width, entity.height, (entity.vx ?? 0) > 0);
       } else if (entity.type === ENTITY.NPC_CHING && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 25;
