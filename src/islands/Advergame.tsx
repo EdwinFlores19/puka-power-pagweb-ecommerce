@@ -1143,7 +1143,7 @@ export default function Advergame() {
 
       // Vertical camera: only on mobile (<=768px wide), keep PC fixed
       if (vp.width <= 768) {
-        const targetCamY = p.y - vp.height * 0.65;
+        const targetCamY = p.y - vp.height * 0.55;
         cam.y += (targetCamY - cam.y) * 0.05;
       } else {
         cam.y += (0 - cam.y) * 0.1;
@@ -1230,6 +1230,9 @@ export default function Advergame() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, vw, vh);
 
+    // Responsive Y helper — keeps background elements visible on small viewports
+    const bgY = (offset: number) => Math.max(vh - offset, vh * 0.12);
+
     // Layer 1: Far background (slowest movement, speed factor 0.05)
     ctx.save();
     const s1 = -scrollX * 0.05;
@@ -1240,11 +1243,12 @@ export default function Advergame() {
       ctx.fillStyle = '#4c1115';
       for (let i = -1; i < 3; i++) {
         const x = i * vw;
+        const mBase = bgY(160);
         ctx.beginPath();
         ctx.moveTo(x - 50, vh);
-        ctx.lineTo(x + vw * 0.3, vh - 220);
-        ctx.lineTo(x + vw * 0.6, vh - 120);
-        ctx.lineTo(x + vw * 0.8, vh - 260);
+        ctx.lineTo(x + vw * 0.3, mBase);
+        ctx.lineTo(x + vw * 0.6, mBase + 80);
+        ctx.lineTo(x + vw * 0.8, mBase - 40);
         ctx.lineTo(x + vw + 50, vh);
         ctx.closePath();
         ctx.fill();
@@ -1254,10 +1258,11 @@ export default function Advergame() {
       ctx.fillStyle = '#0f3825';
       for (let i = -1; i < 3; i++) {
         const x = i * vw;
+        const mBase = bgY(140);
         ctx.beginPath();
         ctx.moveTo(x - 100, vh);
-        ctx.quadraticCurveTo(x + vw * 0.25, vh - 180, x + vw * 0.5, vh - 100);
-        ctx.quadraticCurveTo(x + vw * 0.75, vh - 200, x + vw + 100, vh);
+        ctx.quadraticCurveTo(x + vw * 0.25, mBase, x + vw * 0.5, mBase + 80);
+        ctx.quadraticCurveTo(x + vw * 0.75, mBase - 20, x + vw + 100, vh);
         ctx.closePath();
         ctx.fill();
       }
@@ -1266,21 +1271,21 @@ export default function Advergame() {
       ctx.fillStyle = '#1e293b';
       for (let i = -1; i < 3; i++) {
         const x = i * vw;
+        const mBase = bgY(180);
         ctx.beginPath();
         ctx.moveTo(x - 20, vh);
-        ctx.lineTo(x + vw * 0.25, vh - 320);
-        ctx.lineTo(x + vw * 0.5, vh - 150);
-        ctx.lineTo(x + vw * 0.75, vh - 350);
+        ctx.lineTo(x + vw * 0.25, mBase);
+        ctx.lineTo(x + vw * 0.5, mBase + 120);
+        ctx.lineTo(x + vw * 0.75, mBase - 40);
         ctx.lineTo(x + vw + 20, vh);
         ctx.closePath();
         ctx.fill();
         
-        // Draw snow cap highlights
         ctx.fillStyle = '#cbd5e1';
         ctx.beginPath();
-        ctx.moveTo(x + vw * 0.25 - 40, vh - 270);
-        ctx.lineTo(x + vw * 0.25, vh - 320);
-        ctx.lineTo(x + vw * 0.25 + 40, vh - 270);
+        ctx.moveTo(x + vw * 0.25 - 40, mBase + 30);
+        ctx.lineTo(x + vw * 0.25, mBase);
+        ctx.lineTo(x + vw * 0.25 + 40, mBase + 30);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = '#1e293b';
@@ -1294,32 +1299,34 @@ export default function Advergame() {
     ctx.translate(s2 % vw, 0);
     ctx.globalAlpha = 0.55;
     if (themeId === 'GOH_RONG') {
-      // Traditional houses (pagodas) - Raised even higher for absolute visibility and beauty
+      // Traditional houses (pagodas) — visible at top on all viewports
       ctx.fillStyle = '#7B1113';
       for (let i = -1; i < 4; i++) {
         const bx = i * 400;
-        ctx.fillRect(bx + 50, vh - 500, 150, 500);
+        const hY = bgY(500);
+        ctx.fillRect(bx + 50, hY, 150, 500);
         ctx.beginPath();
-        ctx.moveTo(bx + 20, vh - 500);
-        ctx.quadraticCurveTo(bx + 125, vh - 550, bx + 230, vh - 500);
-        ctx.lineTo(bx + 200, vh - 485);
-        ctx.lineTo(bx + 50, vh - 485);
+        ctx.moveTo(bx + 20, hY);
+        ctx.quadraticCurveTo(bx + 125, hY - 50, bx + 230, hY);
+        ctx.lineTo(bx + 200, hY + 15);
+        ctx.lineTo(bx + 50, hY + 15);
         ctx.closePath();
         ctx.fill();
         
         ctx.beginPath();
-        ctx.arc(bx + 125, vh - 430, 15, 0, Math.PI * 2);
+        ctx.arc(bx + 125, hY + 70, 15, 0, Math.PI * 2);
         ctx.fillStyle = '#FFD700';
         ctx.fill();
         ctx.fillStyle = '#7B1113';
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Blurred bamboo stalks - Optimized to be 100% lag-free by using semitransparent forest green instead of heavy ctx.filter blur!
+      // Blurred bamboo stalks
       ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
       for (let i = -1; i < 6; i++) {
         const bx = i * 250;
-        ctx.fillRect(bx + 30, vh - 400, 12, 400);
-        for (let y = vh - 350; y < vh; y += 80) {
+        const bY = bgY(400);
+        ctx.fillRect(bx + 30, bY, 12, 400);
+        for (let y = bY + 50; y < bY + 400; y += 80) {
           ctx.fillRect(bx + 28, y, 16, 4);
         }
       }
@@ -1328,12 +1335,13 @@ export default function Advergame() {
       ctx.fillStyle = '#334155';
       for (let i = -1; i < 4; i++) {
         const bx = i * 450;
+        const cBase = bgY(220);
         ctx.beginPath();
         ctx.moveTo(bx, vh);
-        ctx.lineTo(bx + 100, vh - 220);
-        ctx.lineTo(bx + 220, vh - 200);
-        ctx.lineTo(bx + 320, vh - 300);
-        ctx.lineTo(bx + 400, vh - 180);
+        ctx.lineTo(bx + 100, cBase);
+        ctx.lineTo(bx + 220, cBase + 20);
+        ctx.lineTo(bx + 320, cBase - 80);
+        ctx.lineTo(bx + 400, cBase + 40);
         ctx.lineTo(bx + 480, vh);
         ctx.closePath();
         ctx.fill();
@@ -1363,8 +1371,9 @@ export default function Advergame() {
       ctx.fillStyle = '#22c55e';
       for (let i = -1; i < 7; i++) {
         const bx = i * 200;
-        ctx.fillRect(bx + 50, vh - 500, 14, 500);
-        for (let y = vh - 450; y < vh; y += 70) {
+        const fY = bgY(500);
+        ctx.fillRect(bx + 50, fY, 14, 500);
+        for (let y = fY + 50; y < fY + 500; y += 70) {
           ctx.fillStyle = '#a3e635';
           ctx.fillRect(bx + 47, y, 20, 4);
         }
