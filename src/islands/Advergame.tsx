@@ -1570,18 +1570,19 @@ export default function Advergame() {
         const isRedBull = (Math.floor(entity.x) % 2 === 0);
         const spriteSrc = isRedBull ? SPRITE.RED_BULL : SPRITE.MONSTER;
         
-        // Draw the character holding/offering it next to the can
-        const hostSprite = isRedBull ? SPRITE.MALA_PUCCA : SPRITE.NINJA2;
-        drawSprite(ctx, hostSprite, 0, entity.x - 32, entity.y - 12, 32, 48);
+        // Thrown by enemy (has vx) = just the can, no character
+        // Static placed (no vx) = character companion next to it
+        if (entity.vx === undefined) {
+          const hostSprite = isRedBull ? SPRITE.MALA_PUCCA : SPRITE.NINJA2;
+          drawSprite(ctx, hostSprite, 0, entity.x - 32, entity.y - 12, 32, 48);
+          const deceptiveText = isRedBull 
+            ? "¡Toma un Red Bull, te dará alas de verdad! 😈🥤" 
+            : "¡Prueba un Monster helado! ¡Es energía ninja! 😈🥤";
+          drawSpeechBubble(ctx, deceptiveText, entity.x - 8, entity.y - 15);
+        }
         
         // Draw the can
         drawSprite(ctx, spriteSrc, 0, entity.x, entity.y, entity.width, entity.height);
-        
-        // Draw deceptive Speech Bubble
-        const deceptiveText = isRedBull 
-          ? "¡Toma un Red Bull, te dará alas de verdad! 😈🥤" 
-          : "¡Prueba un Monster helado! ¡Es energía ninja! 😈🥤";
-        drawSpeechBubble(ctx, deceptiveText, entity.x - 8, entity.y - 15);
         ctx.restore();
       } else if (entity.type === ENTITY.PROJECTILE_BULL && entity.active) {
         ctx.save();
