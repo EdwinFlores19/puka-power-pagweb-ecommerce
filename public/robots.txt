@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pukapower.pe/sitemap.xml

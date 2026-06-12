@@ -31,13 +31,13 @@ export default function ProductCatalog() {
               }}
             >
               {product.id === 1 && (
-                <img src="/sprites/3-puka-power.png" alt="Pack Reto Puka Power - 3 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" decoding="async" />
+                <img src="/sprites/3-puka-power.webp" alt="Pack Reto Puka Power - 3 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" loading="lazy" decoding="async" />
               )}
               {product.id === 2 && (
-                <img src="/sprites/six-pack-puka-power.png" alt="Six pack Puka Power - 6 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" decoding="async" />
+                <img src="/sprites/six-pack-puka-power.webp" alt="Six pack Puka Power - 6 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" loading="lazy" decoding="async" />
               )}
               {product.id === 3 && (
-                <img src="/sprites/24-puka-power.png" alt="Suscripción mensual Puka Power - 24 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" decoding="async" />
+                <img src="/sprites/24-puka-power.webp" alt="Suscripción mensual Puka Power - 24 latas" class="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(123,17,19,0.3)]" width="128" height="128" loading="lazy" decoding="async" />
               )}
             </div>
 
