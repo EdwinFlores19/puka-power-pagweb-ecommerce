@@ -331,7 +331,7 @@ export default function Advergame() {
     const h = window.innerHeight;
     if (w > 768 && w > h) return 400;
     if (w > h) return 250;
-    return Math.min(w * 0.35, 200);
+    return Math.max(w * 0.4, 200);
   };
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
@@ -1141,8 +1141,13 @@ export default function Advergame() {
       cam.x += (targetCamX - cam.x) * 0.1;
       if (cam.x < 0) cam.x = 0;
 
-      const targetCamY = p.y - viewport.height * 0.6;
-      cam.y += (targetCamY - cam.y) * 0.05;
+      // Vertical camera: only on mobile (<=768px wide), keep PC fixed
+      if (vp.width <= 768) {
+        const targetCamY = p.y - vp.height * 0.55;
+        cam.y += (targetCamY - cam.y) * 0.05;
+      } else {
+        cam.y += (0 - cam.y) * 0.1;
+      }
 
       if (s.shakeTimer > 0) s.shakeTimer -= 16.6;
 
