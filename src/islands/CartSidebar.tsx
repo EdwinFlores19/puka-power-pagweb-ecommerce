@@ -13,7 +13,7 @@ import {
   clearCart,
   clearCoupon,
 } from '@/store/cartStore';
-import OrderSuccessModal from './OrderSuccessModal';
+import PaymentModal from './PaymentModal';
 
 export default function CartSidebar() {
   const cart = useStore($cart);
@@ -23,6 +23,7 @@ export default function CartSidebar() {
   const discount = useStore($discount);
   const coupon = useStore($coupon);
   const [showModal, setShowModal] = createSignal(false);
+  const [orderData, setOrderData] = createSignal({ orderId: '', total: 0, items: [] as { id: number; qty: number }[], couponApplied: '' });
   const [isProcessing, setIsProcessing] = createSignal(false);
   const [checkoutError, setCheckoutError] = createSignal('');
 
@@ -52,13 +53,12 @@ export default function CartSidebar() {
         return;
       }
 
-      localStorage.setItem(
-        'puka-last-order',
-        JSON.stringify({
-          orderId: result.orderId,
-          total: result.total,
-        }),
-      );
+      setOrderData({
+        orderId: result.orderId,
+        total: result.total,
+        items: payload.items,
+        couponApplied: result.couponApplied || '',
+      });
 
       setShowModal(true);
     } catch {
@@ -74,7 +74,6 @@ export default function CartSidebar() {
     setShowModal(false);
     clearCart();
     clearCoupon();
-    localStorage.removeItem('puka-last-order');
   };
 
   return (
@@ -174,17 +173,17 @@ export default function CartSidebar() {
                 </div>
               </Show>
               <Show when={!coupon().applied}>
-                <div class="bg-gradient-to-br from-purple-900/5 to-brand-primary/5 rounded-2xl border border-purple-500/20 p-4">
+                <div class="bg-gradient-to-br from-brand-accent/5 to-brand-primary/5 rounded-2xl border border-brand-accent/15 p-4">
                   <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0 text-lg">🎮</div>
+                    <div class="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center shrink-0 text-lg">🎮</div>
                     <div class="space-y-1 min-w-0">
-                      <p class="text-xs font-black uppercase tracking-wider text-purple-700">¿Quieres 15% de descuento?</p>
+                      <p class="text-xs font-black uppercase tracking-wider text-brand-primary">¿Quieres 15% de descuento?</p>
                       <p class="text-[10px] text-brand-dark/60 leading-relaxed">
                         Juega nuestro arcade Ninja, completa los 3 niveles y desbloquea un descuento exclusivo. ¡El poder del rayo te espera!
                       </p>
                       <a
                         href="/juego"
-                        class="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-brand-light font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-all duration-200 shadow-md"
+                        class="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1.5 bg-brand-accent hover:bg-brand-accentGold text-brand-light font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-all duration-200 shadow-md"
                       >
                         <span>Jugar ahora</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +260,13 @@ export default function CartSidebar() {
       </div>
 
       <Show when={showModal()}>
-        <OrderSuccessModal onClose={handleCloseModal} />
+        <PaymentModal
+          orderId={orderData().orderId}
+          total={orderData().total}
+          items={orderData().items}
+          couponApplied={orderData().couponApplied}
+          onClose={handleCloseModal}
+        />
       </Show>
 
       <style>{`

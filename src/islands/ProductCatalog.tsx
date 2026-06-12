@@ -64,8 +64,8 @@ export default function ProductCatalog() {
               onClick={() => addItemToCart(product.id)}
               class="w-full sm:w-auto px-6 py-3 font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 shadow-md"
               classList={{
-                'bg-brand-primary text-brand-light hover:bg-brand-accent': product.id !== 2,
-                'bg-brand-accent text-brand-light hover:bg-brand-accentGold font-extrabold px-6 py-4 animate-btn-pulse': product.id === 2,
+                'bg-brand-accent text-brand-light hover:bg-brand-accentGold': true,
+                'font-extrabold px-6 py-4 animate-btn-pulse': product.id === 2,
               }}
             >
               {product.id === 3 ? 'Suscribirse' : 'Añadir'}
