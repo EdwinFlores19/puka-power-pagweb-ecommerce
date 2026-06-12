@@ -2129,7 +2129,7 @@ export default function Advergame() {
         )}
 
         <div class="relative w-full h-dvh bg-[#0a0d1a] overflow-hidden">
-          <div ref={containerEl} class="absolute inset-0 mx-auto max-w-[1920px]">
+          <div ref={containerEl} class="absolute inset-0">
             <canvas ref={canvasEl} class="relative z-10 w-full h-full block" style={{ 'image-rendering': 'pixelated' }} />
           </div>
         </div>
