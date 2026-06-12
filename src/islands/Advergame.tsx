@@ -162,6 +162,7 @@ const ENTITY = {
   TRAP_CHEMICAL: 7, PROJECTILE_BULL: 8,
   PROJECTILE_KUNAI: 9, PROJECTILE_SHURIKEN: 10, AMMO_BOX: 11,
   NPC_MALA_PUCCA: 12,
+  NPC_CAT_PUKA_POWER: 13,
 } as const;
 
 const PLAYER_STATE = {
@@ -1028,6 +1029,9 @@ export default function Advergame() {
           }
           case ENTITY.NPC_ABYO: {
             entity.active = false;
+            if (inventory().length < 5) {
+              setInventory(prev => [...prev, 'PUKA_POWER']);
+            }
             const sweepStart = entity.x;
             const sweepEnd = entity.x + 300;
             s.entities.forEach((e) => {
@@ -1048,6 +1052,9 @@ export default function Advergame() {
           }
           case ENTITY.NPC_TIOS: {
             entity.active = false;
+            if (inventory().length < 5) {
+              setInventory(prev => [...prev, 'PUKA_POWER']);
+            }
             s.timerFrozen = true;
             s.timerFreezeEnd = Date.now() + 5000;
             spawnFloatingText(entity.x, entity.y - 40, '¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜😊😊😊');
@@ -1532,7 +1539,7 @@ export default function Advergame() {
         ctx.fillStyle = r;
         ctx.fillRect(cx - 25, cy - 25, 50, 50);
         ctx.font = `${Math.round(26 * coinScale)}px Arial`;
-        ctx.fillText('??', cx - 13 * coinScale + 5, cy + 2);
+        ctx.fillText('$', cx - 7 * coinScale, cy + 2);
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
       } else if (entity.type === ENTITY.ENEMY_NINJA && entity.active) {
