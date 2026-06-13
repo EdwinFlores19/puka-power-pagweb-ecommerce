@@ -256,12 +256,14 @@ const LEVEL_COMPLETED_CONFIG: Record<number, LevelCompletedConfig> = {
     subtitle: 'El espíritu del rayo te acompaña. La montaña sagrada te espera.',
   },
   3: {
-    // Cinemática de boda — no popup, todo el centro es la boda
-    heroImage: '/sprites/boda_pukaygaru.jpg',
-    heroAlt: 'La boda de Pucca y Garu en la montaña sagrada',
+    // Regular "level completed" card for level 3 — the wedding cinemática
+    // lives in the VICTORY screen (so the user doesn't see the wedding
+    // image twice in a row).
+    heroImage: '/sprites/pucca_y_garu_enamorados_sticker.png',
+    heroAlt: 'Pucca y Garu, muy enamorados antes del altar',
     popup: null,
-    header: '💍 ¡Lo lograste!',
-    subtitle: 'Garu no tiene escapatoria. Al fin, en la montaña donde empezó todo, Pucca y Garu se unen para siempre. 💋🌸',
+    header: '¡Nivel 3 Completado!',
+    subtitle: 'Garu te espera al final del sendero… 💍🌸 Pulsa Reclamar Recompensas para la cinemática final.',
   },
 };
 
