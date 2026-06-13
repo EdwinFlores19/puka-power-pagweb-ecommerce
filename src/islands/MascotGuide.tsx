@@ -100,14 +100,30 @@ interface Props {
   startIndex?: number;
   /** When true, the companion cat (Mio) appears on the right when its bubble is active. */
   enableCompanion?: boolean;
+  /**
+   * Whether the user has ALREADY won the campaign (server-side cookie
+   * present). Pass `true` from server-rendered pages (e.g. /tienda) so
+   * the champion greeting shows on first paint with no flash. When
+   * omitted, the island will check the server endpoint on mount.
+   */
+  initialIsWinner?: boolean;
 }
 
 export default function MascotGuide(props: Props) {
-  const [isWinner, setIsWinner] = createSignal(false);
+  const [isWinner, setIsWinner] = createSignal(props.initialIsWinner ?? false);
   const [currentIndex, setCurrentIndex] = createSignal(props.startIndex ?? 0);
-  const [showBubble, setShowBubble] = createSignal((props.autoShowDelay ?? 0) === 0);
+  // The bubble should not appear until we know the winner state
+  // (avoids a flash of the wrong greeting in /index when the cookie
+  // check is still pending). Pages that pre-supply initialIsWinner
+  // skip the check and can show the bubble on the normal schedule.
+  const [showBubble, setShowBubble] = createSignal(
+    props.initialIsWinner !== undefined && (props.autoShowDelay ?? 0) === 0,
+  );
   const [showCompanion, setShowCompanion] = createSignal(false);
-  const [showMainBubble, setShowMainBubble] = createSignal(false);
+  const [showMainBubble, setShowMainBubble] = createSignal(
+    props.initialIsWinner !== undefined && (props.autoShowDelay ?? 0) === 0,
+  );
+  const [winnerChecked, setWinnerChecked] = createSignal(props.initialIsWinner !== undefined);
   let companionTimer: ReturnType<typeof setTimeout> | null = null;
   let mainBubbleTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -149,24 +165,70 @@ export default function MascotGuide(props: Props) {
   });
 
   onMount(() => {
-    // Detect whether the user has won the campaign via cross-page flag
-    if (typeof window !== 'undefined') {
+    // The SOURCE OF TRUTH for "has the user won the campaign" is the
+    // signed HttpOnly cookie `puka_won_session` set by /api/mark-won.
+    // We fetch the lightweight /api/checkout-cookie-state endpoint to
+    // mirror that state into the UI. localStorage is intentionally NOT
+    // trusted because it persists per-browser (not per-session) and can
+    // leak the "winner" state to a new visitor on the same machine.
+    const checkWinner = async () => {
+      if (typeof window === 'undefined') return;
+      let serverSaysWon: boolean | null = null;
       try {
-        if (localStorage.getItem(WINNER_STORAGE_KEY) === 'true') {
-          setIsWinner(true);
-          setCurrentIndex(0);
+        const res = await fetch('/api/checkout-cookie-state', {
+          credentials: 'same-origin',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.won === true) serverSaysWon = true;
+          else serverSaysWon = false;
         }
-      } catch (_) { /* localStorage unavailable; ignore */ }
-    }
+      } catch {
+        // Network failed — fall back to localStorage as a soft hint
+        try {
+          if (localStorage.getItem(WINNER_STORAGE_KEY) === 'true') {
+            serverSaysWon = true;
+          } else {
+            serverSaysWon = false;
+          }
+        } catch { /* ignore */ }
+      }
 
-    const delay = props.autoShowDelay ?? 0;
-    if (delay > 0) {
-      setTimeout(() => {
-        setShowBubble(true);
+      // Only update state if the parent didn't pre-supply an initial value
+      if (props.initialIsWinner === undefined && serverSaysWon !== null) {
+        setIsWinner(serverSaysWon);
+        if (serverSaysWon) setCurrentIndex(0);
+      }
+      setWinnerChecked(true);
+
+      // Reveal the bubble after the check completes so first paint is
+      // never the wrong greeting (a flash of "welcome" or "champion" is
+      // more confusing than a 1-frame delay).
+      const delay = props.autoShowDelay ?? 0;
+      if (delay > 0) {
+        setTimeout(() => {
+          setShowBubble(true);
+          setShowMainBubble(true);
+        }, delay);
+      } else {
         setShowMainBubble(true);
-      }, delay);
+      }
+    };
+
+    // If initialIsWinner was provided by the server, skip the fetch and
+    // just show the bubble on the normal schedule.
+    if (props.initialIsWinner !== undefined) {
+      const delay = props.autoShowDelay ?? 0;
+      if (delay > 0) {
+        setTimeout(() => {
+          setShowBubble(true);
+          setShowMainBubble(true);
+        }, delay);
+      } else {
+        setShowMainBubble(true);
+      }
     } else {
-      setShowMainBubble(true);
+      void checkWinner();
     }
   });
 
