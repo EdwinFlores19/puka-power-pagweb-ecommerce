@@ -463,6 +463,74 @@ export default function CartSidebar() {
           </Show>
         </Show>
 
+        {/* Coupon block — ALWAYS visible (even with empty cart) so the
+            user can see their 15% reward right after winning the game,
+            before adding any products. Mirrors the cart() > 0 block
+            above, but the "applied" variant adds a "Ver productos" CTA
+            when the cart is empty. */}
+        <Show when={cart().length === 0}>
+          <div class="border-t border-brand-primary/10 pt-4 space-y-4">
+            <Show when={isVerifyingCoupon()}>
+              <div class="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl border border-slate-200 p-4 animate-pulse">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-lg bg-slate-300" />
+                  <div class="flex-1 space-y-1.5">
+                    <div class="h-3 w-3/4 rounded bg-slate-300" />
+                    <div class="h-2.5 w-1/2 rounded bg-slate-300" />
+                  </div>
+                </div>
+              </div>
+            </Show>
+            <Show when={!isVerifyingCoupon() && coupon().applied}>
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border-2 border-green-500/30 p-4 shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center shrink-0 text-lg ring-2 ring-green-500/30">
+                    ✅
+                  </div>
+                  <div class="space-y-1.5 min-w-0 flex-1">
+                    <p class="text-xs font-black uppercase tracking-wider text-green-700">¡Descuento por juego aplicado!</p>
+                    <p class="text-2xl font-black text-green-700">15% OFF</p>
+                    <p class="text-[10px] text-green-700/70 leading-relaxed">
+                      Completaste los 3 niveles. El poder del rayo te espera — añade productos al carrito para aplicar el descuento.
+                    </p>
+                    <a
+                      href="#productos"
+                      class="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-all duration-200 shadow-md"
+                    >
+                      <span>Ver productos</span>
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </Show>
+            <Show when={!isVerifyingCoupon() && !coupon().applied}>
+              <div class="bg-gradient-to-br from-brand-accent/5 to-brand-primary/5 rounded-2xl border border-brand-accent/15 p-4">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center shrink-0 text-lg">🎮</div>
+                  <div class="space-y-1 min-w-0">
+                    <p class="text-xs font-black uppercase tracking-wider text-brand-primary">¿Quieres 15% de descuento?</p>
+                    <p class="text-[10px] text-brand-dark/60 leading-relaxed">
+                      Juega nuestro arcade Ninja, completa los 3 niveles y desbloquea un descuento exclusivo.
+                    </p>
+                    <a
+                      href="/juego"
+                      class="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1.5 bg-brand-accent hover:bg-brand-accentGold text-brand-light font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-all duration-200 shadow-md"
+                    >
+                      <span>Jugar ahora</span>
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </Show>
+          </div>
+        </Show>
+
         {/* STEP 2: Customer form */}
         <Show when={step() === 'customer'}>
           <div class="space-y-3 max-h-[420px] overflow-y-auto scrollbar-hidden pr-1">

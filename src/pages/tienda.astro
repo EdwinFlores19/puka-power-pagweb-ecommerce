@@ -95,6 +95,6 @@ const initialIsWinner = !!wonSession;
     </div>
   </main>
 
-  <MascotGuide client:load autoShowDelay={5000} startIndex={5} enableCompanion={true} initialIsWinner={initialIsWinner} />
+  <MascotGuide client:load autoShowDelay={5000} startIndex={initialIsWinner ? 0 : 5} enableCompanion={true} initialIsWinner={initialIsWinner} />
   <Footer />
 </BaseLayout>
