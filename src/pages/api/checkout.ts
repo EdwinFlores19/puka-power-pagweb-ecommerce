@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { PRICE_MAP, VALID_COUPON } from '../../lib/constants';
 import type { OrderResponse } from '../../lib/types';
 import { verifyWonCookie, WON_COOKIE_NAME } from '../../lib/session';
+import { sendOrderConfirmation } from '../../lib/emails';
 
 export const prerender = false;
 
@@ -129,6 +130,24 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         district: customer.district || '',
       } : undefined,
     };
+
+    // Fire-and-forget: send the order-confirmation email (Resend).
+    // If email fails for any reason, the order still succeeds.
+    if (order.customer?.email) {
+      try {
+        await sendOrderConfirmation({
+          to: order.customer.email,
+          orderId,
+          total: order.total,
+          subtotal: order.subtotal,
+          discount: order.discount,
+          customer: order.customer,
+          items: order.items,
+        });
+      } catch (e) {
+        console.error('[checkout] Order email failed:', e);
+      }
+    }
 
     return new Response(
       JSON.stringify({ success: true, ...order }),
