@@ -19,6 +19,16 @@ const BASE_SPEED = 6;
 const TIME_LIMIT = 150;
 const COOLDOWN_SHURIKEN = 2000;
 
+// Hearts system: 1 full heart = 2 half-hearts internally.
+// So lives ranges from 0 to LIVES_MAX*2 (e.g. 0..6 for 3 full hearts).
+const LIVES_MAX = 3;
+const LIVES_MAX_HALVES = LIVES_MAX * 2;
+const HITSTUN_MS = 350;
+const PROJECTILE_KNOCKBACK_VX = 6;
+const PROJECTILE_KNOCKBACK_VY = -4;
+const NINJA_KNOCKBACK_VX = 7;
+const NINJA_KNOCKBACK_VY = -5;
+
 const SPRITE = {
   PUKA_RUN: '/sprites/pucca_animacion_caminata_sprite_sheet.png',
   PUKA_IDLE: '/sprites/pucca_idle_cuerpo_completo.png',
@@ -315,7 +325,7 @@ const iconPlay = '▶';
 
 interface Entity { type: number; x: number; y: number; width: number; height: number; active?: boolean; vx?: number; vy?: number; startX?: number; range?: number; emoji?: string; isHit?: boolean; reward?: string; rewardType?: string; coinScale?: number; lastShot?: number; sprite?: string; angle?: number; }
 interface GhostPos { x: number; y: number; alpha: number; }
-interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; attackAnimTimer: number; animFrame: number; animTimer: number; }
+interface Player { x: number; y: number; vx: number; vy: number; width: number; height: number; grounded: boolean; state: string; stateTimer: number; facingLeft: boolean; isDead: boolean; isGiant: boolean; hasPet: boolean; canDoubleJump: boolean; idleTimer: number; lastSafeX: number; lastSafeY: number; jumpTimer: number; justLanded: boolean; squashX: number; squashY: number; ghosts: GhostPos[]; sugarCrashTimer: number; attackCooldown: number; attackAnimTimer: number; animFrame: number; animTimer: number; hitstun: number; }
 interface Keys { left: boolean; right: boolean; up: boolean; upJustPressed: boolean; attack: boolean; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; alpha: number; size: number; }
 interface EnvParticle { x: number; y: number; vx: number; vy: number; size: number; rotation: number; rotationSpeed: number; alpha: number; }
@@ -324,7 +334,7 @@ interface Projectile { id: number; type: number; x: number; y: number; vx: numbe
 export default function Advergame() {
   const [appState, setAppState] = createSignal<number>(APP_STATE.START_SCREEN);
   const [selection, setSelection] = createSignal<{ theme: ThemeId | null }>({ theme: null });
-  const [uiState, setUiState] = createSignal<{ coins: number; timeLeft: number; message: string; messageType: string; playerState: string; lives: number }>({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
+  const [uiState, setUiState] = createSignal<{ coins: number; timeLeft: number; message: string; messageType: string; playerState: string; lives: number }>({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: LIVES_MAX_HALVES });
   const [couponDone, setCouponDone] = createSignal(false);
   const [showTutorial, setShowTutorial] = createSignal(true);
   const [inventory, setInventory] = createSignal<string[]>([]);
@@ -376,8 +386,9 @@ export default function Advergame() {
         canDoubleJump: false, idleTimer: 0, lastSafeX: 100, lastSafeY: 100,
         jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1,
         ghosts: [], sugarCrashTimer: 0, attackCooldown: 0, attackAnimTimer: 0, animFrame: 0, animTimer: 0,
+        hitstun: 0,
       },
-      entities: [], particles: [], envParticles: [], score: 0, lives: 3, startTime: 0,
+      entities: [], particles: [], envParticles: [], score: 0, lives: LIVES_MAX_HALVES, startTime: 0,
       viewport: { width: 800, height: 600 },
       shakeTimer: 0, shakeIntensity: 0, hitstopFrames: 0,
       companion: { x: 280, y: 100, vx: 5, vy: 0, grounded: false, width: 40, height: 60, targetDistance: 180, animFrame: 0, animTimer: 0, isNinjaRecovering: false },
@@ -405,6 +416,58 @@ export default function Advergame() {
     engineState.hitstopFrames = frames;
   }
 
+  /**
+   * Applies a knockback impulse to the player. The direction is determined
+   * by the source's X position: if the source is to the LEFT of the player,
+   * the player is pushed to the RIGHT (+vx), and vice versa.
+   */
+  function applyKnockback(p: Player, fromX: number, vxMag: number, vyMag: number) {
+    const dir = p.x < fromX ? 1 : -1;
+    p.vx = dir * vxMag;
+    p.vy = vyMag;
+    p.hitstun = HITSTUN_MS;
+  }
+
+  /**
+   * Applies damage to the player. If a shield (hasPet/isGiant/Puka_OVERDRIVE)
+   * is active, the shield absorbs the hit. Otherwise:
+   *   1. Decrement lives (default = 1 half-heart)
+   *   2. Apply knockback away from `fromX`
+   *   3. Visual + audio feedback
+   *   4. If lives reach 0, trigger GAME_OVER
+   */
+  function damagePlayer(p: Player, fromX: number, halfHearts = 1, vxMag = PROJECTILE_KNOCKBACK_VX, vyMag = PROJECTILE_KNOCKBACK_VY) {
+    if (p.state === PLAYER_STATE.PUKA_OVERDRIVE) return; // immune
+    if (p.hitstun > 0) return; // i-frames
+
+    if (p.hasPet) {
+      p.hasPet = false;
+      p.canDoubleJump = false;
+      applyKnockback(p, fromX, vxMag, vyMag);
+      setUiState((prev) => ({ ...prev, message: '\u00A1MASCOTA PERDIDA!', messageType: 'warning' }));
+    } else if (p.isGiant) {
+      p.isGiant = false;
+      p.width = 40;
+      p.height = 60;
+      applyKnockback(p, fromX, vxMag, vyMag);
+      setUiState((prev) => ({ ...prev, message: '\u00A1PODER PERDIDO!', messageType: 'warning' }));
+    } else {
+      // Real damage (default = 1 half-heart per hit)
+      engineState.lives = Math.max(0, engineState.lives - halfHearts);
+      applyKnockback(p, fromX, vxMag, vyMag);
+      setUiState((prev) => ({ ...prev, lives: engineState.lives, message: '\u00A1SHURIKEN! -' + halfHearts + ' \u{1F4A5}\u{1F4A5}', messageType: 'error' }));
+      if (audioInst) audioInst.hurt();
+      triggerShake(8, 200);
+      triggerHitstop(2);
+      if (engineState.lives <= 0) {
+        p.isDead = true;
+        if (audioInst) audioInst.victory();
+        trackGameEvent('puka_game_over', { stage: currentLevelIndex(), score: engineState.score, timeLeft: uiState().timeLeft });
+        setAppState(APP_STATE.GAME_OVER);
+      }
+    }
+  }
+
   function spawnFloatingText(x: number, y: number, text: string) {
     engineState.floatingTexts.push({ x, y, text, life: 1500, maxLife: 1500, alpha: 1 });
   }
@@ -414,9 +477,9 @@ export default function Advergame() {
 
   function generateLevel(theme: typeof THEMES[keyof typeof THEMES], levelIndex: number) {
     const s = engineState;
-    s.entities = []; s.score = 0; s.lives = 3;
+    s.entities = []; s.score = 0; s.lives = LIVES_MAX_HALVES;
     s.projectiles = []; s.nextProjectileId = 0;
-    s.player = { ...s.player, x: 100, y: 100, vx: 0, vy: 0, state: PLAYER_STATE.NORMAL, isDead: false, isGiant: false, hasPet: false, canDoubleJump: false, width: 40, height: 60, idleTimer: 0, lastSafeX: 100, lastSafeY: 100, jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1, ghosts: [], sugarCrashTimer: 0, attackCooldown: 0, animFrame: 0, animTimer: 0 };
+    s.player = { ...s.player, x: 100, y: 100, vx: 0, vy: 0, state: PLAYER_STATE.NORMAL, isDead: false, isGiant: false, hasPet: false, canDoubleJump: false, width: 40, height: 60, idleTimer: 0, lastSafeX: 100, lastSafeY: 100, jumpTimer: 0, justLanded: false, squashX: 1, squashY: 1, ghosts: [], sugarCrashTimer: 0, attackCooldown: 0, animFrame: 0, animTimer: 0, hitstun: 0 };
     s.camera.x = 0;
     setAmmo(10);
     let curX = 0;
@@ -525,7 +588,7 @@ export default function Advergame() {
     setSelection((prev) => ({ ...prev, theme: themeId }));
     setAppState(APP_STATE.PLAYING);
     generateLevel(THEMES[themeId], levelIdx);
-    setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
+    setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: LIVES_MAX_HALVES });
     lastFrameUpdate = 0;
     trackGameEvent('puka_campaign_start', { stage: levelIdx });
     preloadAssets().then(() => {
@@ -550,7 +613,7 @@ export default function Advergame() {
     setSelection((prev) => ({ ...prev, theme: nextTheme }));
     setAppState(APP_STATE.PLAYING);
     generateLevel(THEMES[nextTheme], nextLevel);
-    setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: 3 });
+    setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: LIVES_MAX_HALVES });
     lastFrameUpdate = 0;
     trackGameEvent('puka_level_up', { stage: nextLevel });
   }
@@ -590,9 +653,11 @@ export default function Advergame() {
 
       if (timeLeft <= 0 || p.y > 1500) {
         if (s.lives > 1) {
-          s.lives--;
+          // Falling off / time-out counts as losing a FULL heart (2 half-hearts).
+          s.lives = Math.max(0, s.lives - 2);
           p.x = p.lastSafeX || 100; p.y = (p.lastSafeY || 500) - 100;
           p.vx = 0; p.vy = 0;
+          p.hitstun = 0; // reset i-frames so the next hit registers
           p.isGiant = false; p.hasPet = false; p.canDoubleJump = false;
           p.width = 40; p.height = 60; p.idleTimer = 0;
           p.state = PLAYER_STATE.NORMAL; p.stateTimer = 0;
@@ -624,6 +689,7 @@ export default function Advergame() {
       let jumpMult = 1;
       if (p.stateTimer > 0) p.stateTimer -= 16.6;
       if (p.sugarCrashTimer > 0) p.sugarCrashTimer -= 16.6;
+      if (p.hitstun > 0) p.hitstun -= 16.6;
 
       let currentSpeedMult = p.sugarCrashTimer > 0 ? 0.5 : 1;
 
@@ -1021,7 +1087,7 @@ export default function Advergame() {
             if (inventory().length < 5) {
               setInventory(prev => [...prev, 'PUKA_POWER']);
             }
-            spawnFloatingText(entity.x, entity.y - 40, '¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ???');
+            spawnFloatingText(entity.x, entity.y - 40, '¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! \u{1F60A}\u{1F60A}\u{1F60A}');
             if (audioInst) audioInst.powerup();
             spawnParticle(entity.x, entity.y, '#ffd700', 25);
             triggerShake(4, 150);
@@ -1096,20 +1162,9 @@ export default function Advergame() {
           case ENTITY.PROJECTILE_BULL: {
             entity.active = false;
             if (p.state === PLAYER_STATE.PUKA_OVERDRIVE) break;
-            if (p.hasPet) {
-              p.hasPet = false; p.canDoubleJump = false; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
-              setUiState((prev) => ({ ...prev, message: '¡MASCOTA PERDIDA!', messageType: 'warning' }));
-            } else if (p.isGiant) {
-              p.isGiant = false; p.width = 40; p.height = 60; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
-              setUiState((prev) => ({ ...prev, message: '¡PODER PERDIDO!', messageType: 'warning' }));
-            } else {
-              p.vx = p.facingLeft ? 10 : -10; p.vy = -5;
-              s.score = Math.max(0, s.score - 1);
-              setUiState((prev) => ({ ...prev, message: '¡SHURIKEN! -1 💥💥', messageType: 'error' }));
-            }
-            if (audioInst) audioInst.hurt();
-            triggerShake(8, 120);
-            triggerHitstop(2);
+            // Use the shared damagePlayer helper: 1 half-heart per hit,
+            // knockback away from the projectile.
+            damagePlayer(p, entity.x, 1, PROJECTILE_KNOCKBACK_VX, PROJECTILE_KNOCKBACK_VY);
             break;
           }
           case ENTITY.AMMO_BOX: {
@@ -1124,7 +1179,7 @@ export default function Advergame() {
             const curLevel = currentLevelIndex();
             const cfg = LEVEL_CONFIG[curLevel as keyof typeof LEVEL_CONFIG];
             if (cfg && s.score < cfg.minCoins) {
-              setUiState((prev) => ({ ...prev, message: `¡Necesitas ${cfg.minCoins} monedas! ??`, messageType: 'warning' }));
+              setUiState((prev) => ({ ...prev, message: `¡Necesitas ${cfg.minCoins} monedas! \u{1FA99}`, messageType: 'warning' }));
               break;
             }
             if (curLevel < 3) {
@@ -1183,23 +1238,28 @@ export default function Advergame() {
 
       if (s.shakeTimer > 0) s.shakeTimer -= 16.6;
 
-      s.floatingTexts.forEach((ft, idx) => {
+      // Decay floating texts, scores, and particles; use reverse iteration
+      // + splice to avoid the forEach + splice index-shift bug.
+      for (let i = s.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = s.floatingTexts[i];
         ft.life -= 16.6;
         ft.alpha = Math.max(0, ft.life / ft.maxLife);
         ft.y -= 0.5;
-        if (ft.life <= 0) s.floatingTexts.splice(idx, 1);
-      });
-      s.floatingScores.forEach((fs, idx) => {
+        if (ft.life <= 0) s.floatingTexts.splice(i, 1);
+      }
+      for (let i = s.floatingScores.length - 1; i >= 0; i--) {
+        const fs = s.floatingScores[i];
         fs.life -= 16.6;
         fs.y += fs.vy;
-        if (fs.life <= 0) s.floatingScores.splice(idx, 1);
-      });
+        if (fs.life <= 0) s.floatingScores.splice(i, 1);
+      }
 
-      s.particles.forEach((part, idx) => {
+      for (let i = s.particles.length - 1; i >= 0; i--) {
+        const part = s.particles[i];
         part.life -= 16.6; part.x += part.vx; part.y += part.vy;
         part.alpha = Math.max(0, part.life / part.maxLife);
-        if (part.life <= 0) s.particles.splice(idx, 1);
-      });
+        if (part.life <= 0) s.particles.splice(i, 1);
+      }
 
       s.envParticles.forEach((ep) => {
         ep.x += ep.vx;
@@ -1214,22 +1274,10 @@ export default function Advergame() {
     }
 
     function handleHit(entity: Entity) {
-      if (audioInst) audioInst.hurt();
-      triggerShake(10, 150);
-      triggerHitstop(2);
-      if (p.hasPet) {
-        p.hasPet = false; p.canDoubleJump = false; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
-        entity.active = false;
-        setUiState((prev) => ({ ...prev, message: '¡MASCOTA PERDIDA!', messageType: 'warning' }));
-      } else if (p.isGiant) {
-        p.isGiant = false; p.width = 40; p.height = 60; p.vy = -6; p.vx = p.facingLeft ? 8 : -8;
-        entity.active = false;
-        setUiState((prev) => ({ ...prev, message: '¡PODER PERDIDO!', messageType: 'warning' }));
-      } else {
-        p.vx = p.facingLeft ? 10 : -10; p.vy = -5;
-        s.score = Math.max(0, s.score - 1);
-        setUiState((prev) => ({ ...prev, message: '¡GOLPE! -1 💥💥', messageType: 'error' }));
-      }
+      // Defer to the shared damagePlayer helper for consistency.
+      // 1 half-heart loss + knockback, away from `entity.x`.
+      entity.active = false;
+      damagePlayer(p, entity.x, 1, NINJA_KNOCKBACK_VX, NINJA_KNOCKBACK_VY);
     }
 
     if (canvasEl) render(canvasEl.getContext('2d')!, s, theme);
@@ -1352,7 +1400,7 @@ export default function Advergame() {
         ctx.fillStyle = '#7B1113';
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Blurred bamboo stalks
+      // Mid-distance bamboo (blurred, fewer details)
       ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
       for (let i = -1; i < 6; i++) {
         const bx = i * 250;
@@ -1361,6 +1409,14 @@ export default function Advergame() {
         for (let y = bY + 50; y < bY + 400; y += 80) {
           ctx.fillRect(bx + 28, y, 16, 4);
         }
+        // Subtle leaves for the mid layer
+        ctx.fillStyle = 'rgba(101, 163, 13, 0.35)';
+        ctx.beginPath();
+        ctx.moveTo(bx + 36, bY + 10);
+        ctx.quadraticCurveTo(bx + 56, bY, bx + 54, bY + 18);
+        ctx.quadraticCurveTo(bx + 46, bY + 14, bx + 36, bY + 10);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
       }
     } else {
       // Steep rocky cliffs
@@ -1399,17 +1455,49 @@ export default function Advergame() {
         ctx.fillRect(bx + 160, vh - 130, 160, 12);
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Crisp, defined vertical bamboos
-      ctx.fillStyle = '#22c55e';
+      // Detailed bamboo stalks: green body with darker nodes and leaves.
+      const fY = bgY(500);
+      const STALK_H = 500;
+      const NODE_GAP = 60;
       for (let i = -1; i < 7; i++) {
-        const bx = i * 200;
-        const fY = bgY(500);
-        ctx.fillRect(bx + 50, fY, 14, 500);
-        for (let y = fY + 50; y < fY + 500; y += 70) {
-          ctx.fillStyle = '#a3e635';
-          ctx.fillRect(bx + 47, y, 20, 4);
-        }
+        const bx = i * 200 + 50;
+        // Trunk: 2-tone gradient effect (darker stripe on left edge)
+        ctx.fillStyle = '#15803d';
+        ctx.fillRect(bx - 1, fY, 16, STALK_H);
         ctx.fillStyle = '#22c55e';
+        ctx.fillRect(bx, fY, 14, STALK_H);
+        // Nodes (the horizontal joints at each segment) - slightly raised
+        for (let y = fY + 30; y < fY + STALK_H; y += NODE_GAP) {
+          ctx.fillStyle = '#166534'; // dark green node
+          ctx.fillRect(bx - 2, y, 18, 6);
+          ctx.fillStyle = '#4ade80'; // bright highlight band
+          ctx.fillRect(bx + 1, y + 1, 12, 2);
+        }
+        // Leaves at the top of each stalk
+        ctx.fillStyle = '#65a30d';
+        // Right-side leaf
+        ctx.beginPath();
+        ctx.moveTo(bx + 7, fY + 8);
+        ctx.quadraticCurveTo(bx + 35, fY - 5, bx + 32, fY + 18);
+        ctx.quadraticCurveTo(bx + 20, fY + 14, bx + 7, fY + 8);
+        ctx.fill();
+        // Left-side leaf
+        ctx.beginPath();
+        ctx.moveTo(bx + 7, fY + 16);
+        ctx.quadraticCurveTo(bx - 22, fY + 6, bx - 18, fY + 28);
+        ctx.quadraticCurveTo(bx - 5, fY + 22, bx + 7, fY + 16);
+        ctx.fill();
+        // A few mid-stalk leaves
+        ctx.beginPath();
+        ctx.moveTo(bx + 7, fY + 200);
+        ctx.quadraticCurveTo(bx + 28, fY + 190, bx + 24, fY + 212);
+        ctx.quadraticCurveTo(bx + 16, fY + 208, bx + 7, fY + 200);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(bx + 7, fY + 320);
+        ctx.quadraticCurveTo(bx - 24, fY + 312, bx - 20, fY + 332);
+        ctx.quadraticCurveTo(bx - 6, fY + 326, bx + 7, fY + 320);
+        ctx.fill();
       }
     } else {
       // Clouds passing by horizontally
@@ -1567,7 +1655,7 @@ export default function Advergame() {
         // Floating Puka Power can above head!
         drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! ???", entity.x + entity.width / 2, entity.y - 48);
+        drawSpeechBubble(ctx, "¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! \u{1F60A}\u{1F60A}\u{1F60A}", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_CAT_PUKA_POWER && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 20;
@@ -1580,7 +1668,7 @@ export default function Advergame() {
         // Floating Puka Power above head
         drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Miau! ¡Toma fideos y Puka Power natural! ?????", entity.x + entity.width / 2, entity.y - 48);
+        drawSpeechBubble(ctx, "¡Miau! ¡Toma fideos y Puka Power natural! \u{1F431}\u{1F60A}\u{1F60A}\u{1F60A}\u{1F60A}", entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_ABYO && entity.active) {
         ctx.save();
         ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 15;
@@ -2107,16 +2195,44 @@ export default function Advergame() {
 
     const progressPct = () => s().totalLevelLength > 0 ? Math.min(100, Math.max(0, (s().player.x / s().totalLevelLength) * 100)) : 0;
 
+    // Heart rendering: lives stored as half-hearts (0..LIVES_MAX*2).
+    // Render `Math.floor(lives/2)` full hearts + one half heart if `lives % 2 === 1`.
+    const renderHearts = () => {
+      const lives = Math.max(0, ui().lives);
+      const fullHearts = Math.floor(lives / 2);
+      const hasHalf = lives % 2 === 1;
+      const out: any[] = [];
+      for (let i = 0; i < fullHearts; i++) {
+        out.push(
+          <svg class="w-7 h-7 sm:w-8 sm:h-8 text-red-500 fill-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" viewBox="0 0 24 24">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>,
+        );
+      }
+      if (hasHalf) {
+        out.push(
+          <svg class="w-7 h-7 sm:w-8 sm:h-8 text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" viewBox="0 0 24 24">
+            <defs>
+              <clipPath id="heart-half-clip">
+                <rect x="0" y="0" width="12" height="24" />
+              </clipPath>
+            </defs>
+            <g clip-path="url(#heart-half-clip)">
+              <path class="fill-red-500" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            </g>
+            <path class="fill-red-500/20" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+          </svg>,
+        );
+      }
+      return out;
+    };
+
     return (
       <div class="fixed inset-0 bg-black overflow-hidden select-none font-sans">
         <div class="absolute top-0 left-0 right-0 z-30 flex justify-between items-start p-2 sm:p-3 pointer-events-none">
           <div class="flex items-center gap-2">
             <div class="flex gap-0.5">
-              {Array.from({ length: Math.max(0, ui().lives) }).map(() => (
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 text-red-500 fill-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" viewBox="0 0 24 24">
-                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                </svg>
-              ))}
+              {renderHearts()}
             </div>
             <div class="flex items-center gap-2 bg-slate-900/80   px-3 py-1.5 rounded-lg border border-slate-700/50 shadow-lg">
               <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2141,12 +2257,12 @@ export default function Advergame() {
 
         <div class="hidden md:flex absolute bottom-4 left-4 z-30 flex-col gap-1 bg-slate-900/80   px-3 py-2 rounded-lg border border-slate-700/50 text-white text-xs font-semibold">
           <div class="flex items-center gap-1.5">
-            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">?</span>
-            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">?</span>
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{'\u2190'}</span>
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{'\u2192'}</span>
             <span>Moverse</span>
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">?</span>
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{'\u2191'}</span>
             <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">Espacio</span>
             <span>Saltar</span>
           </div>
@@ -2157,7 +2273,7 @@ export default function Advergame() {
           <div class="flex items-center gap-1.5">
             <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">Shift</span>
             <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">C</span>
-            <span>Puka Overdrive ?</span>
+            <span>Puka Overdrive {'\u26A1'}</span>
           </div>
         </div>
 
