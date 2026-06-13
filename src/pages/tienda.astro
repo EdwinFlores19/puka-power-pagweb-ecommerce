@@ -5,10 +5,19 @@ import ProductCatalog from '@/islands/ProductCatalog';
 import CartSidebar from '@/islands/CartSidebar';
 import MascotGuide from '@/islands/MascotGuide';
 import UserMenu from '@/islands/UserMenu';
+import { verifyWonCookie, WON_COOKIE_NAME } from '@/lib/session';
 
 export const prerender = false;
 
 Astro.response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
+// Detect the won-cookie server-side so the MascotGuide can render the
+// "champion" greeting on first paint (no flash, no client-side fetch).
+// The cookie is the same one /api/mark-won sets when the user wins the
+// campaign, so it accurately reflects "has this user won?".
+const cookieHeader = Astro.request.headers.get('cookie');
+const wonSession = await verifyWonCookie(cookieHeader);
+const initialIsWinner = !!wonSession;
 ---
 
 <BaseLayout
@@ -86,6 +95,6 @@ Astro.response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate
     </div>
   </main>
 
-  <MascotGuide client:load autoShowDelay={5000} startIndex={5} enableCompanion={true} />
+  <MascotGuide client:load autoShowDelay={5000} startIndex={5} enableCompanion={true} initialIsWinner={initialIsWinner} />
   <Footer />
 </BaseLayout>
