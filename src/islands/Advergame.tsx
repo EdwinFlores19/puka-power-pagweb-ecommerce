@@ -1679,7 +1679,10 @@ export default function Advergame() {
     if (viewport.width <= 0 || viewport.height <= 0) return;
     const now = Date.now();
 
-    // Scale up everything on small viewports so characters and text are readable
+    // Scale up the game world on small viewports so characters and text
+    // are readable. The parallax background is drawn at its NATIVE viewport
+    // size (not scaled) so the mountains, houses and bamboo keep their
+    // intended layout and never get clipped on small screens.
     const isSmallViewport = viewport.width < 900;
     const worldScale = isSmallViewport ? 1.5 : 1;
 
@@ -1691,14 +1694,16 @@ export default function Advergame() {
       ctx.translate(sx, sy);
     }
 
-    // Apply scale around viewport center for the whole game world
+    // Draw the parallax background at native viewport size — NOT scaled.
+    drawParallaxBackground(ctx, theme.id, camera.x, viewport.width, viewport.height);
+
+    // Apply worldScale only to the game entities (player, platforms, NPCs, projectiles)
     if (worldScale !== 1) {
+      ctx.save();
       ctx.translate(viewport.width / 2, viewport.height / 2);
       ctx.scale(worldScale, worldScale);
       ctx.translate(-viewport.width / 2, -viewport.height / 2);
     }
-
-    drawParallaxBackground(ctx, theme.id, camera.x, viewport.width, viewport.height);
 
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
@@ -2129,7 +2134,10 @@ export default function Advergame() {
     ctx.filter = 'none';
     ctx.restore();
 
-    ctx.restore();
+    // Close the worldScale block (only if it was opened)
+    if (worldScale !== 1) {
+      ctx.restore();
+    }
 
     ctx.restore();
   }
