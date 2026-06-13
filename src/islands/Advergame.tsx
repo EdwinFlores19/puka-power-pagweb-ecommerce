@@ -38,6 +38,7 @@ const SPRITE = {
   PUKA_LAUGH: '/sprites/pucca_risa_inclinada.png',
   GARU_RUN: '/sprites/garu_animacion_carrera_sprite_sheet.png',
   GARU_IDLE: '/sprites/garu_de_pie_enojado.png',
+  GARU_LOVE: '/sprites/garu_ojos_corazon_fondo_rosa.png',
   GARU_SCARED: '/sprites/garu_asustado_inclinado_derecha.png',
   NINJA: '/sprites/enemigo_ninja_morado_espada.png',
   NINJA2: '/sprites/enemigo2_pucca.png',
@@ -74,6 +75,7 @@ const SPRITE_DISPLAY: Record<string, { w: number; h: number }> = {
   [SPRITE.PUKA_LAUGH]: { w: 40, h: 60 },
   [SPRITE.GARU_RUN]: { w: 40, h: 60 },
   [SPRITE.GARU_IDLE]: { w: 40, h: 60 },
+  [SPRITE.GARU_LOVE]: { w: 40, h: 60 },
   [SPRITE.GARU_SCARED]: { w: 40, h: 60 },
   [SPRITE.NINJA]: { w: 40, h: 60 },
   [SPRITE.NINJA2]: { w: 40, h: 60 },
@@ -1939,7 +1941,14 @@ export default function Advergame() {
       if (garuMoving) {
         drawSprite(ctx, SPRITE.GARU_RUN, s.companion.animFrame, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
       } else {
-        drawSprite(ctx, SPRITE.GARU_IDLE, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
+        // In level 2 Garu is "in love" — show heart-eyes sprite instead of the angry idle.
+        const loveLevel = currentLevelIndex() === 2;
+        const garuSprite = loveLevel ? SPRITE.GARU_LOVE : SPRITE.GARU_IDLE;
+        drawSprite(ctx, garuSprite, 0, s.companion.x, s.companion.y, s.companion.width, s.companion.height, player.facingLeft);
+        // Emit subtle heart particles on level 2 every ~800ms while Garu is on-screen
+        if (loveLevel && now % 800 < 32) {
+          spawnParticle(s.companion.x + s.companion.width / 2, s.companion.y - 4, '#ff6b9d', 1, true);
+        }
       }
     }
     ctx.restore();
