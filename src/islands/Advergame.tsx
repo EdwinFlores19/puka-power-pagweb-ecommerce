@@ -2456,34 +2456,16 @@ export default function Advergame() {
               {iconArrowLeft} Volver a la Tienda
             </a>
             <div class="relative z-10">
-              {/* Special congratulations from the cat TÍOS — only on full campaign victory */}
-              <div class="mb-8 max-w-lg mx-auto flex items-center gap-4 bg-gradient-to-r from-green-500/15 via-emerald-500/10 to-green-500/15 border-2 border-green-500/40 rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(34,197,94,0.25)] animate-bubble-in">
-                <div class="relative shrink-0">
-                  <div class="absolute inset-0 bg-green-400/30 blur-xl rounded-full animate-pulse" />
-                  <img
-                    src="/sprites/gato_negro_cuerpo_completo.png"
-                    class="relative w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-[0_0_18px_rgba(34,197,94,0.8)]"
-                    alt="Gato Tíos celebrando"
-                    width="96"
-                    height="96"
-                    decoding="async"
-                  />
-                  <div class="absolute -top-1 -right-1 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-base shadow-lg ring-2 ring-green-500/60 animate-bounce">
-                    {'\u{1F431}'}
-                  </div>
-                </div>
-                <div class="flex-1 text-left min-w-0">
-                  <p class="text-[10px] sm:text-xs font-black uppercase text-green-300 mb-1 tracking-[0.2em] flex items-center gap-1.5">
-                    <span class="inline-block w-2 h-2 rounded-full bg-green-400 animate-ping" />
-                    {'\u{00A1}'}El Gato Tíos te felicita!
-                  </p>
-                  <p class="text-sm sm:text-base text-slate-100 leading-relaxed font-semibold">
-                    ¡MIAU! {'\u{1F431}'} ¡Atrapaste a Garu y completaste los 3 niveles! Eres una verdadera <span class="text-green-300">Ninja del amor</span>. ¡Purr-fecto! {'\u{1F48B}'}
-                  </p>
-                  <p class="text-[10px] sm:text-xs text-slate-400 mt-1.5 italic">
-                    Pasa por la tienda, me debes un fideo {'\u{1F35C}'}
-                  </p>
-                </div>
+              {/* Kiss sticker between Pucca and Garu standing — placed above the trophy. */}
+              <div class="mb-6 animate-bounce drop-shadow-[0_0_25px_rgba(255,100,150,0.5)]">
+                <img
+                  src="/sprites/beso_puka_y_garu_parados.png"
+                  alt="Pucca y Garu besándose"
+                  class="w-56 sm:w-72 h-auto object-contain mx-auto"
+                  width="288"
+                  height="204"
+                  decoding="async"
+                />
               </div>
 
               <div class="text-8xl sm:text-9xl mb-6 animate-bounce drop-shadow-[0_0_30px_rgba(34,197,94,0.3)]">{'\u{1F3C6}'}</div>
@@ -2536,6 +2518,38 @@ export default function Advergame() {
             </a>
             <div class="relative z-10 flex flex-col items-center max-w-md w-full">
               <img src="/sprites/pucca_besando_garu_sticker.png" class="w-64 h-64 object-contain animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)] mb-4" />
+
+              {/* Cat congratulations card — shown after EVERY level completion.
+                  The cat (Mio) congratulates Pucca and asks for a fideo. */}
+              <div class="mb-6 w-full flex items-center gap-3 bg-gradient-to-r from-purple-500/15 via-fuchsia-500/10 to-purple-500/15 border-2 border-purple-500/40 rounded-2xl p-3 sm:p-4 shadow-[0_0_30px_rgba(168,85,247,0.25)] animate-bubble-in">
+                <div class="relative shrink-0">
+                  <div class="absolute inset-0 bg-purple-400/30 blur-xl rounded-full animate-pulse" />
+                  <img
+                    src="/sprites/gato_negro_cuerpo_completo.png"
+                    class="relative w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]"
+                    alt="Gato Mio celebrando"
+                    width="80"
+                    height="80"
+                    decoding="async"
+                  />
+                  <div class="absolute -top-1 -right-1 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center text-sm shadow-lg ring-2 ring-purple-500/60 animate-bounce">
+                    {'\u{1F431}'}
+                  </div>
+                </div>
+                <div class="flex-1 text-left min-w-0">
+                  <p class="text-[10px] sm:text-xs font-black uppercase text-purple-300 mb-1 tracking-[0.2em] flex items-center gap-1.5">
+                    <span class="inline-block w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                    {'\u{00A1}'}El Gato Mio te felicita!
+                  </p>
+                  <p class="text-xs sm:text-sm text-slate-100 leading-relaxed font-semibold">
+                    ¡MIAU! {'\u{1F431}'} <Show when={currentLevelIndex() === 3} fallback={<>¡Nivel completado!</>}>¡Atrapaste a Garu y completaste los 3 niveles!</Show> Eres una verdadera <span class="text-purple-300">Ninja del amor</span>. {'\u{1F48B}'}
+                  </p>
+                  <p class="text-[10px] sm:text-xs text-slate-400 mt-1 italic">
+                    Pasa por la tienda, me debes un fideo {'\u{1F35C}'}
+                  </p>
+                </div>
+              </div>
+
               <Show when={currentLevelIndex() === 3}>
                 <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡CAMPAÑA COMPLETADA!</h1>
                 <p class="text-lg text-slate-300 mb-6 leading-relaxed">
