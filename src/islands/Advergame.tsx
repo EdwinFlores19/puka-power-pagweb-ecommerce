@@ -811,7 +811,7 @@ export default function Advergame() {
           if (Math.random() > 0.8) spawnParticle(p.x, p.y + 40, '#3b82f6', 1);
           if (p.stateTimer <= 0) {
             p.state = PLAYER_STATE.TACHYCARDIA; p.stateTimer = 4000;
-            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.TACHYCARDIA, message: '¡TAQUICARDIA! 😭😭', messageType: 'error' }));
+            setUiState((prev) => ({ ...prev, playerState: PLAYER_STATE.TACHYCARDIA, message: '¡TAQUICARDIA por químicos industriales! 💔⚡', messageType: 'error' }));
             if (audioInst) audioInst.hurt();
             triggerShake(6, 200);
           }
