@@ -175,6 +175,94 @@ const ENTITY = {
   NPC_CAT_PUKA_POWER: 13,
 } as const;
 
+// ============ Per-level NPC dialogs ============
+// Each level features a different character with a unique dialog. The
+// chef (CHING) is the level-1 ally, the warrior (ABYO) is the level-2
+// ally, the cat (TIOS) is a level-1-and-2 helper, and the level-3
+// finale is a cinemática (no NPC dialog).
+interface LevelNpcDialog {
+  name: string;
+  text: string;
+}
+
+const NPC_DIALOGS: Record<'ching' | 'abyo' | 'tios', Record<number, LevelNpcDialog>> = {
+  // CHEF CHING — el cocinero rojo (aparece en niveles 1 y 2)
+  ching: {
+    1: { name: 'CHING', text: '¡Fideos de la velocidad! Por tu ritmo te preparé unos noodles. ¡Toma este Puka Power, antes de que se enfríe! 🍜⚡' },
+    2: { name: 'CHING', text: '¡Wok caliente, ninja veloz! Esta vez el ramen viene con extra energía Sooga. ¡No te detengas! 🍜' },
+    3: { name: 'CHING', text: '¡El último plato! Fideos místicos de la montaña sagrada. Después de esto, la cocina cierra — Garu te espera. 🍜' },
+  },
+  // ABYO — el luchador (aparece en niveles 1 y 2)
+  abyo: {
+    1: { name: 'ABYO', text: '¡El espíritu del rayo arde en ti! Siente la energía de Sooga, pequeña ninja. ¡KIAAA! 🔥' },
+    2: { name: 'ABYO', text: '¡Más profundo en el bambú! Cada paso es un latido del dragón. ¡No temas, el rayo te guía! 🔥' },
+    3: { name: 'ABYO', text: '¡La última línea! Cruza y el corazón de Garu será tuyo. ¡KIAAA, hija del rayo! 🔥' },
+  },
+  // TÍOS — el gato negro (aparece en niveles 1 y 2, no en 3)
+  tios: {
+    1: { name: 'TÍOS', text: 'Buena suerte, pequeña. Un té antes de continuar — la vida es corta, los fideos largos. 🍵' },
+    2: { name: 'TÍOS', text: 'El bambú oculta secretos. Mantén los ojos abiertos, querida. 🍵' },
+    3: { name: 'TÍOS', text: 'Buen viaje, Pucca. Recuerda: el amor es la velocidad. 🐢' },
+  },
+};
+
+// ============ LEVEL_COMPLETED config (per level) ============
+interface LevelCompletedConfig {
+  /** Main hero image (the kiss / ramo / boda). */
+  heroImage: string;
+  heroAlt: string;
+  /** Character to show in the popup card. null = no popup (cinemática
+      de boda en el nivel 3). */
+  popup: null | {
+    name: string;
+    title: string;
+    text: string;
+    icon: string;          // emoji (e.g. "🐱")
+    image: string;         // path to sprite
+  };
+  /** Header text under the hero image. */
+  header: string;
+  /** Subtitle text. */
+  subtitle: string;
+}
+
+const LEVEL_COMPLETED_CONFIG: Record<number, LevelCompletedConfig> = {
+  1: {
+    heroImage: '/sprites/pucca_y_garu_enamorados_sticker.png',
+    heroAlt: 'Pucca y Garu, novios en el restaurante',
+    popup: {
+      name: 'MIO',
+      title: '¡EL GATO MIO TE FELICITA!',
+      text: '¡MIAU! 🐱 ¡Nivel completado! Eres una verdadera Ninja del amor. 💋',
+      icon: '🐱',
+      image: '/sprites/gato_negro_cuerpo_completo.png',
+    },
+    header: '¡Nivel 1 Completado!',
+    subtitle: 'Del Restaurante Goh-Rong al siguiente paso. ¡El ramen de Ching te espera!',
+  },
+  2: {
+    heroImage: '/sprites/garu_con_ramo_flores.png',
+    heroAlt: 'Garu sosteniendo un ramo de flores para Pucca',
+    popup: {
+      name: 'CHING',
+      title: '¡EL CHEF CHING TE FELICITA!',
+      text: '¡Wok caliente, ninja veloz! El bosque de bambú no te detuvo. ¡Sigue así! 🍜',
+      icon: '🍜',
+      image: '/sprites/personaje_cocinero_rojo_con_cubos_variante.png',
+    },
+    header: '¡Nivel 2 Completado!',
+    subtitle: 'El espíritu del rayo te acompaña. La montaña sagrada te espera.',
+  },
+  3: {
+    // Cinemática de boda — no popup, todo el centro es la boda
+    heroImage: '/sprites/boda_pukaygaru.jpg',
+    heroAlt: 'La boda de Pucca y Garu en la montaña sagrada',
+    popup: null,
+    header: '💍 ¡Lo lograste!',
+    subtitle: 'Garu no tiene escapatoria. Al fin, en la montaña donde empezó todo, Pucca y Garu se unen para siempre. 💋🌸',
+  },
+};
+
 const PLAYER_STATE = {
   NORMAL: 'NORMAL',
   CHEMICAL_RUSH: 'CHEMICAL_RUSH',
@@ -1644,53 +1732,61 @@ export default function Advergame() {
       } else if (entity.type === ENTITY.ENEMY_NINJA && entity.active) {
         drawSprite(ctx, entity.sprite || SPRITE.NINJA, 0, entity.x, entity.y, entity.width, entity.height, (entity.vx ?? 0) > 0);
       } else if (entity.type === ENTITY.NPC_CHING && entity.active) {
+        const lvl = (currentLevelIndex() as 1 | 2 | 3) || 1;
+        const dialog = NPC_DIALOGS.ching[lvl] || NPC_DIALOGS.ching[1];
         ctx.save();
         ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 25;
         drawSprite(ctx, SPRITE.CHING, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
         ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-        ctx.fillText('CHING', entity.x, entity.y - 8);
-        
+        ctx.fillText(dialog.name, entity.x, entity.y - 8);
+
         // Floating Puka Power can above head!
         drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
-        // Speech Bubble
-        drawSpeechBubble(ctx, "¡Hola Pucca! ¡Toma un Puka Power para ir más rápido! \u{1F60A}\u{1F60A}\u{1F60A}", entity.x + entity.width / 2, entity.y - 48);
+        // Speech Bubble with level-specific dialog
+        drawSpeechBubble(ctx, dialog.text, entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_CAT_PUKA_POWER && entity.active) {
+        const lvl = (currentLevelIndex() as 1 | 2 | 3) || 1;
+        const dialog = NPC_DIALOGS.abyo[lvl] || NPC_DIALOGS.abyo[1];
         ctx.save();
-        ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 25;
         drawSprite(ctx, SPRITE.CAT_PUKA_POWER, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
         ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
         ctx.fillText('MIO', entity.x, entity.y - 8);
-        
+
         // Floating Puka Power above head
         drawSprite(ctx, SPRITE.PUKA_POWER, 0, entity.x + entity.width / 2 - 12, entity.y - 45, 24, 36);
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Miau! ¡Toma fideos y Puka Power natural! \u{1F431}\u{1F60A}\u{1F60A}\u{1F60A}\u{1F60A}", entity.x + entity.width / 2, entity.y - 48);
+        drawSpeechBubble(ctx, dialog.text, entity.x + entity.width / 2, entity.y - 48);
       } else if (entity.type === ENTITY.NPC_ABYO && entity.active) {
+        const lvl = (currentLevelIndex() as 1 | 2 | 3) || 1;
+        const dialog = NPC_DIALOGS.abyo[lvl] || NPC_DIALOGS.abyo[1];
         ctx.save();
         ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 15;
         drawSprite(ctx, SPRITE.ABYO, 0, entity.x, entity.y, entity.width, entity.height);
         ctx.shadowBlur = 0;
         ctx.restore();
         ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-        ctx.fillText('ABYO', entity.x, entity.y - 8);
-        
+        ctx.fillText(dialog.name, entity.x, entity.y - 8);
+
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡KIAAA! ¡Siente la energía de Sooga, Pucca! 🔥🔥🔥🔥", entity.x + entity.width / 2, entity.y - 8);
+        drawSpeechBubble(ctx, dialog.text, entity.x + entity.width / 2, entity.y - 8);
       } else if (entity.type === ENTITY.NPC_TIOS && entity.active) {
+        const lvl = (currentLevelIndex() as 1 | 2 | 3) || 1;
+        const dialog = NPC_DIALOGS.tios[lvl] || NPC_DIALOGS.tios[1];
         ctx.save();
         ctx.shadowColor = '#22c55e'; ctx.shadowBlur = 20;
         drawSprite(ctx, SPRITE.CAT, 0, entity.x, entity.y, 40, 40);
         ctx.shadowBlur = 0;
         ctx.restore();
         ctx.font = 'bold 20px Arial'; ctx.fillStyle = '#22c55e'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-        ctx.fillText('TÍOS', entity.x, entity.y - 8);
-        
+        ctx.fillText(dialog.name, entity.x, entity.y - 8);
+
         // Speech Bubble
-        drawSpeechBubble(ctx, "¡Fideos de la felicidad listos! ¡Buen viaje, Pucca! 🍜😊😊😊", entity.x + 20, entity.y - 8);
+        drawSpeechBubble(ctx, dialog.text, entity.x + 20, entity.y - 8);
       } else if (entity.type === ENTITY.NPC_MALA_PUCCA && entity.active) {
         ctx.save();
         ctx.shadowColor = '#8b5cf6'; ctx.shadowBlur = 15;
@@ -2446,39 +2542,43 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.VICTORY}>
-          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-green-950/30 to-slate-900 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10">
-              <div class="absolute top-10 left-10 w-64 h-64 bg-green-500 rounded-full blur-3xl animate-pulse" />
-              <div class="absolute bottom-10 right-10 w-80 h-80 bg-yellow-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s" />
+          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-pink-950/40 to-rose-950/40 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-15">
+              <div class="absolute top-10 left-10 w-64 h-64 bg-pink-500 rounded-full blur-3xl animate-pulse" />
+              <div class="absolute bottom-10 right-10 w-80 h-80 bg-rose-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s" />
             </div>
             <a href="/tienda"
               class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
               {iconArrowLeft} Volver a la Tienda
             </a>
-            <div class="relative z-10">
-              {/* Kiss sticker between Pucca and Garu standing — placed above the trophy. */}
-              <div class="mb-6 animate-bounce drop-shadow-[0_0_25px_rgba(255,100,150,0.5)]">
+            <div class="relative z-10 max-w-3xl">
+              {/* The wedding photo — the center of everything */}
+              <div class="mb-6 animate-bubble-in">
                 <img
-                  src="/sprites/beso_puka_y_garu_parados.png"
-                  alt="Pucca y Garu besándose"
-                  class="w-56 sm:w-72 h-auto object-contain mx-auto"
-                  width="288"
-                  height="204"
+                  src="/sprites/boda_pukaygaru.jpg"
+                  alt="La boda de Pucca y Garu en la montaña sagrada"
+                  class="w-72 sm:w-96 h-auto object-contain mx-auto rounded-2xl ring-4 ring-pink-400/30 shadow-[0_0_60px_rgba(255,100,150,0.5)]"
+                  width="384"
+                  height="auto"
                   decoding="async"
                 />
               </div>
 
-              <div class="text-8xl sm:text-9xl mb-6 animate-bounce drop-shadow-[0_0_30px_rgba(34,197,94,0.3)]">{'\u{1F3C6}'}</div>
-              <h1 class="text-5xl sm:text-6xl font-black uppercase mb-2 text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">{'\u{00A1}'}Campaña completada!</h1>
-              <p class="text-lg sm:text-xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
-              <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
-              <div class="my-8 p-5 sm:p-6 rounded-2xl bg-white/5 border border-pink-500/30 backdrop-blur-sm flex flex-col items-center gap-3 shadow-[0_0_40px_rgba(255,100,150,0.15)]">
+              <div class="text-7xl sm:text-8xl mb-4 animate-bounce drop-shadow-[0_0_30px_rgba(255,100,150,0.4)]">{'\u{1F48D}'}</div>
+              <h1 class="text-3xl sm:text-4xl md:text-5xl font-black uppercase mb-4 text-pink-300 drop-shadow-[0_0_20px_rgba(255,100,150,0.5)]">
+                {currentLevelIndex() === 3 ? '¡Garu no tiene escapatoria!' : '¡Campaña completada!'}
+              </h1>
+              <p class="text-base sm:text-lg text-slate-200 max-w-2xl mx-auto leading-relaxed mb-6">
+                Pasaste los 3 niveles. Atrapaste a Garu. Pero lo más importante: cruzaste la línea. Y ahora Garu no tiene opción. Pucca y Garu se casan al fin, en la montaña donde empezó todo. 💋🌸
+              </p>
+              <p class="text-sm text-slate-400 mb-6">Nivel {currentLevelIndex()}/3 · Monedas: <span class="text-yellow-400 font-bold">{uiState().coins}</span> 🪙</p>
+              <div class="my-6 p-5 sm:p-6 rounded-2xl bg-white/5 border border-pink-500/30 backdrop-blur-sm flex flex-col items-center gap-3 shadow-[0_0_40px_rgba(255,100,150,0.15)]">
                 <span class="text-[10px] sm:text-xs text-pink-300 uppercase tracking-[0.25em] font-semibold">{'\u{2728}'} En colaboración con {'\u{2728}'}</span>
                 <img src="/sprites/Pucca-Logo.png" alt="Pucca Logo" class="w-40 sm:w-52 h-auto object-contain drop-shadow-[0_0_40px_rgba(255,100,150,0.5)] hover:scale-105 transition-transform duration-700" />
                 <span class="text-xs sm:text-sm text-slate-400">{'\u{1F48B}'} Puka Power × Pucca {'\u{1F48B}'}</span>
               </div>
               <Show when={couponDone()}>
-                <div class="bg-green-500/20   border-2 border-green-500/50 text-green-400 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                <div class="bg-pink-500/20 border-2 border-pink-500/50 text-pink-300 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(255,100,150,0.15)]">
                   {'\u{1F389}'} Descuento de 15% activado – canjeado en tu carrito
                 </div>
               </Show>
@@ -2499,7 +2599,7 @@ export default function Advergame() {
                   {iconPlay} JUGAR DE NUEVO
                 </button>
                  <a href="/tienda"
-                  class="bg-slate-700 hover:bg-slate-600 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
+                  class="bg-pink-600 hover:bg-pink-500 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
                   Ir a la tienda {'\u{1F6D2}'}
                 </a>
               </div>
@@ -2508,84 +2608,115 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.LEVEL_COMPLETED}>
-          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/40 to-slate-900 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10">
-              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-600 rounded-full blur-3xl animate-pulse" />
-            </div>
-            <a href="/tienda"
-              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
-              {iconArrowLeft} Volver a la Tienda
-            </a>
-            <div class="relative z-10 flex flex-col items-center max-w-md w-full">
-              <img src="/sprites/pucca_besando_garu_sticker.png" class="w-64 h-64 object-contain animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)] mb-4" />
-
-              {/* Cat congratulations card — shown after EVERY level completion.
-                  The cat (Mio) congratulates Pucca and asks for a fideo. */}
-              <div class="mb-6 w-full flex items-center gap-3 bg-gradient-to-r from-purple-500/15 via-fuchsia-500/10 to-purple-500/15 border-2 border-purple-500/40 rounded-2xl p-3 sm:p-4 shadow-[0_0_30px_rgba(168,85,247,0.25)] animate-bubble-in">
-                <div class="relative shrink-0">
-                  <div class="absolute inset-0 bg-purple-400/30 blur-xl rounded-full animate-pulse" />
-                  <img
-                    src="/sprites/gato_negro_cuerpo_completo.png"
-                    class="relative w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]"
-                    alt="Gato Mio celebrando"
-                    width="80"
-                    height="80"
-                    decoding="async"
-                  />
-                  <div class="absolute -top-1 -right-1 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center text-sm shadow-lg ring-2 ring-purple-500/60 animate-bounce">
-                    {'\u{1F431}'}
-                  </div>
+          {(() => {
+            const lvl = (currentLevelIndex() as 1 | 2 | 3) || 1;
+            const cfg = LEVEL_COMPLETED_CONFIG[lvl] || LEVEL_COMPLETED_CONFIG[1];
+            const isFinal = lvl === 3;
+            // Cinemática de boda uses a pink/rose gradient; levels 1 and 2
+            // use the purple/slate gradient.
+            const bgClass = isFinal
+              ? 'bg-gradient-to-br from-slate-900 via-pink-950/50 to-rose-950/60'
+              : 'bg-gradient-to-br from-slate-900 via-purple-950/40 to-slate-900';
+            const glowColor = isFinal ? 'bg-pink-500' : 'bg-purple-600';
+            const ringColor = isFinal ? 'ring-pink-400/30' : 'ring-purple-400/20';
+            const heroSizeClass = isFinal
+              ? 'w-72 sm:w-96 h-auto'    // boda is wide, use auto height
+              : 'w-64 h-64 object-contain';
+            return (
+              <div class={`w-full min-h-screen ${bgClass} text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden`}>
+                <div class="absolute inset-0 opacity-15">
+                  <div class={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] ${glowColor} rounded-full blur-3xl animate-pulse`} />
                 </div>
-                <div class="flex-1 text-left min-w-0">
-                  <p class="text-[10px] sm:text-xs font-black uppercase text-purple-300 mb-1 tracking-[0.2em] flex items-center gap-1.5">
-                    <span class="inline-block w-2 h-2 rounded-full bg-purple-400 animate-ping" />
-                    {'\u{00A1}'}El Gato Mio te felicita!
-                  </p>
-                  <p class="text-xs sm:text-sm text-slate-100 leading-relaxed font-semibold">
-                    ¡MIAU! {'\u{1F431}'} <Show when={currentLevelIndex() === 3} fallback={<>¡Nivel completado!</>}>¡Atrapaste a Garu y completaste los 3 niveles!</Show> Eres una verdadera <span class="text-purple-300">Ninja del amor</span>. {'\u{1F48B}'}
-                  </p>
-                  <p class="text-[10px] sm:text-xs text-slate-400 mt-1 italic">
-                    Pasa por la tienda, me debes un fideo {'\u{1F35C}'}
-                  </p>
+                <a href="/tienda"
+                  class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
+                  {iconArrowLeft} Volver a la Tienda
+                </a>
+
+                {/* ===== Layout: hero on the left/center, popup on the right ===== */}
+                <div class="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center">
+                  {/* Left/center: hero image + header + subtitle + CTA */}
+                  <div class="flex flex-col items-center text-center order-2 lg:order-1">
+                    <img
+                      src={cfg.heroImage}
+                      alt={cfg.heroAlt}
+                      class={`${heroSizeClass} object-contain ${isFinal ? 'rounded-2xl ring-4 ' + ringColor + ' shadow-[0_0_50px_rgba(255,100,150,0.5)]' : 'animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]'} mb-4`}
+                      decoding="async"
+                    />
+                    <h1 class={`text-3xl sm:text-4xl md:text-5xl font-black uppercase mb-3 ${isFinal ? 'text-pink-300 drop-shadow-[0_0_20px_rgba(255,100,150,0.5)]' : 'text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]'}`}>
+                      {cfg.header}
+                    </h1>
+                    <p class="text-base sm:text-lg text-slate-200 max-w-xl leading-relaxed mb-6">
+                      {cfg.subtitle}
+                    </p>
+
+                    {/* CTA — different for level 3 (Reclamar) vs 1/2 (Siguiente) */}
+                    <Show
+                      when={isFinal}
+                      fallback={
+                        <button
+                          onClick={() => advanceToNextLevel()}
+                          class="w-full max-w-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider"
+                        >
+                          Siguiente Nivel {iconPlay}
+                        </button>
+                      }
+                    >
+                      <button
+                        onClick={async () => {
+                          trackGameEvent('puka_campaign_victory', { finalCoins: uiState().coins });
+                          if (!couponDone()) {
+                            await markGameWon();
+                            setCouponDone(true);
+                          }
+                          if (typeof window !== 'undefined') {
+                            try { localStorage.setItem('puka_campaign_won', 'true'); } catch (_) { /* noop */ }
+                          }
+                          setAppState(APP_STATE.VICTORY);
+                        }}
+                        class="w-full max-w-sm bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 hover:from-pink-500 hover:to-rose-400 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_40px_rgba(255,100,150,0.6)] uppercase tracking-wider"
+                      >
+                        💍 Reclamar Recompensas {iconPlay}
+                      </button>
+                    </Show>
+                  </div>
+
+                  {/* Right: popup character (only on levels 1 and 2) */}
+                  <Show when={cfg.popup}>
+                    {(popup) => (
+                      <div class="order-1 lg:order-2 w-full max-w-sm mx-auto">
+                        <div class="relative bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-md border-2 border-purple-500/50 rounded-3xl p-5 sm:p-6 shadow-[0_0_40px_rgba(168,85,247,0.4)] animate-bubble-in">
+                          <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl pointer-events-none" />
+                          <div class="relative flex flex-col items-center text-center">
+                            <div class="relative mb-3">
+                              <div class="absolute inset-0 bg-purple-400/40 blur-2xl rounded-full animate-pulse" />
+                              <img
+                                src={popup().image}
+                                alt={popup().name}
+                                class="relative w-28 h-28 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_20px_rgba(168,85,247,0.9)]"
+                                width="128"
+                                height="128"
+                                decoding="async"
+                              />
+                              <div class="absolute -top-1 -right-1 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-xl shadow-lg ring-2 ring-purple-500/60 animate-bounce">
+                                {popup().icon}
+                              </div>
+                            </div>
+                            <p class="text-[10px] sm:text-xs font-black uppercase text-purple-300 mb-2 tracking-[0.2em] flex items-center gap-1.5">
+                              <span class="inline-block w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                              {popup().title}
+                            </p>
+                            <p class="text-sm sm:text-base text-slate-100 leading-relaxed font-semibold">
+                              {popup().text}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Show>
                 </div>
               </div>
-
-              <Show when={currentLevelIndex() === 3}>
-                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡CAMPAÑA COMPLETADA!</h1>
-                <p class="text-lg text-slate-300 mb-6 leading-relaxed">
-                  ¡Felicidades! ¡Pucca ha atrapado finalmente a Garu y completado toda la campaña de amor y velocidad de Sooga! 💋🌸🌸🌸
-                </p>
-                <button onClick={async () => {
-                  trackGameEvent('puka_campaign_victory', { finalCoins: uiState().coins });
-                  if (!couponDone()) {
-                    // Server-side: sets HttpOnly signed cookie via /api/mark-won,
-                    // then refreshes local coupon UI from /api/checkout-cookie-state.
-                    await markGameWon();
-                    setCouponDone(true);
-                  }
-                  // Mark the campaign as won so MascotGuide in /tienda shows the
-                  // special "winner" greeting from the cat TÍOS
-                  if (typeof window !== 'undefined') {
-                    try { localStorage.setItem('puka_campaign_won', 'true'); } catch (_) { /* noop */ }
-                  }
-                  setAppState(APP_STATE.VICTORY);
-                }}
-                  class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">
-                  Reclamar Recompensas {iconPlay}
-                </button>
-              </Show>
-              <Show when={currentLevelIndex() < 3}>
-                <h1 class="text-4xl sm:text-5xl font-black uppercase mb-2 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">¡NIVEL COMPLETADO!</h1>
-                <p class="text-lg text-slate-300 mb-6 leading-relaxed">
-                  ¡Pucca ha logrado atrappar a Garu y darle un tierno beso de victoria! 💋🌸🌸🌸
-                </p>
-                <button onClick={() => advanceToNextLevel()}
-                  class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider">
-                  Siguiente Nivel {iconPlay}
-                </button>
-              </Show>
-            </div>
-          </div>
+            );
+          })()}
         </Match>
 
         <Match when={appState() === APP_STATE.PLAYING}>
