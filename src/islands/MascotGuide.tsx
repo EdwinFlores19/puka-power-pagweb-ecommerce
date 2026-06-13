@@ -211,6 +211,7 @@ export default function MascotGuide(props: Props) {
           setShowMainBubble(true);
         }, delay);
       } else {
+        setShowBubble(true);
         setShowMainBubble(true);
       }
     };
@@ -225,6 +226,7 @@ export default function MascotGuide(props: Props) {
           setShowMainBubble(true);
         }, delay);
       } else {
+        setShowBubble(true);
         setShowMainBubble(true);
       }
     } else {
