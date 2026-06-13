@@ -1284,17 +1284,28 @@ export default function Advergame() {
             // *right now* (sets the signed won-cookie via /api/mark-won)
             // so the 15% coupon is applied by default as soon as the user
             // navigates to /tienda — no extra click required.
+            //
+            // We chain off the markGameWon() promise so the state
+            // transition (and the analytics event) only fire AFTER the
+            // cookie has landed. That way, even if the user clicks
+            // "Volver a la Tienda" in the header (bypassing the VICTORY
+            // screen), the cookie is already in the browser.
             p.isDead = true;
             if (audioInst) audioInst.victory();
+            trackGameEvent('puka_campaign_victory', { finalCoins: s.score });
             if (!couponDone()) {
               setCouponDone(true);
               try { localStorage.setItem('puka_campaign_won', 'true'); } catch (_) { /* noop */ }
-              // Fire-and-forget; if the request fails the user can still
-              // claim the coupon from the VICTORY screen.
-              void markGameWon();
+              // Fire the mark-won request; once the cookie is set, the
+              // server returns success and we transition to the
+              // completed screen. Coupon path is guaranteed to work
+              // by the time the user lands on /tienda.
+              markGameWon().finally(() => {
+                setAppState(APP_STATE.LEVEL_COMPLETED);
+              });
+            } else {
+              setAppState(APP_STATE.LEVEL_COMPLETED);
             }
-            trackGameEvent('puka_campaign_victory', { finalCoins: s.score });
-            setAppState(APP_STATE.LEVEL_COMPLETED);
             return;
           }
         }
