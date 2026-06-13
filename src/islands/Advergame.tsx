@@ -1398,6 +1398,7 @@ export default function Advergame() {
     scrollX: number,
     vw: number,
     vh: number,
+    groundY: number = 500,
   ) {
     // Clear screen with theme's sky/base background
     let bgGrad = ctx.createLinearGradient(0, 0, 0, vh);
@@ -1414,65 +1415,69 @@ export default function Advergame() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, vw, vh);
 
-    // Responsive Y helper → keeps background elements visible on small viewports
-    const bgY = (offset: number) => Math.max(vh - offset, vh * 0.12);
+    // Responsive Y helper — fractional distance ABOVE the ground line.
+    // bgY(0.25) = the Y position that is 25% of vh above the ground,
+    // so on a 1080-tall canvas the result is 500 - 270 = 230, which
+    // is always above the ground regardless of vh.
+    const bgY = (fracAboveGround: number) => groundY - vh * fracAboveGround;
 
     // Layer 1: Far background (slowest movement, speed factor 0.05)
     ctx.save();
     const s1 = -scrollX * 0.05;
     ctx.translate(((s1 % vw) + vw) % vw, 0);
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 0.6;
     if (themeId === 'GOH_RONG') {
-      // Far mountains
-      ctx.fillStyle = '#4c1115';
+      // Far mountain silhouettes — visible against the dark wine sky
+      ctx.fillStyle = '#7a1a1f';
       for (let i = -1; i < 3; i++) {
         const x = i * vw;
-        const mBase = bgY(160);
+        const mBase = bgY(0.18);
         ctx.beginPath();
         ctx.moveTo(x - 50, vh);
         ctx.lineTo(x + vw * 0.3, mBase);
-        ctx.lineTo(x + vw * 0.6, mBase + 80);
-        ctx.lineTo(x + vw * 0.8, mBase - 40);
+        ctx.lineTo(x + vw * 0.6, mBase + vh * 0.10);
+        ctx.lineTo(x + vw * 0.8, mBase - vh * 0.05);
         ctx.lineTo(x + vw + 50, vh);
         ctx.closePath();
         ctx.fill();
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Misty sky mountains/clouds
-      ctx.fillStyle = '#0f3825';
+      // Misty mountain silhouettes — brightened so they show against the dark base
+      ctx.fillStyle = '#1f6f3e';
       for (let i = -1; i < 3; i++) {
         const x = i * vw;
-        const mBase = bgY(140);
+        const mBase = bgY(0.22);
         ctx.beginPath();
         ctx.moveTo(x - 100, vh);
-        ctx.quadraticCurveTo(x + vw * 0.25, mBase, x + vw * 0.5, mBase + 80);
-        ctx.quadraticCurveTo(x + vw * 0.75, mBase - 20, x + vw + 100, vh);
+        ctx.quadraticCurveTo(x + vw * 0.25, mBase, x + vw * 0.5, mBase + vh * 0.10);
+        ctx.quadraticCurveTo(x + vw * 0.75, mBase - vh * 0.04, x + vw + 100, vh);
         ctx.closePath();
         ctx.fill();
       }
     } else {
-      // Snowy mountain peaks
-      ctx.fillStyle = '#1e293b';
+      // Snowy mountain peaks (level 3) — slate-600 for visible contrast
+      ctx.fillStyle = '#475569';
       for (let i = -1; i < 3; i++) {
         const x = i * vw;
-        const mBase = bgY(180);
+        const mBase = bgY(0.20);
         ctx.beginPath();
         ctx.moveTo(x - 20, vh);
         ctx.lineTo(x + vw * 0.25, mBase);
-        ctx.lineTo(x + vw * 0.5, mBase + 120);
-        ctx.lineTo(x + vw * 0.75, mBase - 40);
+        ctx.lineTo(x + vw * 0.5, mBase + vh * 0.12);
+        ctx.lineTo(x + vw * 0.75, mBase - vh * 0.05);
         ctx.lineTo(x + vw + 20, vh);
         ctx.closePath();
         ctx.fill();
-        
-        ctx.fillStyle = '#cbd5e1';
+
+        // Snow cap — larger and with a bright highlight stripe
+        ctx.fillStyle = '#f1f5f9';
         ctx.beginPath();
-        ctx.moveTo(x + vw * 0.25 - 40, mBase + 30);
+        ctx.moveTo(x + vw * 0.25 - vh * 0.07, mBase + vh * 0.04);
         ctx.lineTo(x + vw * 0.25, mBase);
-        ctx.lineTo(x + vw * 0.25 + 40, mBase + 30);
+        ctx.lineTo(x + vw * 0.25 + vh * 0.07, mBase + vh * 0.04);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = '#1e293b';
+        ctx.fillStyle = '#475569';
       }
     }
     ctx.restore();
@@ -1481,58 +1486,70 @@ export default function Advergame() {
     ctx.save();
     const s2 = -scrollX * 0.15;
     ctx.translate(((s2 % vw) + vw) % vw, 0);
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.75;
     if (themeId === 'GOH_RONG') {
-      // Traditional houses (pagodas) → visible at top on all viewports
+      // Traditional houses (pagodas) — positioned ABOVE the ground line
+      // so they are always visible regardless of vh.
       ctx.fillStyle = '#7B1113';
+      const houseTopFrac = 0.22;   // 22% of vh above the ground
+      const houseHFrac = 0.22;     // 22% of vh tall
       for (let i = -1; i < 4; i++) {
-        const bx = i * 400;
-        const hY = bgY(500);
-        ctx.fillRect(bx + 50, hY, 150, 500);
+        const bx = i * Math.max(360, vw * 0.22);
+        const hY = bgY(houseTopFrac);
+        const hH = vh * houseHFrac;
+        // Body
+        ctx.fillRect(bx + 50, hY, 150, hH);
+        // Pagoda roof — curved top
         ctx.beginPath();
         ctx.moveTo(bx + 20, hY);
-        ctx.quadraticCurveTo(bx + 125, hY - 50, bx + 230, hY);
+        ctx.quadraticCurveTo(bx + 125, hY - vh * 0.06, bx + 230, hY);
         ctx.lineTo(bx + 200, hY + 15);
         ctx.lineTo(bx + 50, hY + 15);
         ctx.closePath();
         ctx.fill();
-        
+        // Golden door / window
         ctx.beginPath();
-        ctx.arc(bx + 125, hY + 70, 15, 0, Math.PI * 2);
+        ctx.arc(bx + 125, hY + hH * 0.45, 16, 0, Math.PI * 2);
         ctx.fillStyle = '#FFD700';
         ctx.fill();
         ctx.fillStyle = '#7B1113';
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Mid-distance bamboo (blurred, fewer details)
-      ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
+      // Mid-distance bamboo — thicker trunks, scaled to viewport
+      ctx.fillStyle = 'rgba(40, 120, 70, 0.75)';
+      const trunkW = Math.max(16, vw * 0.012);
+      const separation = Math.max(220, vw * 0.13);
       for (let i = -1; i < 6; i++) {
-        const bx = i * 250;
-        const bY = bgY(400);
-        ctx.fillRect(bx + 30, bY, 12, 400);
-        for (let y = bY + 50; y < bY + 400; y += 80) {
-          ctx.fillRect(bx + 28, y, 16, 4);
+        const bx = i * separation;
+        const bY = bgY(0.30);
+        const bH = groundY - bY + vh * 0.05; // from bY down past the ground line
+        ctx.fillRect(bx + 30, bY, trunkW, bH);
+        // Node joints
+        ctx.fillStyle = 'rgba(22, 101, 52, 0.95)';
+        for (let y = bY + 50; y < bY + bH; y += 80) {
+          ctx.fillRect(bx + 28, y, trunkW + 4, 5);
         }
-        // Subtle leaves for the mid layer
-        ctx.fillStyle = 'rgba(101, 163, 13, 0.35)';
+        ctx.fillStyle = 'rgba(40, 120, 70, 0.75)';
+        // Subtle leaves at the top
+        ctx.fillStyle = 'rgba(101, 163, 13, 0.55)';
         ctx.beginPath();
         ctx.moveTo(bx + 36, bY + 10);
         ctx.quadraticCurveTo(bx + 56, bY, bx + 54, bY + 18);
         ctx.quadraticCurveTo(bx + 46, bY + 14, bx + 36, bY + 10);
         ctx.fill();
-        ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
+        ctx.fillStyle = 'rgba(40, 120, 70, 0.75)';
       }
     } else {
-      // Steep rocky cliffs
-      ctx.fillStyle = '#334155';
+      // Steep rocky cliffs (level 3 mid layer)
+      ctx.fillStyle = '#64748b';
       for (let i = -1; i < 4; i++) {
-        const bx = i * 450;
-        const cBase = bgY(220);
+        const bx = i * Math.max(420, vw * 0.25);
+        const cBase = bgY(0.18);
         ctx.beginPath();
         ctx.moveTo(bx, vh);
         ctx.lineTo(bx + 100, cBase);
         ctx.lineTo(bx + 220, cBase + 20);
-        ctx.lineTo(bx + 320, cBase - 80);
+        ctx.lineTo(bx + 320, cBase - vh * 0.06);
         ctx.lineTo(bx + 400, cBase + 40);
         ctx.lineTo(bx + 480, vh);
         ctx.closePath();
@@ -1545,12 +1562,12 @@ export default function Advergame() {
     ctx.save();
     const s3 = -scrollX * 0.3;
     ctx.translate(((s3 % vw) + vw) % vw, 0);
-    ctx.globalAlpha = 0.7;
+    ctx.globalAlpha = 0.85;
     if (themeId === 'GOH_RONG') {
-      // Restaurant tables & columns
+      // Restaurant columns (full-height) + tables
       ctx.fillStyle = '#3A0003';
       for (let i = -1; i < 5; i++) {
-        const bx = i * 350;
+        const bx = i * Math.max(300, vw * 0.18);
         ctx.fillRect(bx + 80, 0, 18, vh);
         ctx.fillStyle = '#FFD700';
         ctx.fillRect(bx + 80, vh - 180, 18, 6);
@@ -1559,25 +1576,27 @@ export default function Advergame() {
         ctx.fillRect(bx + 160, vh - 130, 160, 12);
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Detailed bamboo stalks: green body with darker nodes and leaves.
-      const fY = bgY(500);
-      const STALK_H = 500;
+      // Detailed foreground bamboo — thicker, scaled to viewport
+      const fY = bgY(0.30);
+      const fH = groundY - fY + vh * 0.05;
+      const trunkW = Math.max(18, vw * 0.018);
+      const separation = Math.max(180, vw * 0.11);
       const NODE_GAP = 60;
       for (let i = -1; i < 7; i++) {
-        const bx = i * 200 + 50;
+        const bx = i * separation + 50;
         // Trunk: 2-tone gradient effect (darker stripe on left edge)
         ctx.fillStyle = '#15803d';
-        ctx.fillRect(bx - 1, fY, 16, STALK_H);
+        ctx.fillRect(bx - 1, fY, trunkW + 2, fH);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(bx, fY, 14, STALK_H);
-        // Nodes (the horizontal joints at each segment) - slightly raised
-        for (let y = fY + 30; y < fY + STALK_H; y += NODE_GAP) {
-          ctx.fillStyle = '#166534'; // dark green node
-          ctx.fillRect(bx - 2, y, 18, 6);
-          ctx.fillStyle = '#4ade80'; // bright highlight band
-          ctx.fillRect(bx + 1, y + 1, 12, 2);
+        ctx.fillRect(bx, fY, trunkW, fH);
+        // Nodes
+        for (let y = fY + 30; y < fY + fH; y += NODE_GAP) {
+          ctx.fillStyle = '#166534';
+          ctx.fillRect(bx - 2, y, trunkW + 4, 6);
+          ctx.fillStyle = '#4ade80';
+          ctx.fillRect(bx + 1, y + 1, trunkW - 2, 2);
         }
-        // Leaves at the top of each stalk
+        // Leaves at the top
         ctx.fillStyle = '#65a30d';
         // Right-side leaf
         ctx.beginPath();
@@ -1591,7 +1610,7 @@ export default function Advergame() {
         ctx.quadraticCurveTo(bx - 22, fY + 6, bx - 18, fY + 28);
         ctx.quadraticCurveTo(bx - 5, fY + 22, bx + 7, fY + 16);
         ctx.fill();
-        // A few mid-stalk leaves
+        // Mid-stalk leaves
         ctx.beginPath();
         ctx.moveTo(bx + 7, fY + 200);
         ctx.quadraticCurveTo(bx + 28, fY + 190, bx + 24, fY + 212);
@@ -1604,10 +1623,10 @@ export default function Advergame() {
         ctx.fill();
       }
     } else {
-      // Clouds passing by horizontally
-      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      // Clouds passing by horizontally (level 3 foreground)
+      ctx.fillStyle = 'rgba(241, 245, 249, 0.35)';
       for (let i = -1; i < 4; i++) {
-        const bx = i * 450;
+        const bx = i * Math.max(420, vw * 0.25);
         ctx.beginPath();
         ctx.arc(bx + 100, vh - 150, 40, 0, Math.PI * 2);
         ctx.arc(bx + 140, vh - 170, 50, 0, Math.PI * 2);
