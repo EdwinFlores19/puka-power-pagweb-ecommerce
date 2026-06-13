@@ -86,7 +86,50 @@ export default function CartSidebar() {
         }
       }
     } catch { /* noop */ }
+
+    // Migrate local orders to the server-side user account (if signed in).
+    // This runs once per session: it checks if the user has any local
+    // orders that haven't been migrated yet, sends them to the server,
+    // and clears the local copy.
+    void migrateLocalOrders();
   });
+
+  /**
+   * Send any localStorage orders to the server so they appear in the
+   * signed-in user's Mi Cuenta. After a successful migration, the
+   * local copy is cleared.
+   */
+  const migrateLocalOrders = async () => {
+    try {
+      // Only run if signed in
+      const meRes = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      if (!meRes.ok) return;
+      const meData = await meRes.json();
+      if (!meData.user) return;
+
+      // Read local orders
+      const raw = localStorage.getItem('puka_orders');
+      if (!raw) return;
+      const localOrders = JSON.parse(raw);
+      if (!Array.isArray(localOrders) || localOrders.length === 0) return;
+
+      // Send to server
+      const res = await fetch('/api/auth/migrate-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ orders: localOrders }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Clear local copy so we don't double-migrate
+        localStorage.removeItem('puka_orders');
+        console.log('[cart] Migrated', data.migrated, 'orders to user account');
+      }
+    } catch (e) {
+      // Silent — not critical
+    }
+  };
 
   // Persist customer draft on every change
   const updateCustomerField = (field: keyof CustomerInfo, value: string) => {

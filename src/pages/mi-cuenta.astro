@@ -2,30 +2,123 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Footer from '../components/Footer.astro';
 import OrderHistory from '../islands/OrderHistory.tsx';
+import { getUserOrders } from '../lib/users';
 
 export const prerender = false;
+
+// Middleware ensures user is signed in (redirects to /auth/login if not).
+const user = Astro.locals.user!;
+const orders = await getUserOrders(user.id);
 ---
 
 <BaseLayout
-  title="Mi Cuenta | Puka Power"
+  title={`Mi Cuenta | ${user.name || user.email}`}
   description="Consulta el historial de tus pedidos de Puka Power."
   ogType="website"
 >
-  <main class="min-h-screen bg-gradient-to-br from-slate-900 via-amber-950/30 to-slate-900 text-white">
-    <section class="py-12 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto">
-      <header class="mb-8 text-center">
-        <a href="/" class="inline-flex items-center gap-1 text-sm text-amber-300 hover:text-amber-200 transition-colors mb-4">
+  <main class="min-h-screen bg-gradient-to-br from-brand-wineDark via-brand-wine to-brand-wineDark text-brand-cream">
+    <!-- Decorative orbs -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-accent/10 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-brand-accentGold/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <section class="relative max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <header class="mb-8">
+        <a href="/" class="inline-flex items-center gap-1 text-sm text-brand-cream/60 hover:text-brand-cream transition-colors mb-4">
           <span>←</span> Volver al inicio
         </a>
-        <h1 class="text-4xl sm:text-5xl font-black text-amber-200 mb-2">👤 Mi Cuenta</h1>
-        <p class="text-amber-100/70 text-sm sm:text-base">
-          Consulta tus pedidos guardados. Ingresa tu email para ver tu historial.
+        <h1 class="font-serif text-4xl sm:text-5xl font-black tracking-tight text-brand-cream">👤 Mi Cuenta</h1>
+        <p class="text-brand-cream/60 text-sm sm:text-base mt-1">
+          Bienvenido de vuelta, {user.name || user.email.split('@')[0]}.
         </p>
       </header>
 
-      <OrderHistory client:load />
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Profile card -->
+        <aside class="lg:col-span-1">
+          <div class="bg-brand-cream/10 backdrop-blur-sm border border-brand-cream/15 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center gap-3">
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name || user.email}
+                  class="w-16 h-16 rounded-full ring-2 ring-brand-accent/40 object-cover"
+                  referrerpolicy="no-referrer"
+                />
+              ) : (
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-brand-accentGold flex items-center justify-center text-brand-wineDark font-black text-xl ring-2 ring-brand-accent/40">
+                  {(user.name || user.email)[0].toUpperCase()}
+                </div>
+              )}
+              <div class="min-w-0 flex-1">
+                <p class="font-serif text-xl font-black text-brand-cream truncate">
+                  {user.name || user.email.split('@')[0]}
+                </p>
+                <p class="text-xs text-brand-cream/60 truncate">{user.email}</p>
+                {user.googleId && (
+                  <span class="inline-flex items-center gap-1 text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full mt-1 font-bold">
+                    <svg class="w-2.5 h-2.5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/></svg>
+                    Google
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-3 border-t border-brand-cream/10 text-sm">
+              <div class="flex justify-between text-brand-cream/80">
+                <span>Cliente desde</span>
+                <span class="font-bold text-brand-cream">{new Date(user.createdAt).toLocaleDateString('es-PE', { year: 'numeric', month: 'short' })}</span>
+              </div>
+              <div class="flex justify-between text-brand-cream/80">
+                <span>Pedidos</span>
+                <span class="font-extrabold text-brand-accent text-lg">{user.totalOrders}</span>
+              </div>
+              <div class="flex justify-between text-brand-cream/80">
+                <span>Total gastado</span>
+                <span class="font-extrabold text-brand-accent text-lg">S/ {user.totalSpent.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-brand-cream/10 space-y-2">
+              <a
+                href="/tienda"
+                class="block w-full py-3 bg-gradient-to-r from-brand-accent to-brand-accentGold text-brand-wineDark font-extrabold uppercase tracking-widest text-xs rounded-xl text-center hover:scale-[1.02] transition-all shadow-lg"
+              >
+                Ir a la tienda ⚡
+              </a>
+              <button
+                id="logout-btn"
+                class="block w-full py-2.5 text-brand-cream/60 hover:text-brand-cream text-xs font-bold uppercase tracking-wider transition-colors"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Orders -->
+        <div class="lg:col-span-2">
+          <h2 class="font-serif text-2xl font-black text-brand-cream mb-4 flex items-center gap-2">
+            <span>📦</span> Tus Pedidos
+            <span class="text-xs font-bold text-brand-cream/40">({orders.length})</span>
+          </h2>
+
+          <OrderHistory client:load initialOrders={orders} initialCustomer={user} />
+        </div>
+      </div>
     </section>
   </main>
 
   <Footer />
 </BaseLayout>
+
+<script>
+  // Logout handler — POST to /api/auth/logout then redirect home
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch { /* noop */ }
+    window.location.href = '/';
+  });
+</script>

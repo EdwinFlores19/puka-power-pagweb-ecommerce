@@ -1,0 +1,103 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export const prerender = false;
+
+// The actual verification is done by /api/auth/verify which sets the
+// session cookie and then redirects to /auth/verify?ok=1&...
+// This page just shows the result and offers a CTA to continue.
+const ok = Astro.url.searchParams.get('ok') === '1';
+const reason = Astro.url.searchParams.get('reason') || '';
+const email = Astro.url.searchParams.get('email') || '';
+const via = Astro.url.searchParams.get('via') || ''; // 'google' or ''
+const user = Astro.locals.user;
+---
+
+<BaseLayout
+  title={ok ? '¡Listo! | Puka Power' : 'Hubo un problema | Puka Power'}
+  description=""
+  ogType="website"
+>
+  <main class="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-gradient-to-br from-brand-wineDark via-brand-wine to-brand-wineDark">
+    <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-accent/15 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-brand-accentGold/15 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s"></div>
+    </div>
+
+    <div class="relative w-full max-w-md">
+      <div class="bg-brand-cream rounded-3xl shadow-2xl p-8 sm:p-10 text-center border border-brand-wine/10">
+        {ok ? (
+          <>
+            <div class="w-20 h-20 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-green-500/20 animate-bounce-in">
+              <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h1 class="font-serif text-3xl sm:text-4xl font-black text-brand-wine mb-2">
+              {via === 'google' ? '¡Bienvenido con Google!' : '¡Listo!'}
+            </h1>
+            {email && (
+              <p class="text-sm text-brand-dark/60 mb-6">
+                Sesión iniciada como <span class="font-bold text-brand-dark">{email}</span>
+              </p>
+            )}
+            <p class="text-sm text-brand-dark/70 mb-6 leading-relaxed">
+              Tu próxima recarga de Puka Power te está esperando. Mira tu historial de pedidos y obtén descuentos exclusivos.
+            </p>
+            <a
+              href="/tienda"
+              class="block w-full py-4 bg-gradient-to-r from-brand-wine to-brand-wineDark hover:from-brand-wineDark hover:to-brand-wine text-brand-cream font-extrabold uppercase tracking-widest text-sm rounded-xl transition-all hover:scale-[1.02] shadow-xl shadow-brand-wine/30"
+            >
+              Ir a la tienda ⚡
+            </a>
+            <a
+              href="/mi-cuenta"
+              class="block w-full py-3 mt-2 text-brand-wine/70 hover:text-brand-wine font-bold text-xs uppercase tracking-widest transition-colors"
+            >
+              Ver mi cuenta →
+            </a>
+          </>
+        ) : (
+          <>
+            <div class="w-20 h-20 bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-red-500/20">
+              <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+            <h1 class="font-serif text-3xl font-black text-brand-wine mb-2">Link no válido</h1>
+            <p class="text-sm text-brand-dark/70 mb-6 leading-relaxed">
+              {reason === 'expired' && 'El link mágico ha expirado. Los links caducan en 15 minutos por seguridad.'}
+              {reason === 'user_not_found' && 'No encontramos una cuenta con este email. Crea una cuenta primero.'}
+              {reason === 'already_used' && 'Este link ya fue utilizado. Si necesitas acceder, solicita uno nuevo.'}
+              {reason === 'state_mismatch' && 'La verificación de Google falló por seguridad. Intenta de nuevo.'}
+              {!['expired', 'user_not_found', 'already_used', 'state_mismatch'].includes(reason) && 'Hubo un problema con el link. Intenta solicitar uno nuevo.'}
+            </p>
+            <a
+              href="/auth/login"
+              class="block w-full py-4 bg-gradient-to-r from-brand-wine to-brand-wineDark hover:from-brand-wineDark hover:to-brand-wine text-brand-cream font-extrabold uppercase tracking-widest text-sm rounded-xl transition-all hover:scale-[1.02] shadow-xl shadow-brand-wine/30"
+            >
+              Solicitar nuevo link
+            </a>
+            {reason === 'user_not_found' && (
+              <a
+                href="/auth/register"
+                class="block w-full py-3 mt-2 bg-brand-accent hover:bg-brand-accentGold text-brand-wine font-extrabold uppercase tracking-widest text-sm rounded-xl transition-all"
+              >
+                Crear cuenta
+              </a>
+            )}
+          </>
+        )}
+      </div>
+
+      <div class="mt-6 text-center text-xs text-brand-cream/40">
+        <a href="/" class="hover:text-brand-cream/70 transition-colors">← Volver al inicio</a>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  @keyframes bounce-in {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+</style>

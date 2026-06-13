@@ -1,5 +1,6 @@
 ---
 import CartBadge from '../islands/CartBadge.tsx';
+import UserMenu from '../islands/UserMenu.tsx';
 ---
 
 <header
@@ -17,12 +18,10 @@ import CartBadge from '../islands/CartBadge.tsx';
       <a href="/#ingredientes" class="hover:text-brand-primary transition-colors duration-200">Ingredientes</a>
       <a href="/#testimonios" class="hover:text-brand-primary transition-colors duration-200">Testimonios</a>
       <a href="/tienda" class="hover:text-brand-primary transition-colors duration-200 font-bold text-brand-accent">Ir a Tienda ⚡</a>
-      <a href="/mi-cuenta" class="hover:text-brand-primary transition-colors duration-200 flex items-center gap-1">
-        <span>👤</span> Mi Cuenta
-      </a>
     </nav>
 
-    <div class="flex items-center space-x-4">
+    <div class="flex items-center space-x-3">
+      <UserMenu client:load />
       <a
         href="/tienda"
         class="hidden md:inline-flex px-6 py-2.5 bg-brand-accent text-brand-light font-bold text-xs uppercase tracking-widest rounded-full hover:bg-brand-accentGold transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-brand-accent/20"
@@ -50,7 +49,7 @@ import CartBadge from '../islands/CartBadge.tsx';
       <a href="/#ingredientes" class="mobile-link hover:text-brand-primary transition-colors">Ingredientes</a>
       <a href="/#testimonios" class="mobile-link hover:text-brand-primary transition-colors">Testimonios</a>
       <a href="/tienda" class="mobile-link hover:text-brand-accent transition-colors font-bold text-brand-accent">Ver Tienda 🛒</a>
-      <a href="/mi-cuenta" class="mobile-link hover:text-brand-primary transition-colors">👤 Mi Cuenta</a>
+      <a href="/auth/login" class="mobile-link hover:text-brand-primary transition-colors">👤 Iniciar sesión</a>
       <a href="/tienda" class="mobile-link w-full text-center py-3 bg-brand-accent text-brand-light font-bold text-sm uppercase tracking-widest rounded-lg shadow-lg hover:bg-brand-accentGold">
         Comprar Ahora
       </a>
