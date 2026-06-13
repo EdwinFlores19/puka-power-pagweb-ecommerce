@@ -57,11 +57,20 @@ export default function CartSidebar() {
     department: 'Lima', province: 'Lima', district: '',
   });
   const [customerErrors, setCustomerErrors] = createSignal<Record<string, string>>({});
+  // True while we're waiting for the server to confirm the won-cookie.
+  // While true, we show a "Verificando descuento..." skeleton instead of
+  // the "¿Quieres 15%?" prompt (avoids the flash of wrong state).
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = createSignal(true);
 
   // Restore draft on mount
   onMount(() => {
-    // Refresh coupon from server (in case user just won)
-    refreshCouponFromServer();
+    // Refresh coupon from server (in case user just won). The server is
+    // the source of truth — we wait for the response before showing the
+    // "verifying" or the "applied" state.
+    setIsVerifyingCoupon(true);
+    refreshCouponFromServer()
+      .finally(() => setIsVerifyingCoupon(false));
+
     // Restore customer draft
     try {
       const draft = localStorage.getItem('puka_customer_draft');
@@ -354,13 +363,38 @@ export default function CartSidebar() {
 
           <Show when={cart().length > 0}>
             <div class="border-t border-brand-primary/10 pt-4 space-y-4">
-              <Show when={coupon().applied}>
-                <p class="text-xs font-bold text-brand-success flex items-center space-x-1">
-                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                  <span>¡Descuento por juego aplicado! 15% OFF.</span>
-                </p>
+              <Show when={isVerifyingCoupon()}>
+                {/* Skeleton while the server confirms whether the user has a
+                    won-cookie. Prevents the "flash of wrong state" where
+                    the ¿Quieres 15%? prompt appears for 1 frame before
+                    being replaced by the green "applied" badge. */}
+                <div class="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl border border-slate-200 p-4 animate-pulse">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-slate-300" />
+                    <div class="flex-1 space-y-1.5">
+                      <div class="h-3 w-3/4 rounded bg-slate-300" />
+                      <div class="h-2.5 w-1/2 rounded bg-slate-300" />
+                    </div>
+                  </div>
+                </div>
               </Show>
-              <Show when={!coupon().applied}>
+              <Show when={!isVerifyingCoupon() && coupon().applied}>
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border-2 border-green-500/30 p-4 shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center shrink-0 text-lg ring-2 ring-green-500/30">
+                      ✅
+                    </div>
+                    <div class="space-y-1 min-w-0 flex-1">
+                      <p class="text-xs font-black uppercase tracking-wider text-green-700">¡Descuento por juego aplicado!</p>
+                      <p class="text-2xl font-black text-green-700">15% OFF</p>
+                      <p class="text-[10px] text-green-700/70 leading-relaxed">
+                        Completaste los 3 niveles del arcade ninja. El poder del rayo te espera.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Show>
+              <Show when={!isVerifyingCoupon() && !coupon().applied}>
                 <div class="bg-gradient-to-br from-brand-accent/5 to-brand-primary/5 rounded-2xl border border-brand-accent/15 p-4">
                   <div class="flex items-start gap-3">
                     <div class="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center shrink-0 text-lg">🎮</div>

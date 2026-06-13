@@ -306,7 +306,7 @@ export default function MascotGuide(props: Props) {
       <Show when={showCompanionCat() && currentMessage().companion}>
         {(comp) => (
           <div class="flex items-start gap-2 sm:gap-3 max-w-xs sm:max-w-sm pointer-events-auto flex-row-reverse animate-bubble-in">
-            <div class="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl shadow-2xl border-2 border-green-500/50 bg-gradient-to-br from-slate-800 to-slate-900 overflow-hidden">
+            <div class="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl shadow-2xl border-2 border-brand-primary/10 bg-brand-secondary overflow-hidden">
               <img
                 src={comp().image}
                 alt={comp().name}
@@ -315,21 +315,21 @@ export default function MascotGuide(props: Props) {
                 height="96"
                 decoding="async"
               />
-              <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center text-xs font-black text-white shadow-lg ring-2 ring-slate-900">
+              <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-accent rounded-full flex items-center justify-center text-xs font-black text-brand-dark shadow-lg ring-2 ring-brand-light">
                 M
               </div>
             </div>
 
             <Show when={showCompanion()}>
-              <div class="relative flex-1 bg-gradient-to-br from-slate-800 to-slate-900 text-white p-3 sm:p-4 rounded-2xl shadow-2xl border border-green-500/40">
-                <div class="absolute -right-2.5 top-4 w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-l-[10px] border-l-slate-800" />
+              <div class="relative flex-1 bg-brand-light text-brand-dark p-3 sm:p-4 rounded-2xl shadow-2xl border border-brand-primary/10">
+                <div class="absolute -right-2.5 top-4 w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-l-[10px] border-l-brand-light" />
 
-                <div class="text-[10px] sm:text-xs text-green-300 font-extrabold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <div class="text-[10px] sm:text-xs text-brand-accent font-extrabold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full bg-green-400 animate-ping" />
                   <span>{comp().name}</span>
                 </div>
 
-                <p class="text-xs sm:text-sm leading-relaxed font-semibold text-slate-100">
+                <p class="text-xs sm:text-sm leading-relaxed font-semibold text-brand-dark/90">
                   {comp().text}
                 </p>
               </div>
