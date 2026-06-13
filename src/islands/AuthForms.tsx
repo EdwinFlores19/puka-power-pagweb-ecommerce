@@ -77,7 +77,7 @@ export default function AuthForms(props: AuthFormsProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ email: email().trim().toLowerCase(), password }),
+        body: JSON.stringify({ email: email().trim().toLowerCase(), password: password() }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -112,7 +112,7 @@ export default function AuthForms(props: AuthFormsProps) {
         credentials: 'same-origin',
         body: JSON.stringify({
           email: email().trim().toLowerCase(),
-          password,
+          password: password(),
           name: name().trim(),
           surname: surname().trim(),
           phone: phone().trim() || undefined,
