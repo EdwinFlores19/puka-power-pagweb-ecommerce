@@ -2439,8 +2439,8 @@ export default function Advergame() {
         </div>
 
         {ui().message && (
-          <div class="absolute top-28 sm:top-32 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
-            <div class="px-4 py-2 rounded-full border font-bold uppercase text-[10px] sm:text-xs animate-pulse"
+          <div class="absolute bottom-24 sm:bottom-28 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
+            <div class="max-w-2xl px-4 py-2 rounded-2xl border font-bold uppercase text-[10px] sm:text-xs animate-pulse text-center whitespace-normal leading-snug"
               classList={{
                 'bg-red-500/20 text-red-400 border-red-500/40': ui().messageType === 'success',
                 'bg-gray-800/80 text-white border-gray-600/40': ui().messageType === 'error',
