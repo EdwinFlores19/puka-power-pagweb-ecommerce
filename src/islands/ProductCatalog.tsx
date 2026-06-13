@@ -1,5 +1,6 @@
 import { CATALOG } from '../lib/constants';
 import { addItemToCart } from '../store/cartStore';
+import { trackAddToCart } from '../lib/analytics';
 
 export default function ProductCatalog() {
   const products = Object.values(CATALOG);
@@ -61,7 +62,10 @@ export default function ProductCatalog() {
 
           <div class="flex sm:flex-col justify-center sm:justify-between items-center shrink-0 gap-4 w-full sm:w-auto">
             <button
-              onClick={() => addItemToCart(product.id)}
+              onClick={() => {
+                addItemToCart(product.id);
+                trackAddToCart({ id: product.id, name: product.name, price: product.price, qty: 1 });
+              }}
               class="w-full sm:w-auto px-6 py-3 font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 shadow-md"
               classList={{
                 'bg-brand-accent text-brand-light hover:bg-brand-accentGold': true,

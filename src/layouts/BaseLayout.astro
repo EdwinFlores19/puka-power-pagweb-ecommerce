@@ -9,6 +9,11 @@ export interface Props {
   canonicalURL?: string;
 }
 
+const env = (import.meta as any).env || {};
+const GTM_ID = env.PUBLIC_GTM_ID || '';
+const META_PIXEL_ID = env.PUBLIC_META_PIXEL_ID || '';
+const IS_PROD = env.NODE_ENV === 'production' || env.PUBLIC_ENV === 'production';
+
 const {
   title,
   description,
@@ -59,6 +64,20 @@ const {
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
     </script>
+
+    {GTM_ID && (
+      <script is:inline define:vars={{ GTM_ID }}>
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer', GTM_ID);
+      </script>
+    )}
+
+    {META_PIXEL_ID && (
+      <script is:inline define:vars={{ META_PIXEL_ID }}>
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        window.fbq('init', META_PIXEL_ID);
+        window.fbq('track', 'PageView');
+      </script>
+    )}
   </head>
   <body class="bg-brand-secondary text-brand-dark font-sans overflow-x-hidden antialiased flex flex-col min-h-screen">
     <slot />

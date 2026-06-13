@@ -16,6 +16,7 @@ import {
 } from '@/store/cartStore';
 import { saveOrder, getCustomerPrefill } from '@/store/ordersStore';
 import type { CustomerInfo, OrderRecord } from '@/lib/types';
+import { trackBeginCheckout, trackPurchase } from '@/lib/analytics';
 import PaymentModal from './PaymentModal';
 
 // Ubigeo Perú — los más comunes (departamento → provincias → distritos)
@@ -111,6 +112,8 @@ export default function CartSidebar() {
   const goToCustomerStep = () => {
     setStep('customer');
     setCheckoutError('');
+    // E-commerce funnel: begin_checkout
+    try { trackBeginCheckout(total(), totalQty()); } catch { /* noop */ }
   };
 
   const goToReviewStep = () => {
@@ -205,6 +208,23 @@ export default function CartSidebar() {
       } catch (e) {
         console.error('Failed to save order locally:', e);
       }
+
+      // E-commerce funnel: purchase
+      try {
+        trackPurchase(
+          result.orderId,
+          result.total,
+          payload.items.map((it) => {
+            const found = cart().find((ci) => ci.id === it.id);
+            return {
+              id: it.id,
+              name: found?.name || ('Producto #' + it.id),
+              price: found?.price ?? 0,
+              quantity: it.qty,
+            };
+          }),
+        );
+      } catch { /* noop */ }
 
       setShowModal(true);
     } catch {
