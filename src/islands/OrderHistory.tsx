@@ -1,4 +1,4 @@
-import { createSignal, Show, onMount, For, Switch, Match } from 'solid-js';
+import { createSignal, Show, onMount, For } from 'solid-js';
 import type { OrderRecord, User } from '@/lib/types';
 import { $orders, getOrdersByEmail } from '@/store/ordersStore';
 

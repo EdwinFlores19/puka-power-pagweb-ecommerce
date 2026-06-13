@@ -98,21 +98,38 @@ const DEBUG_MODE = false;
 const imageCache = new Map<string, HTMLImageElement>();
 let assetsPreloaded = false;
 
+function loadImage(src: string, retries = 3): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const attempt = (remaining: number) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const timeout = setTimeout(() => {
+        if (remaining > 0) attempt(remaining - 1);
+        else resolve();
+      }, 8000);
+      img.onload = () => {
+        clearTimeout(timeout);
+        imageCache.set(src, img);
+        resolve();
+      };
+      img.onerror = () => {
+        clearTimeout(timeout);
+        if (remaining > 0) attempt(remaining - 1);
+        else resolve();
+      };
+      img.src = src;
+    };
+    attempt(retries);
+  });
+}
+
 function preloadAssets(): Promise<void> {
   if (assetsPreloaded) {
     return Promise.resolve();
   }
   const paths = Object.values(SPRITE);
-  const promises = paths.map((src) => {
-    return new Promise<void>((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => { imageCache.set(src, img); resolve(); };
-      img.onerror = () => { resolve(); };
-      img.src = src;
-    });
-  });
-  return Promise.allSettled(promises).then((results) => {
+  const promises = paths.map((src) => loadImage(src));
+  return Promise.allSettled(promises).then(() => {
     assetsPreloaded = true;
   });
 }
@@ -438,6 +455,8 @@ export default function Advergame() {
     if (typeof window === 'undefined') return 150;
     const vw = engineState.viewport?.width || window.innerWidth;
     const vh = engineState.viewport?.height || window.innerHeight;
+    const isLandscape = vw > vh && vh < 500;
+    if (isLandscape) return Math.max(vw * 0.25, 150);
     if (vw > 768 && vw > vh) return 400;
     if (vw > vh) return 250;
     return Math.max(vw * 0.4, 200);
@@ -683,15 +702,7 @@ export default function Advergame() {
     setUiState({ coins: 0, timeLeft: TIME_LIMIT, message: '', messageType: '', playerState: PLAYER_STATE.NORMAL, lives: LIVES_MAX_HALVES });
     lastFrameUpdate = 0;
     trackGameEvent('puka_campaign_start', { stage: levelIdx });
-    preloadAssets().then(() => {
-      if (canvasEl) {
-        cancelAnimationFrame(rafId);
-        canvasEl.width = window.innerWidth;
-        canvasEl.height = window.innerHeight;
-        engineState.viewport = { width: window.innerWidth, height: window.innerHeight };
-        rafId = requestAnimationFrame(gameLoop);
-      }
-    });
+    preloadAssets();
   }
 
   function advanceToNextLevel() {
@@ -1343,10 +1354,12 @@ export default function Advergame() {
       cam.x += (targetCamX - cam.x) * 0.1;
       if (cam.x < 0) cam.x = 0;
 
-      // Vertical camera: only on mobile (<=768px wide), keep PC fixed
-      if (vp.width <= 768) {
-        const targetCamY = p.y - vp.height * 0.55;
-        cam.y += (targetCamY - cam.y) * 0.05;
+      const isLandscapeMobile = vp.width > vp.height && vp.height < 500;
+      const worldScaleForCam = (vp.width < 900) ? (isLandscapeMobile ? 1.25 : 1.5) : 1;
+      const effectiveVpHeight = vp.height / worldScaleForCam;
+      if (effectiveVpHeight < 600) {
+        const targetCamY = p.y - effectiveVpHeight * 0.55;
+        cam.y += (targetCamY - cam.y) * 0.08;
       } else {
         cam.y += (0 - cam.y) * 0.1;
       }
@@ -1698,18 +1711,19 @@ export default function Advergame() {
     // size (not scaled) so the mountains, houses and bamboo keep their
     // intended layout and never get clipped on small screens.
     const isSmallViewport = viewport.width < 900;
-    const worldScale = isSmallViewport ? 1.5 : 1;
+    const isLandscapeMobile = viewport.width > viewport.height && viewport.height < 500;
+    const worldScale = isSmallViewport ? (isLandscapeMobile ? 1.25 : 1.5) : 1;
 
     ctx.save();
+
+    ctx.clearRect(0, 0, viewport.width, viewport.height);
+    drawParallaxBackground(ctx, theme.id, camera.x, viewport.width, viewport.height);
 
     if (s.shakeTimer > 0) {
       const sx = (Math.random() - 0.5) * s.shakeIntensity;
       const sy = (Math.random() - 0.5) * s.shakeIntensity;
       ctx.translate(sx, sy);
     }
-
-    // Draw the parallax background at native viewport size — NOT scaled.
-    drawParallaxBackground(ctx, theme.id, camera.x, viewport.width, viewport.height);
 
     // Apply worldScale only to the game entities (player, platforms, NPCs, projectiles)
     if (worldScale !== 1) {
@@ -2202,7 +2216,11 @@ export default function Advergame() {
       });
 
       const onVisibility = () => { engineState.isPaused = document.hidden; };
-      const onOrientationChange = () => setTimeout(onResize, 300);
+      const onOrientationChange = () => {
+        setTimeout(onResize, 150);
+        setTimeout(onResize, 400);
+        setTimeout(onResize, 800);
+      };
       const onResize = () => {
         if (!canvasEl || !containerEl) return;
         const w = containerEl.clientWidth || window.innerWidth;
@@ -2415,7 +2433,8 @@ export default function Advergame() {
           </div>
         </div>
 
-        <div class="hidden md:flex absolute bottom-4 left-4 z-30 flex-col gap-1 bg-slate-900/80   px-3 py-2 rounded-lg border border-slate-700/50 text-white text-xs font-semibold">
+        <div class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex-col gap-1 bg-slate-900/80   px-3 py-2 rounded-lg border border-slate-700/50 text-white text-xs font-semibold pointer-events-none"
+          classList={{ 'md:flex': !isTouchDevice }}>
           <div class="flex items-center gap-1.5">
             <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{'\u2190'}</span>
             <span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{'\u2192'}</span>
@@ -2523,22 +2542,23 @@ export default function Advergame() {
         </div>
 
         <Show when={!showTutorial()}>
-          <div class="absolute bottom-3 sm:bottom-6 left-0 right-0 px-3 sm:px-6 flex justify-between items-end z-30" classList={{ 'md:hidden': !isTouchDevice }}>
-            <div class="flex gap-3 sm:gap-4">
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-3xl sm:text-4xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-black/60   rounded-2xl border-2 border-white/15 text-white text-3xl sm:text-4xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
+          <div class="absolute bottom-2 sm:bottom-4 left-0 right-0 px-2 sm:px-4 flex justify-between items-end z-30" classList={{ 'md:hidden': !isTouchDevice }}
+            style={{ 'max-height': '35vh' }}>
+            <div class="flex gap-2 sm:gap-3">
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-14 h-14 sm:w-20 sm:h-20 landscape:w-12 landscape:h-12 bg-black/60   rounded-xl border-2 border-white/15 text-white text-2xl sm:text-3xl landscape:text-xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-14 h-14 sm:w-20 sm:h-20 landscape:w-12 landscape:h-12 bg-black/60   rounded-xl border-2 border-white/15 text-white text-2xl sm:text-3xl landscape:text-xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
             </div>
-            <div class="flex gap-3 sm:gap-4 items-end">
+            <div class="flex gap-2 sm:gap-3 items-end">
               <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.attack = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.attack = false; }} onMouseDown={() => { engineState.keys.attack = true; }} onMouseUp={() => { engineState.keys.attack = false; }}
-                class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500/20   rounded-2xl border-2 border-blue-500/40 text-blue-300 text-2xl sm:text-3xl font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
-                <img src="/sprites/shuriken.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
+                class="w-11 h-11 sm:w-16 sm:h-16 landscape:w-10 landscape:h-10 bg-blue-500/20   rounded-xl border-2 border-blue-500/40 text-blue-300 text-xl sm:text-2xl landscape:text-lg font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
+                <img src="/sprites/shuriken.png" class="w-5 h-5 sm:w-7 sm:h-7 landscape:w-4 landscape:h-4 object-contain" />
               </button>
               <button onTouchStart={(e) => { e.preventDefault(); consumeBoost(); }} onTouchEnd={(e) => e.preventDefault()} onMouseDown={() => { consumeBoost(); }} disabled={inv().length === 0}
                 classList={{ 'opacity-40': inv().length === 0 }}
-                class="w-16 h-16 sm:w-20 sm:h-20 bg-yellow-500/20   rounded-2xl border-2 border-yellow-500/40 text-yellow-300 text-2xl sm:text-3xl font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
-                <img src="/sprites/Puka-Power.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
+                class="w-11 h-11 sm:w-16 sm:h-16 landscape:w-10 landscape:h-10 bg-yellow-500/20   rounded-xl border-2 border-yellow-500/40 text-yellow-300 text-xl sm:text-2xl landscape:text-lg font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
+                <img src="/sprites/Puka-Power.png" class="w-5 h-5 sm:w-7 sm:h-7 landscape:w-4 landscape:h-4 object-contain" />
               </button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-24 h-24 sm:w-28 sm:h-28 bg-red-500/30   rounded-2xl border-2 border-red-500/50 text-white text-4xl sm:text-5xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-16 h-16 sm:w-24 sm:h-24 landscape:w-14 landscape:h-14 bg-red-500/30   rounded-xl border-2 border-red-500/50 text-white text-3xl sm:text-4xl landscape:text-2xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
             </div>
           </div>
         </Show>
@@ -2550,17 +2570,18 @@ export default function Advergame() {
     <>
       <Switch>
         <Match when={appState() === APP_STATE.START_SCREEN}>
-          <div class="w-screen h-screen overflow-hidden relative bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
+          <div class="w-screen h-screen overflow-hidden relative bg-[#1A080A] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
             <button
               onClick={() => startGame(THEMES.GOH_RONG.id)}
-              class="absolute bottom-[15%] left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-500 text-white font-black text-3xl sm:text-5xl py-5 px-16 rounded-2xl shadow-2xl shadow-red-500/40 hover:shadow-red-500/60 hover:scale-105 active:scale-95 transition-all duration-200 uppercase tracking-widest border-2 border-red-400/30">
+              class="absolute bottom-[15%] left-1/2 -translate-x-1/2 bg-red-600 hover:bg-red-500 text-white font-black text-2xl sm:text-5xl landscape:text-3xl py-4 sm:py-5 landscape:py-3 px-12 sm:px-16 landscape:px-10 rounded-2xl shadow-2xl shadow-red-500/40 hover:shadow-red-500/60 hover:scale-105 active:scale-95 transition-all duration-200 uppercase tracking-widest border-2 border-red-400/30">
               EMPEZAR
             </button>
           </div>
         </Match>
 
         <Match when={appState() === APP_STATE.CHARACTER_SELECTION}>
-          <div class="w-screen h-screen overflow-hidden relative bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
+          <div class="w-screen h-screen overflow-hidden relative bg-[#1A080A] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
             <div class="absolute inset-0 bg-black/60  " />
             <a href="/tienda"
               class="absolute top-6 left-6 z-20 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors">
@@ -2798,8 +2819,8 @@ export default function Advergame() {
           const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
           return (
             <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 sm:p-6">
-              <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 w-full text-center text-white shadow-2xl shadow-red-500/5 relative overflow-hidden"
-                classList={{ 'max-w-md p-8 space-y-6': !isMobile, 'max-w-sm p-6 space-y-5': isMobile }}>
+              <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 w-full text-center text-white shadow-2xl shadow-red-500/5 relative overflow-hidden max-h-[90vh] overflow-y-auto"
+                classList={{ 'max-w-md p-8 space-y-6': !isMobile, 'max-w-sm p-5 space-y-3 landscape:space-y-2 landscape:p-4': isMobile }}>
                 <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-red-500" />
                 <div class="text-4xl sm:text-5xl">{'\u{1F3AE}'}</div>
                 <h2 class="text-xl sm:text-2xl font-black uppercase tracking-wider">{'\u{00A1}'}A jugar!</h2>

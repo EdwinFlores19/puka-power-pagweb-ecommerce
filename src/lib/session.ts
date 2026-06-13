@@ -84,18 +84,27 @@ export async function buildWonCookie(): Promise<string> {
   const encoded = b64urlEncode(strToBytes(json));
   const sig = await hmacSign(encoded, getSecret());
   const value = `${encoded}.${sig}`;
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
   return [
     `${COOKIE_NAME}=${value}`,
     'Path=/',
     `Max-Age=${COOKIE_MAX_AGE}`,
     'HttpOnly',
     'SameSite=Lax',
-    // 'Secure' is added in production via the deploy
+    ...(isProd ? ['Secure'] : []),
   ].join('; ');
 }
 
 export async function buildClearedWonCookie(): Promise<string> {
-  return `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`;
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+  return [
+    `${COOKIE_NAME}=`,
+    'Path=/',
+    'Max-Age=0',
+    'HttpOnly',
+    'SameSite=Lax',
+    ...(isProd ? ['Secure'] : []),
+  ].join('; ');
 }
 
 /** Parses the cookie header. Returns null if missing/invalid/expired. */
@@ -149,17 +158,27 @@ export async function buildUserCookie(userId: string, email: string): Promise<st
   const json = JSON.stringify(payload);
   const encoded = b64urlEncode(strToBytes(json));
   const sig = await hmacSign(encoded, getSecret());
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
   return [
     `${USER_COOKIE}=${encoded}.${sig}`,
     'Path=/',
     `Max-Age=${USER_COOKIE_MAX_AGE}`,
     'HttpOnly',
     'SameSite=Lax',
+    ...(isProd ? ['Secure'] : []),
   ].join('; ');
 }
 
 export async function buildClearedUserCookie(): Promise<string> {
-  return `${USER_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`;
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+  return [
+    `${USER_COOKIE}=`,
+    'Path=/',
+    'Max-Age=0',
+    'HttpOnly',
+    'SameSite=Lax',
+    ...(isProd ? ['Secure'] : []),
+  ].join('; ');
 }
 
 export async function verifyUserCookie(cookieHeader: string | null | undefined): Promise<UserSessionPayload | null> {
