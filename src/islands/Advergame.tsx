@@ -1280,8 +1280,20 @@ export default function Advergame() {
               setAppState(APP_STATE.LEVEL_COMPLETED);
               return;
             }
+            // Level 3 — the campaign is complete. Mark the game as won
+            // *right now* (sets the signed won-cookie via /api/mark-won)
+            // so the 15% coupon is applied by default as soon as the user
+            // navigates to /tienda — no extra click required.
             p.isDead = true;
             if (audioInst) audioInst.victory();
+            if (!couponDone()) {
+              setCouponDone(true);
+              try { localStorage.setItem('puka_campaign_won', 'true'); } catch (_) { /* noop */ }
+              // Fire-and-forget; if the request fails the user can still
+              // claim the coupon from the VICTORY screen.
+              void markGameWon();
+            }
+            trackGameEvent('puka_campaign_victory', { finalCoins: s.score });
             setAppState(APP_STATE.LEVEL_COMPLETED);
             return;
           }
@@ -2596,6 +2608,8 @@ export default function Advergame() {
               <Show when={!couponDone()}>
                 <button
                   onClick={async () => {
+                    // Defensive: usually couponDone is true here because
+                    // markGameWon was already fired on the level-3 GOAL.
                     await markGameWon();
                     setCouponDone(true);
                     window.location.href = '/tienda';
@@ -2674,13 +2688,16 @@ export default function Advergame() {
                     >
                       <button
                         onClick={async () => {
-                          trackGameEvent('puka_campaign_victory', { finalCoins: uiState().coins });
+                          // Defensive: markGameWon was already fired on the
+                          // level-3 GOAL collision, so this is a no-op in
+                          // the normal flow — only re-runs if the user
+                          // somehow reached this screen without the cookie.
                           if (!couponDone()) {
                             await markGameWon();
                             setCouponDone(true);
-                          }
-                          if (typeof window !== 'undefined') {
-                            try { localStorage.setItem('puka_campaign_won', 'true'); } catch (_) { /* noop */ }
+                            if (typeof window !== 'undefined') {
+                              try { localStorage.setItem('puka_campaign_won', 'true'); } catch (_) { /* noop */ }
+                            }
                           }
                           setAppState(APP_STATE.VICTORY);
                         }}
