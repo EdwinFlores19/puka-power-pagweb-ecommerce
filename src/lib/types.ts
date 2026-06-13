@@ -85,9 +85,16 @@ export interface User {
   id: string;                // ULID
   email: string;             // primary key (lowercased)
   name?: string;
+  surname?: string;          // apellidos
   phone?: string;
   avatarUrl?: string;        // Google profile picture (if Google OAuth)
   googleId?: string;         // if signed up via Google
+  passwordHash?: string;     // PBKDF2 salt+hash, set when registered with password
+  /** Shipping address captured at registration (prefills checkout). */
+  address?: string;
+  department?: string;
+  province?: string;
+  district?: string;
   emailVerified: boolean;    // true after a magic link click OR Google OAuth
   createdAt: string;
   lastLoginAt: string;

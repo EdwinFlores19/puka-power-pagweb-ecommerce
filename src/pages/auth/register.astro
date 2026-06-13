@@ -16,14 +16,15 @@ const next = Astro.url.searchParams.get('next') || '/mi-cuenta';
   description="Crea tu cuenta de Puka Power en segundos. Sin contraseñas, solo con tu email."
   ogType="website"
 >
-  <main class="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-gradient-to-br from-brand-wineDark via-brand-wine to-brand-wineDark">
+  <main class="min-h-screen flex items-center justify-center px-4 py-16 sm:py-20 relative overflow-hidden bg-gradient-to-br from-brand-wineDark via-brand-wine to-brand-wineDark">
     <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-      <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-accent/15 rounded-full blur-3xl animate-pulse"></div>
-      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-brand-accentGold/15 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s"></div>
+      <div class="absolute -top-32 -left-32 w-[28rem] h-[28rem] bg-brand-accent/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute -bottom-32 -right-32 w-[28rem] h-[28rem] bg-brand-accentGold/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-brand-wine/30 rounded-full blur-3xl"></div>
     </div>
 
-    <div class="relative w-full max-w-md">
-      <a href="/" class="flex items-center gap-2 text-brand-cream/70 hover:text-brand-cream text-sm mb-6 transition-colors">
+    <div class="relative w-full max-w-2xl">
+      <a href="/" class="inline-flex items-center gap-2 text-brand-cream/80 hover:text-brand-cream text-sm mb-6 transition-colors font-semibold">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
         Volver al inicio
       </a>

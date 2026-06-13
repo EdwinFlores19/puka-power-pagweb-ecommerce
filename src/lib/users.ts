@@ -1,5 +1,6 @@
 import type { User, OrderRecord } from './types';
 import { kvGet, kvSet, kvKeys, kvListByPrefix } from './kv';
+import { hashPassword, verifyPassword } from './passwords';
 
 // All user records are stored under the `user:` prefix in KV.
 const USER_PREFIX = 'user:';
@@ -43,24 +44,43 @@ export async function getUserByGoogleId(googleId: string): Promise<User | null> 
 export interface CreateUserInput {
   email: string;
   name?: string;
+  surname?: string;
   phone?: string;
   avatarUrl?: string;
   googleId?: string;
+  /** Plain-text password — will be hashed with PBKDF2 before storing. */
+  password?: string;
+  address?: string;
+  department?: string;
+  province?: string;
+  district?: string;
   emailVerified?: boolean;
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
   const normalized = input.email.trim().toLowerCase();
+  // Hash the password if provided (never store plain)
+  let passwordHash: string | undefined;
+  if (input.password) {
+    passwordHash = await hashPassword(input.password);
+  }
   // Check for existing
   const existing = await getUserByEmail(normalized);
   if (existing) {
-    // Merge: update missing fields
+    // Merge: update missing fields. Don't downgrade an existing
+    // passwordHash unless one is explicitly provided now.
     const merged: User = {
       ...existing,
       name: input.name ?? existing.name,
+      surname: input.surname ?? existing.surname,
       phone: input.phone ?? existing.phone,
       avatarUrl: input.avatarUrl ?? existing.avatarUrl,
       googleId: input.googleId ?? existing.googleId,
+      address: input.address ?? existing.address,
+      department: input.department ?? existing.department,
+      province: input.province ?? existing.province,
+      district: input.district ?? existing.district,
+      passwordHash: passwordHash ?? existing.passwordHash,
       emailVerified: existing.emailVerified || !!input.emailVerified,
       lastLoginAt: new Date().toISOString(),
     };
@@ -71,9 +91,15 @@ export async function createUser(input: CreateUserInput): Promise<User> {
     id: newId(),
     email: normalized,
     name: input.name,
+    surname: input.surname,
     phone: input.phone,
     avatarUrl: input.avatarUrl,
     googleId: input.googleId,
+    passwordHash,
+    address: input.address,
+    department: input.department,
+    province: input.province,
+    district: input.district,
     emailVerified: !!input.emailVerified,
     createdAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),
@@ -84,6 +110,18 @@ export async function createUser(input: CreateUserInput): Promise<User> {
   // Index by email
   await kvSet(USER_BY_EMAIL(normalized), user.id);
   return user;
+}
+
+/**
+ * Look up a user by email + password. Returns the user on success
+ * or null if the email doesn't exist OR the password doesn't match
+ * (deliberately indistinguishable to prevent email enumeration).
+ */
+export async function getUserByCredentials(email: string, password: string): Promise<User | null> {
+  const user = await getUserByEmail(email);
+  if (!user || !user.passwordHash) return null;
+  const ok = await verifyPassword(password, user.passwordHash);
+  return ok ? user : null;
 }
 
 export async function updateUser(id: string, patch: Partial<User>): Promise<User | null> {
