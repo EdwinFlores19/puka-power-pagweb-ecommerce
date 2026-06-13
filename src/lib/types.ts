@@ -77,3 +77,38 @@ export interface OrderRecord {
   shippedAt?: string;
   trackingNumber?: string;
 }
+
+// --- Auth types ---
+
+/** Authenticated user record (persisted server-side in KV). */
+export interface User {
+  id: string;                // ULID
+  email: string;             // primary key (lowercased)
+  name?: string;
+  phone?: string;
+  avatarUrl?: string;        // Google profile picture (if Google OAuth)
+  googleId?: string;         // if signed up via Google
+  emailVerified: boolean;    // true after a magic link click OR Google OAuth
+  createdAt: string;
+  lastLoginAt: string;
+  totalOrders: number;
+  totalSpent: number;
+}
+
+/** Server-side session record. The cookie value is signed (HMAC). */
+export interface UserSession {
+  token: string;
+  userId: string;
+  email: string;
+  createdAt: string;
+  expiresAt: string;         // 30 days
+}
+
+/** Single-use, short-lived token sent via email. */
+export interface MagicLinkToken {
+  token: string;
+  email: string;
+  intent: 'login' | 'register';
+  createdAt: string;
+  expiresAt: string;         // 15 minutes
+}

@@ -132,3 +132,92 @@ export async function verifyWonCookie(cookieHeader: string | null | undefined): 
 }
 
 export const WON_COOKIE_NAME = COOKIE_NAME;
+
+// ---------- User session (login) ----------
+
+const USER_COOKIE = 'puka_user_session';
+const USER_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
+export interface UserSessionPayload {
+  userId: string;
+  email: string;
+  ts: number;
+}
+
+export async function buildUserCookie(userId: string, email: string): Promise<string> {
+  const payload: UserSessionPayload = { userId, email, ts: Date.now() };
+  const json = JSON.stringify(payload);
+  const encoded = b64urlEncode(strToBytes(json));
+  const sig = await hmacSign(encoded, getSecret());
+  return [
+    `${USER_COOKIE}=${encoded}.${sig}`,
+    'Path=/',
+    `Max-Age=${USER_COOKIE_MAX_AGE}`,
+    'HttpOnly',
+    'SameSite=Lax',
+  ].join('; ');
+}
+
+export async function buildClearedUserCookie(): Promise<string> {
+  return `${USER_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`;
+}
+
+export async function verifyUserCookie(cookieHeader: string | null | undefined): Promise<UserSessionPayload | null> {
+  if (!cookieHeader) return null;
+  const parts = cookieHeader.split(';').map((p) => p.trim());
+  const raw = parts.find((p) => p.startsWith(`${USER_COOKIE}=`));
+  if (!raw) return null;
+  const value = raw.slice(USER_COOKIE.length + 1);
+  if (!value || value === 'deleted') return null;
+  const dot = value.indexOf('.');
+  if (dot < 0) return null;
+  const encoded = value.slice(0, dot);
+  const sig = value.slice(dot + 1);
+  const ok = await hmacVerify(encoded, sig, getSecret());
+  if (!ok) return null;
+  let json: string;
+  try { json = bytesToStr(b64urlDecode(encoded)); } catch { return null; }
+  let payload: UserSessionPayload;
+  try { payload = JSON.parse(json); } catch { return null; }
+  if (!payload || !payload.userId || !payload.email) return null;
+  const ageMs = Date.now() - payload.ts;
+  if (ageMs < 0 || ageMs > USER_COOKIE_MAX_AGE * 1000) return null;
+  return payload;
+}
+
+export const USER_COOKIE_NAME = USER_COOKIE;
+
+// ---------- Google OAuth state (CSRF) ----------
+
+const OAUTH_STATE_COOKIE = 'puka_oauth_state';
+
+export function buildOAuthStateCookie(state: string): string {
+  // Short-lived (10 min) and NOT HttpOnly so the client can read it for
+  // comparison, but we set it via Set-Cookie so we control the value.
+  return [
+    `${OAUTH_STATE_COOKIE}=${state}`,
+    'Path=/',
+    'Max-Age=600',
+    // Intentionally NOT HttpOnly so we can read it from the client for verification
+    'SameSite=Lax',
+  ].join('; ');
+}
+
+export function buildClearedOAuthStateCookie(): string {
+  return `${OAUTH_STATE_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+export const OAUTH_STATE_COOKIE_NAME = OAUTH_STATE_COOKIE;
+
+/**
+ * Read the OAuth state from a Cookie header. Used by the callback
+ * endpoint to verify the state matches what was sent in /start.
+ */
+export function verifyOAuthStateCookie(cookieHeader: string | null | undefined, expected: string): boolean {
+  if (!cookieHeader || !expected) return false;
+  const parts = cookieHeader.split(';').map((p) => p.trim());
+  const raw = parts.find((p) => p.startsWith(`${OAUTH_STATE_COOKIE}=`));
+  if (!raw) return false;
+  const value = raw.slice(OAUTH_STATE_COOKIE.length + 1);
+  return value === expected;
+}
