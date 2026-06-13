@@ -1515,22 +1515,24 @@ export default function Advergame() {
         ctx.fillStyle = '#7B1113';
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Mid-distance bamboo — thicker trunks, scaled to viewport
+      // Mid-distance bamboo — full-height trunks, denser spacing so the
+      // forest feels like a forest and not a sparse row of poles.
       ctx.fillStyle = 'rgba(40, 120, 70, 0.75)';
-      const trunkW = Math.max(16, vw * 0.012);
-      const separation = Math.max(220, vw * 0.13);
-      for (let i = -1; i < 6; i++) {
+      const trunkW = Math.max(18, vw * 0.015);
+      const separation = Math.max(160, vw * 0.085);
+      const bY = 0;                              // trunks start at top
+      const bH = vh + 20;                        // extend past bottom
+      for (let i = -1; i < 7; i++) {
         const bx = i * separation;
-        const bY = bgY(0.30);
-        const bH = groundY - bY + vh * 0.05; // from bY down past the ground line
+        // Trunk
         ctx.fillRect(bx + 30, bY, trunkW, bH);
-        // Node joints
+        // Node joints — distributed evenly down the trunk
         ctx.fillStyle = 'rgba(22, 101, 52, 0.95)';
         for (let y = bY + 50; y < bY + bH; y += 80) {
           ctx.fillRect(bx + 28, y, trunkW + 4, 5);
         }
         ctx.fillStyle = 'rgba(40, 120, 70, 0.75)';
-        // Subtle leaves at the top
+        // Subtle leaves at the top — always near the top edge
         ctx.fillStyle = 'rgba(101, 163, 13, 0.55)';
         ctx.beginPath();
         ctx.moveTo(bx + 36, bY + 10);
@@ -1576,29 +1578,30 @@ export default function Advergame() {
         ctx.fillRect(bx + 160, vh - 130, 160, 12);
       }
     } else if (themeId === 'BAMBOO_FOREST') {
-      // Detailed foreground bamboo — thicker, scaled to viewport
-      const fY = bgY(0.30);
-      const fH = groundY - fY + vh * 0.05;
-      const trunkW = Math.max(18, vw * 0.018);
-      const separation = Math.max(180, vw * 0.11);
+      // Detailed foreground bamboo — full-height trunks with leaves at
+      // the very top of the canvas and along the stalk. Dense enough to
+      // cover the full width of the screen at any scrollX position.
+      const fY = 0;
+      const fH = vh + 20;
+      const trunkW = Math.max(20, vw * 0.02);
+      const separation = Math.max(140, vw * 0.07);
       const NODE_GAP = 60;
-      for (let i = -1; i < 7; i++) {
+      for (let i = -1; i < 10; i++) {
         const bx = i * separation + 50;
         // Trunk: 2-tone gradient effect (darker stripe on left edge)
         ctx.fillStyle = '#15803d';
         ctx.fillRect(bx - 1, fY, trunkW + 2, fH);
         ctx.fillStyle = '#22c55e';
         ctx.fillRect(bx, fY, trunkW, fH);
-        // Nodes
+        // Nodes distributed along the full trunk
         for (let y = fY + 30; y < fY + fH; y += NODE_GAP) {
           ctx.fillStyle = '#166534';
           ctx.fillRect(bx - 2, y, trunkW + 4, 6);
           ctx.fillStyle = '#4ade80';
           ctx.fillRect(bx + 1, y + 1, trunkW - 2, 2);
         }
-        // Leaves at the top
+        // Leaves at the top of the trunk (y ≈ 8, always near the top edge)
         ctx.fillStyle = '#65a30d';
-        // Right-side leaf
         ctx.beginPath();
         ctx.moveTo(bx + 7, fY + 8);
         ctx.quadraticCurveTo(bx + 35, fY - 5, bx + 32, fY + 18);
@@ -1610,16 +1613,16 @@ export default function Advergame() {
         ctx.quadraticCurveTo(bx - 22, fY + 6, bx - 18, fY + 28);
         ctx.quadraticCurveTo(bx - 5, fY + 22, bx + 7, fY + 16);
         ctx.fill();
-        // Mid-stalk leaves
+        // Mid-stalk leaves — positioned as fractions of vh so they scale
         ctx.beginPath();
-        ctx.moveTo(bx + 7, fY + 200);
-        ctx.quadraticCurveTo(bx + 28, fY + 190, bx + 24, fY + 212);
-        ctx.quadraticCurveTo(bx + 16, fY + 208, bx + 7, fY + 200);
+        ctx.moveTo(bx + 7, fY + vh * 0.40);
+        ctx.quadraticCurveTo(bx + 28, fY + vh * 0.40 - 10, bx + 24, fY + vh * 0.40 + 12);
+        ctx.quadraticCurveTo(bx + 16, fY + vh * 0.40 + 8, bx + 7, fY + vh * 0.40);
         ctx.fill();
         ctx.beginPath();
-        ctx.moveTo(bx + 7, fY + 320);
-        ctx.quadraticCurveTo(bx - 24, fY + 312, bx - 20, fY + 332);
-        ctx.quadraticCurveTo(bx - 6, fY + 326, bx + 7, fY + 320);
+        ctx.moveTo(bx + 7, fY + vh * 0.70);
+        ctx.quadraticCurveTo(bx - 24, fY + vh * 0.70 - 8, bx - 20, fY + vh * 0.70 + 12);
+        ctx.quadraticCurveTo(bx - 6, fY + vh * 0.70 + 6, bx + 7, fY + vh * 0.70);
         ctx.fill();
       }
     } else {
