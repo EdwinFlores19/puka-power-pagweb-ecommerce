@@ -1,10 +1,12 @@
 import { createSignal, Show, Match, Switch } from 'solid-js';
+import type { CustomerInfo } from '@/lib/types';
 
 interface PaymentModalProps {
   orderId: string;
   total: number;
   items: { id: number; qty: number }[];
   couponApplied: string;
+  customer?: CustomerInfo;
   onClose: () => void;
 }
 
