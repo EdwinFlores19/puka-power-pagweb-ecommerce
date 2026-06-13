@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/Footer.astro';
+import OrderHistory from '../islands/OrderHistory.tsx';
+
+export const prerender = false;
+---
+
+<BaseLayout
+  title="Mi Cuenta | Puka Power"
+  description="Consulta el historial de tus pedidos de Puka Power."
+  ogType="website"
+>
+  <main class="min-h-screen bg-gradient-to-br from-slate-900 via-amber-950/30 to-slate-900 text-white">
+    <section class="py-12 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto">
+      <header class="mb-8 text-center">
+        <a href="/" class="inline-flex items-center gap-1 text-sm text-amber-300 hover:text-amber-200 transition-colors mb-4">
+          <span>←</span> Volver al inicio
+        </a>
+        <h1 class="text-4xl sm:text-5xl font-black text-amber-200 mb-2">👤 Mi Cuenta</h1>
+        <p class="text-amber-100/70 text-sm sm:text-base">
+          Consulta tus pedidos guardados. Ingresa tu email para ver tu historial.
+        </p>
+      </header>
+
+      <OrderHistory client:load />
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>

@@ -14,7 +14,8 @@ import {
   clearCoupon,
   refreshCouponFromServer,
 } from '@/store/cartStore';
-import type { CustomerInfo } from '@/lib/types';
+import { saveOrder, getCustomerPrefill } from '@/store/ordersStore';
+import type { CustomerInfo, OrderRecord } from '@/lib/types';
 import PaymentModal from './PaymentModal';
 
 // Ubigeo Perú — los más comunes (departamento → provincias → distritos)
@@ -66,6 +67,13 @@ export default function CartSidebar() {
       if (draft) {
         const parsed = JSON.parse(draft);
         setCustomer((prev) => ({ ...prev, ...parsed }));
+      } else {
+        // No draft yet: try to prefill from a previous order for the last known email
+        const lastEmail = localStorage.getItem('puka_last_customer_email');
+        if (lastEmail) {
+          const prefill = getCustomerPrefill(lastEmail);
+          if (prefill) setCustomer(prefill);
+        }
       }
     } catch { /* noop */ }
   });
@@ -173,8 +181,30 @@ export default function CartSidebar() {
         couponApplied: result.couponApplied || '',
       });
 
-      // Persist customer for future orders (Mi cuenta)
-      try { localStorage.setItem('puka_customer_draft', JSON.stringify(c)); } catch { /* noop */ }
+      // Persist customer email for future pre-fills (Mi cuenta)
+      try { localStorage.setItem('puka_last_customer_email', c.email); } catch { /* noop */ }
+
+      // Save the order to local storage (so Mi Cuenta can show it)
+      try {
+        const orderRecord: OrderRecord = {
+          orderId: result.orderId,
+          customerId: 'cust_' + Date.now().toString(36),
+          customer: c,
+          items: payload.items.map((it) => {
+            const found = cart().find((ci) => ci.id === it.id);
+            return { ...it, name: found?.name, price: found?.price };
+          }),
+          subtotal: subtotal(),
+          discount: discount(),
+          total: total(),
+          couponApplied: result.couponApplied || '',
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        };
+        saveOrder(orderRecord);
+      } catch (e) {
+        console.error('Failed to save order locally:', e);
+      }
 
       setShowModal(true);
     } catch {
