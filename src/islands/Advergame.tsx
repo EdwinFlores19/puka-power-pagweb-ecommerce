@@ -2542,23 +2542,22 @@ export default function Advergame() {
         </div>
 
         <Show when={!showTutorial()}>
-          <div class="absolute bottom-2 sm:bottom-4 left-0 right-0 px-2 sm:px-4 flex justify-between items-end z-30" classList={{ 'md:hidden': !isTouchDevice }}
-            style={{ 'max-height': '35vh' }}>
+          <div class="absolute bottom-2 sm:bottom-4 left-0 right-0 px-2 sm:px-4 flex justify-between items-end z-30" classList={{ 'md:hidden': !isTouchDevice }}>
             <div class="flex gap-2 sm:gap-3">
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-14 h-14 sm:w-20 sm:h-20 landscape:w-12 landscape:h-12 bg-black/60   rounded-xl border-2 border-white/15 text-white text-2xl sm:text-3xl landscape:text-xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-14 h-14 sm:w-20 sm:h-20 landscape:w-12 landscape:h-12 bg-black/60   rounded-xl border-2 border-white/15 text-white text-2xl sm:text-3xl landscape:text-xl font-black touch-none active:bg-white/20 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.left = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.left = false; }} onMouseDown={() => { engineState.keys.left = true; }} onMouseUp={() => { engineState.keys.left = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-black/60 rounded-2xl border-2 border-white/20 text-white text-3xl sm:text-4xl font-black touch-none active:bg-white/25 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2190'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.right = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.right = false; }} onMouseDown={() => { engineState.keys.right = true; }} onMouseUp={() => { engineState.keys.right = false; }} class="w-20 h-20 sm:w-24 sm:h-24 bg-black/60 rounded-2xl border-2 border-white/20 text-white text-3xl sm:text-4xl font-black touch-none active:bg-white/25 active:scale-90 transition-all duration-100 shadow-lg flex items-center justify-center">{'\u2192'}</button>
             </div>
             <div class="flex gap-2 sm:gap-3 items-end">
               <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING) engineState.keys.attack = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.attack = false; }} onMouseDown={() => { engineState.keys.attack = true; }} onMouseUp={() => { engineState.keys.attack = false; }}
-                class="w-11 h-11 sm:w-16 sm:h-16 landscape:w-10 landscape:h-10 bg-blue-500/20   rounded-xl border-2 border-blue-500/40 text-blue-300 text-xl sm:text-2xl landscape:text-lg font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
-                <img src="/sprites/shuriken.png" class="w-5 h-5 sm:w-7 sm:h-7 landscape:w-4 landscape:h-4 object-contain" />
+                class="w-18 h-18 sm:w-20 sm:h-20 bg-blue-500/20 rounded-2xl border-2 border-blue-500/40 text-blue-300 text-2xl sm:text-3xl font-black touch-none active:bg-blue-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center">
+                <img src="/sprites/shuriken.png" class="w-8 h-8 sm:w-9 sm:h-9 object-contain" />
               </button>
               <button onTouchStart={(e) => { e.preventDefault(); consumeBoost(); }} onTouchEnd={(e) => e.preventDefault()} onMouseDown={() => { consumeBoost(); }} disabled={inv().length === 0}
                 classList={{ 'opacity-40': inv().length === 0 }}
-                class="w-11 h-11 sm:w-16 sm:h-16 landscape:w-10 landscape:h-10 bg-yellow-500/20   rounded-xl border-2 border-yellow-500/40 text-yellow-300 text-xl sm:text-2xl landscape:text-lg font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
-                <img src="/sprites/Puka-Power.png" class="w-5 h-5 sm:w-7 sm:h-7 landscape:w-4 landscape:h-4 object-contain" />
+                class="w-18 h-18 sm:w-20 sm:h-20 bg-yellow-500/20 rounded-2xl border-2 border-yellow-500/40 text-yellow-300 text-2xl sm:text-3xl font-black touch-none active:bg-yellow-500/40 active:scale-90 transition-all duration-100 shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center justify-center">
+                <img src="/sprites/Puka-Power.png" class="w-8 h-8 sm:w-9 sm:h-9 object-contain" />
               </button>
-              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-16 h-16 sm:w-24 sm:h-24 landscape:w-14 landscape:h-14 bg-red-500/30   rounded-xl border-2 border-red-500/50 text-white text-3xl sm:text-4xl landscape:text-2xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
+              <button onTouchStart={(e) => { e.preventDefault(); if (appState() === APP_STATE.PLAYING && !engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onTouchEnd={(e) => { e.preventDefault(); engineState.keys.up = false; }} onMouseDown={() => { if (!engineState.keys.up) engineState.keys.upJustPressed = true; engineState.keys.up = true; }} onMouseUp={() => { engineState.keys.up = false; }} class="w-22 h-22 sm:w-28 sm:h-28 bg-red-500/30 rounded-2xl border-2 border-red-500/50 text-white text-4xl sm:text-5xl font-black touch-none shadow-[0_0_20px_rgba(239,68,68,0.2)] active:bg-red-500/60 active:scale-90 transition-all duration-100 flex items-center justify-center">{'\u2191'}</button>
             </div>
           </div>
         </Show>
@@ -2570,7 +2569,7 @@ export default function Advergame() {
     <>
       <Switch>
         <Match when={appState() === APP_STATE.START_SCREEN}>
-          <div class="w-screen h-screen overflow-hidden relative bg-[#1A080A] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
+          <div class="fixed inset-0 overflow-hidden bg-[#1A080A] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat z-20">
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
             <button
               onClick={() => startGame(THEMES.GOH_RONG.id)}
@@ -2581,7 +2580,7 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.CHARACTER_SELECTION}>
-          <div class="w-screen h-screen overflow-hidden relative bg-[#1A080A] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat">
+          <div class="fixed inset-0 overflow-hidden bg-[#1A080A] bg-[url('/sprites/portada.png')] bg-cover bg-center bg-no-repeat z-20">
             <div class="absolute inset-0 bg-black/60  " />
             <a href="/tienda"
               class="absolute top-6 left-6 z-20 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors">
@@ -2604,22 +2603,22 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.GAME_OVER}>
-          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-red-950/50 to-slate-900 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10">
+          <div class="fixed inset-0 bg-gradient-to-br from-slate-900 via-red-950/50 to-slate-900 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center overflow-y-auto z-20">
+            <div class="absolute inset-0 opacity-10 pointer-events-none">
               <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600 rounded-full blur-3xl animate-pulse" />
             </div>
             <a href="/tienda"
-              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
+              class="absolute top-4 sm:top-6 left-4 sm:left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
               {iconArrowLeft} Volver a la Tienda
             </a>
-            <div class="relative z-10 flex flex-col items-center">
-              <img src="/sprites/pucca_chocada_redbull_o_enojada.png" class="w-48 h-48 object-contain animate-pulse mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]" />
-              <h1 class="text-4xl sm:text-5xl font-black uppercase mb-4 text-red-500 drop-shadow-[0_0_20px_rgba(220,38,38,0.3)]">¡No lograste alcanzar a Garu... 😭!</h1>
-              <p class="text-xl sm:text-2xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
-              <p class="text-xl sm:text-2xl text-slate-300 mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
-              <p class="text-base text-slate-500 mb-8">¡No te rindas! El verdadero poder del rayo te espera.</p>
+            <div class="relative z-10 flex flex-col items-center max-w-md mx-auto w-full">
+              <img src="/sprites/pucca_chocada_redbull_o_enojada.png" class="w-32 h-32 sm:w-48 sm:h-48 object-contain animate-pulse mb-4 sm:mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]" />
+              <h1 class="text-2xl sm:text-5xl font-black uppercase mb-3 sm:mb-4 text-red-500 drop-shadow-[0_0_20px_rgba(220,38,38,0.3)]">{'\u00A1'}No lograste alcanzar a Garu... {'\u{1F62D}'}!</h1>
+              <p class="text-lg sm:text-2xl text-slate-300 mb-2">Nivel {currentLevelIndex()}/3</p>
+              <p class="text-lg sm:text-2xl text-slate-300 mb-3 sm:mb-4">Monedas recolectadas: <span class="text-yellow-400 font-bold drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{uiState().coins} {'\u{1FA99}'}</span></p>
+              <p class="text-sm sm:text-base text-slate-500 mb-6 sm:mb-8">{'\u00A1'}No te rindas! El verdadero poder del rayo te espera.</p>
               <button onClick={() => setAppState(APP_STATE.START_SCREEN)}
-                class="bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
+                class="bg-red-500 hover:bg-red-600 text-white font-black text-lg sm:text-xl py-3 sm:py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)] mb-4">
                 {iconPlay} JUGAR DE NUEVO
               </button>
             </div>
@@ -2627,66 +2626,63 @@ export default function Advergame() {
         </Match>
 
         <Match when={appState() === APP_STATE.VICTORY}>
-          <div class="w-full min-h-screen bg-gradient-to-br from-slate-900 via-pink-950/40 to-rose-950/40 text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-            <div class="absolute inset-0 opacity-15">
+          <div class="fixed inset-0 bg-gradient-to-br from-slate-900 via-pink-950/40 to-rose-950/40 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center overflow-y-auto z-20">
+            <div class="absolute inset-0 opacity-15 pointer-events-none">
               <div class="absolute top-10 left-10 w-64 h-64 bg-pink-500 rounded-full blur-3xl animate-pulse" />
               <div class="absolute bottom-10 right-10 w-80 h-80 bg-rose-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s" />
             </div>
             <a href="/tienda"
-              class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
+              class="absolute top-4 sm:top-6 left-4 sm:left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
               {iconArrowLeft} Volver a la Tienda
             </a>
-            <div class="relative z-10 max-w-3xl">
-              {/* The wedding photo — the center of everything */}
-              <div class="mb-6 animate-bubble-in">
+            <div class="relative z-10 max-w-3xl w-full">
+              <div class="mb-4 sm:mb-6 animate-bubble-in">
                 <img
                   src="/sprites/boda_pukaygaru.jpg"
                   alt="La boda de Pucca y Garu en la montaña sagrada"
-                  class="w-72 sm:w-96 h-auto object-contain mx-auto rounded-2xl ring-4 ring-pink-400/30 shadow-[0_0_60px_rgba(255,100,150,0.5)]"
+                  class="w-48 sm:w-72 md:w-96 h-auto object-contain mx-auto rounded-2xl ring-4 ring-pink-400/30 shadow-[0_0_60px_rgba(255,100,150,0.5)]"
                   width="384"
                   height="auto"
                   decoding="async"
                 />
               </div>
 
-              <div class="text-7xl sm:text-8xl mb-4 animate-bounce drop-shadow-[0_0_30px_rgba(255,100,150,0.4)]">{'\u{1F48D}'}</div>
-              <h1 class="text-3xl sm:text-4xl md:text-5xl font-black uppercase mb-4 text-pink-300 drop-shadow-[0_0_20px_rgba(255,100,150,0.5)]">
-                {currentLevelIndex() === 3 ? '¡Garu no tiene escapatoria!' : '¡Campaña completada!'}
+              <div class="text-5xl sm:text-8xl mb-3 sm:mb-4 animate-bounce drop-shadow-[0_0_30px_rgba(255,100,150,0.4)]">{'\u{1F48D}'}</div>
+              <h1 class="text-2xl sm:text-4xl md:text-5xl font-black uppercase mb-3 sm:mb-4 text-pink-300 drop-shadow-[0_0_20px_rgba(255,100,150,0.5)]">
+                {currentLevelIndex() === 3 ? '\u00A1Garu no tiene escapatoria!' : '\u00A1Campa\u00F1a completada!'}
               </h1>
-              <p class="text-base sm:text-lg text-slate-200 max-w-2xl mx-auto leading-relaxed mb-6">
-                Pasaste los 3 niveles. Atrapaste a Garu. Pero lo más importante: cruzaste la línea. Y ahora Garu no tiene opción. Pucca y Garu se casan al fin, en la montaña donde empezó todo. 💋🌸
+              <p class="text-sm sm:text-lg text-slate-200 max-w-2xl mx-auto leading-relaxed mb-4 sm:mb-6">
+                Pasaste los 3 niveles. Atrapaste a Garu. Pero lo m\u00E1s importante: cruzaste la l\u00EDnea. Y ahora Garu no tiene opci\u00F3n. Pucca y Garu se casan al fin, en la monta\u00F1a donde empez\u00F3 todo. {'\u{1F48B}'}{'\u{1F338}'}
               </p>
-              <p class="text-sm text-slate-400 mb-6">Nivel {currentLevelIndex()}/3 · Monedas: <span class="text-yellow-400 font-bold">{uiState().coins}</span> 🪙</p>
-              <div class="my-6 p-5 sm:p-6 rounded-2xl bg-white/5 border border-pink-500/30 backdrop-blur-sm flex flex-col items-center gap-3 shadow-[0_0_40px_rgba(255,100,150,0.15)]">
+              <p class="text-sm text-slate-400 mb-4 sm:mb-6">Nivel {currentLevelIndex()}/3 · Monedas: <span class="text-yellow-400 font-bold">{uiState().coins}</span> {'\u{1FA99}'}</p>
+              <div class="my-4 sm:my-6 p-4 sm:p-6 rounded-2xl bg-white/5 border border-pink-500/30 backdrop-blur-sm flex flex-col items-center gap-2 sm:gap-3 shadow-[0_0_40px_rgba(255,100,150,0.15)]">
                 <span class="text-[10px] sm:text-xs text-pink-300 uppercase tracking-[0.25em] font-semibold">{'\u{2728}'} En colaboración con {'\u{2728}'}</span>
-                <img src="/sprites/Pucca-Logo.png" alt="Pucca Logo" class="w-40 sm:w-52 h-auto object-contain drop-shadow-[0_0_40px_rgba(255,100,150,0.5)] hover:scale-105 transition-transform duration-700" />
+                <img src="/sprites/Pucca-Logo.png" alt="Pucca Logo" class="w-32 sm:w-52 h-auto object-contain drop-shadow-[0_0_40px_rgba(255,100,150,0.5)] hover:scale-105 transition-transform duration-700" />
                 <span class="text-xs sm:text-sm text-slate-400">{'\u{1F48B}'} Puka Power × Pucca {'\u{1F48B}'}</span>
               </div>
               <Show when={couponDone()}>
-                <div class="bg-pink-500/20 border-2 border-pink-500/50 text-pink-300 font-bold px-6 py-3 rounded-xl mb-6 text-lg animate-pulse shadow-[0_0_20px_rgba(255,100,150,0.15)]">
+                <div class="bg-pink-500/20 border-2 border-pink-500/50 text-pink-300 font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-xl mb-4 sm:mb-6 text-base sm:text-lg animate-pulse shadow-[0_0_20px_rgba(255,100,150,0.15)]">
                   {'\u{1F389}'} Descuento de 15% activado – canjeado en tu carrito
                 </div>
               </Show>
               <Show when={!couponDone()}>
                 <button
                   onClick={async () => {
-                    // Defensive: usually couponDone is true here because
-                    // markGameWon was already fired on the level-3 GOAL.
                     await markGameWon();
                     setCouponDone(true);
                     window.location.href = '/tienda';
                   }}
-                  class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 animate-pulse shadow-[0_0_20px_rgba(234,179,8,0.3)] mx-auto mb-4">
+                  class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-black text-base sm:text-xl py-3 sm:py-4 px-6 sm:px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 animate-pulse shadow-[0_0_20px_rgba(234,179,8,0.3)] mx-auto mb-3 sm:mb-4">
                   {'\u{1F389}'} Canjear 15% de descuento ahora
                 </button>
               </Show>
-              <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pb-4">
                 <button onClick={() => setAppState(APP_STATE.START_SCREEN)}
-                  class="bg-red-500 hover:bg-red-600 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
+                  class="bg-red-500 hover:bg-red-600 text-white font-black text-base sm:text-xl py-3 sm:py-4 px-6 sm:px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.4)]">
                   {iconPlay} JUGAR DE NUEVO
                 </button>
                  <a href="/tienda"
-                  class="bg-pink-600 hover:bg-pink-500 text-white font-black text-lg sm:text-xl py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
+                  class="bg-pink-600 hover:bg-pink-500 text-white font-black text-base sm:text-xl py-3 sm:py-4 px-6 sm:px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105">
                   Ir a la tienda {'\u{1F6D2}'}
                 </a>
               </div>
@@ -2710,39 +2706,36 @@ export default function Advergame() {
               ? 'w-72 sm:w-96 h-auto'    // boda is wide, use auto height
               : 'w-64 h-64 object-contain';
             return (
-              <div class={`w-full min-h-screen ${bgClass} text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden`}>
-                <div class="absolute inset-0 opacity-15">
+              <div class={`fixed inset-0 ${bgClass} text-white flex flex-col items-center justify-center p-4 sm:p-6 pb-8 sm:pb-12 text-center overflow-y-auto z-20`}>
+                <div class="absolute inset-0 opacity-15 pointer-events-none">
                   <div class={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] ${glowColor} rounded-full blur-3xl animate-pulse`} />
                 </div>
                 <a href="/tienda"
-                  class="absolute top-6 left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
+                  class="absolute top-4 sm:top-6 left-4 sm:left-6 flex items-center gap-1 text-sm text-slate-400 hover:text-yellow-400 transition-colors z-10">
                   {iconArrowLeft} Volver a la Tienda
                 </a>
 
-                {/* ===== Layout: hero on the left/center, popup on the right ===== */}
-                <div class="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center">
-                  {/* Left/center: hero image + header + subtitle + CTA */}
+                <div class="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-6 items-center">
                   <div class="flex flex-col items-center text-center order-2 lg:order-1">
                     <img
                       src={cfg.heroImage}
                       alt={cfg.heroAlt}
-                      class={`${heroSizeClass} object-contain ${isFinal ? 'rounded-2xl ring-4 ' + ringColor + ' shadow-[0_0_50px_rgba(255,100,150,0.5)]' : 'animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]'} mb-4`}
+                      class={`${isFinal ? 'w-48 sm:w-72 md:w-96 h-auto' : 'w-40 sm:w-64 h-40 sm:h-64'} object-contain ${isFinal ? 'rounded-2xl ring-4 ' + ringColor + ' shadow-[0_0_50px_rgba(255,100,150,0.5)]' : 'animate-bounce drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]'} mb-3 sm:mb-4`}
                       decoding="async"
                     />
-                    <h1 class={`text-3xl sm:text-4xl md:text-5xl font-black uppercase mb-3 ${isFinal ? 'text-pink-300 drop-shadow-[0_0_20px_rgba(255,100,150,0.5)]' : 'text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]'}`}>
+                    <h1 class={`text-xl sm:text-4xl md:text-5xl font-black uppercase mb-2 sm:mb-3 ${isFinal ? 'text-pink-300 drop-shadow-[0_0_20px_rgba(255,100,150,0.5)]' : 'text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]'}`}>
                       {cfg.header}
                     </h1>
-                    <p class="text-base sm:text-lg text-slate-200 max-w-xl leading-relaxed mb-6">
+                    <p class="text-sm sm:text-lg text-slate-200 max-w-xl leading-relaxed mb-4 sm:mb-6">
                       {cfg.subtitle}
                     </p>
 
-                    {/* CTA — different for level 3 (Reclamar) vs 1/2 (Siguiente) */}
                     <Show
                       when={isFinal}
                       fallback={
                         <button
                           onClick={() => advanceToNextLevel()}
-                          class="w-full max-w-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider"
+                          class="w-full max-w-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-lg sm:text-xl py-3 sm:py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] uppercase tracking-wider mb-4"
                         >
                           Siguiente Nivel {iconPlay}
                         </button>
@@ -2750,10 +2743,6 @@ export default function Advergame() {
                     >
                       <button
                         onClick={async () => {
-                          // Defensive: markGameWon was already fired on the
-                          // level-3 GOAL collision, so this is a no-op in
-                          // the normal flow — only re-runs if the user
-                          // somehow reached this screen without the cookie.
                           if (!couponDone()) {
                             await markGameWon();
                             setCouponDone(true);
@@ -2763,39 +2752,38 @@ export default function Advergame() {
                           }
                           setAppState(APP_STATE.VICTORY);
                         }}
-                        class="w-full max-w-sm bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 hover:from-pink-500 hover:to-rose-400 text-white font-black text-xl py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_40px_rgba(255,100,150,0.6)] uppercase tracking-wider"
+                        class="w-full max-w-xs bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 hover:from-pink-500 hover:to-rose-400 text-white font-black text-lg sm:text-xl py-3 sm:py-4 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 hover:shadow-[0_0_40px_rgba(255,100,150,0.6)] uppercase tracking-wider mb-4"
                       >
-                        💍 Reclamar Recompensas {iconPlay}
+                        {'\u{1F48D}'} Reclamar Recompensas {iconPlay}
                       </button>
                     </Show>
                   </div>
 
-                  {/* Right: popup character (only on levels 1 and 2) */}
                   <Show when={cfg.popup}>
                     {(popup) => (
-                      <div class="order-1 lg:order-2 w-full max-w-sm mx-auto">
-                        <div class="relative bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-md border-2 border-purple-500/50 rounded-3xl p-5 sm:p-6 shadow-[0_0_40px_rgba(168,85,247,0.4)] animate-bubble-in">
-                          <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl pointer-events-none" />
+                      <div class="order-1 lg:order-2 w-full max-w-[280px] sm:max-w-sm mx-auto mb-4 lg:mb-0">
+                        <div class="relative bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-md border-2 border-purple-500/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-[0_0_40px_rgba(168,85,247,0.4)] animate-bubble-in">
+                          <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl sm:rounded-3xl pointer-events-none" />
                           <div class="relative flex flex-col items-center text-center">
-                            <div class="relative mb-3">
+                            <div class="relative mb-2 sm:mb-3">
                               <div class="absolute inset-0 bg-purple-400/40 blur-2xl rounded-full animate-pulse" />
                               <img
                                 src={popup().image}
                                 alt={popup().name}
-                                class="relative w-28 h-28 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_20px_rgba(168,85,247,0.9)]"
+                                class="relative w-20 h-20 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_20px_rgba(168,85,247,0.9)]"
                                 width="128"
                                 height="128"
                                 decoding="async"
                               />
-                              <div class="absolute -top-1 -right-1 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-xl shadow-lg ring-2 ring-purple-500/60 animate-bounce">
+                              <div class="absolute -top-1 -right-1 w-8 h-8 sm:w-10 sm:h-10 bg-yellow-400 rounded-full flex items-center justify-center text-lg sm:text-xl shadow-lg ring-2 ring-purple-500/60 animate-bounce">
                                 {popup().icon}
                               </div>
                             </div>
-                            <p class="text-[10px] sm:text-xs font-black uppercase text-purple-300 mb-2 tracking-[0.2em] flex items-center gap-1.5">
+                            <p class="text-[10px] sm:text-xs font-black uppercase text-purple-300 mb-1 sm:mb-2 tracking-[0.2em] flex items-center gap-1.5">
                               <span class="inline-block w-2 h-2 rounded-full bg-purple-400 animate-ping" />
                               {popup().title}
                             </p>
-                            <p class="text-sm sm:text-base text-slate-100 leading-relaxed font-semibold">
+                            <p class="text-xs sm:text-base text-slate-100 leading-relaxed font-semibold">
                               {popup().text}
                             </p>
                           </div>
@@ -2816,7 +2804,7 @@ export default function Advergame() {
 
       <Show when={appState() === APP_STATE.PLAYING && showTutorial()}>
         {(() => {
-          const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+          const isMobile = typeof window !== 'undefined' && (window.innerWidth <= 768 || (isTouchDevice && window.innerWidth < 1024));
           return (
             <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 sm:p-6">
               <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 w-full text-center text-white shadow-2xl shadow-red-500/5 relative overflow-hidden max-h-[90vh] overflow-y-auto"
